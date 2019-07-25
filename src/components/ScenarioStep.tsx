@@ -1,48 +1,26 @@
 import * as React from 'react';
 
 import { 
-  Flex, 
   Box 
 } from 'reflexbox';
 
 import { 
   Card,
-  H5, H2, H6, 
+  H5, H6, 
   Blockquote,
-  Classes,
   Icon,
   Intent,
 } from '@blueprintjs/core';
 
 import {IconNames} from '@blueprintjs/icons';
-import { UiTabInformation } from '../models/UiTabInformation';
-import { ConnectionInformation } from '../models/ConnectionInformation';
 import { ScenarioStepInfo } from '../models/ScenarioStepInfo';
 
 export interface ScenarioStepProps {
   step: ScenarioStepInfo,
 }
 
-// interface ComponentState {
-// 	step: ScenarioStepInfo,
-// }
 
 export class ScenarioStep extends React.PureComponent<ScenarioStepProps> {
-  // public state: ComponentState = {
-  //   step: {
-  //     stepNumber: 0,
-  //     heading: '',
-  //     description: '',
-  //     optional: false,
-  //     available: false,
-  //     completed: false,
-  //     data: ''
-  //   }
-  // };
-
-  // constructor(props: ScenarioStepProps) {
-  //     super(props);
-  // };
 
   public render() {
     return (

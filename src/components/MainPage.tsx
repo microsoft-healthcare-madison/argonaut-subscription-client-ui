@@ -16,15 +16,14 @@ import {Scenario2Pane} from './Scenario2Pane';
 import { UiTabInformation } from '../models/UiTabInformation';
 import { MainNavigation } from './MainNavigation';
 import { ConnectionInformation } from '../models/ConnectionInformation';
-import { ContentPaneProps } from '../models/ContentPaneProps';
 import { TriggerPane } from './TriggerPane';
 
 /** tab configuration - MUST be in 'id' order - first tab is shown at launch */
 let _tabs: UiTabInformation[] = [
-  {title: 'Configuration', id: '0', panel: React.createFactory(ConfigurationPane)},
-  {title: 'Scenario 1', id: '1', panel: React.createFactory(Scenario1Pane)},
-  {title: 'Scenario 2', id: '2', panel: React.createFactory(Scenario2Pane)},
-  {title: 'Triggers', id: '3', panel: React.createFactory(TriggerPane)},
+  {title: 'Config', id: '0', panel: React.createFactory(ConfigurationPane)},
+  {title: 'One', id: '1', panel: React.createFactory(Scenario1Pane)},
+  {title: 'Two', id: '2', panel: React.createFactory(Scenario2Pane)},
+  {title: 'Trigger', id: '3', panel: React.createFactory(TriggerPane)},
 ]
 
 /** Type definition for the current object's state variable */
@@ -148,7 +147,7 @@ export class MainPage extends React.PureComponent<MainPageProps> {
 
     // **** close any existing Client Host websocket connections  ****
 
-    if (this._clientHostWebSocket) {
+    if ((updatedInfo.status !== 'ok') && (this._clientHostWebSocket)) {
       this._clientHostWebSocket.onmessage = null;
       this._clientHostWebSocket.close();
       this._clientHostWebSocket = null;

@@ -10,14 +10,11 @@ import {
 	Button, 
 	Classes,
   Collapse,
-  Icon,
   InputGroup,
-  Intent,
   FormGroup,
   Elevation,
-  UL,
   Text,
-  H1, H2, H3, H4, H5, Spinner, Popover, NonIdealState
+  H3, H5, Spinner, Popover, NonIdealState
 } from '@blueprintjs/core';
 
 import {IconNames} from "@blueprintjs/icons";
@@ -382,7 +379,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		// **** check to make sure we are connected to the host (requires server) ****
 
-		if (nextProps.clientHostInfo.status != 'ok') {
+		if (nextProps.clientHostInfo.status !== 'ok') {
 			connected = false;
 		} else {
 			connected = true;

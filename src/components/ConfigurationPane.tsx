@@ -8,20 +8,16 @@ import {
 import { 
   Card,
   Button, 
-  Collapse,
-  Icon,
   InputGroup,
   Intent,
   FormGroup,
   Elevation,
-  NonIdealState,
 } from '@blueprintjs/core';
 
 import { ContentPaneProps } from '../models/ContentPaneProps';
 import { ConnectionInformation } from '../models/ConnectionInformation';
 import { ClientHostRegistration } from '../models/ClientHostRegistration';
 import { ApiHelper } from '../util/ApiHelper';
-import { IconNames } from '@blueprintjs/icons';
 
 /** Type definition for the current object's state variable */
 interface ComponentState {
@@ -87,6 +83,7 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
                 id='fhir-server-url'
                 value={this.state.fhirServerUrl}
                 onChange={this.handleFhirServerUrlChange}
+                disabled={this.state.clientHostConnected}
                 />
             </FormGroup>
 
@@ -99,6 +96,7 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
                 id='fhir-client-url'
                 value={this.state.clientHostUrl}
                 onChange={this.handleClientHostUrlChange}
+                disabled={this.state.clientHostConnected}
                 />
             </FormGroup>
 
@@ -189,13 +187,13 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
 
     // **** connected to the server ****
 
-    this.setState({fhirServerConnected: true});
+    this.setState({fhirServerConnecting: false, fhirServerConnected: true});
   }
 
   private connectClientHost = () => {
     // **** try to connect to the client ****
 
-    this.setState({fhirServerConnected: true, clientHostConnecting: true});
+    this.setState({clientHostConnecting: true});
 
     // **** construct the registration REST url ****
 

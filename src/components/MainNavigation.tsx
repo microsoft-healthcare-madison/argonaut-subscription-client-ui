@@ -1,10 +1,7 @@
 import * as React from 'react';
 
 import { 
-  Button, 
-  Collapse,
   Icon,
-  InputGroup,
   Intent,
   Tab,
   TabId,
@@ -16,7 +13,6 @@ import {
   NavbarDivider,
   Alignment,
   AnchorButton,
-  Text,
   ResizeSensor,
   IResizeEntry,
   Drawer,
@@ -41,7 +37,8 @@ interface ComponentState {
   showNavDrawer: boolean,
 }
 
-const _minWidthToRenderFull: number = 1000;
+/** Minimum width to render the full menu */
+const _minWidthToRenderFull: number = 900;
 
 export class MainNavigation extends React.PureComponent<MainNavigationProps> {
   public state: ComponentState = {

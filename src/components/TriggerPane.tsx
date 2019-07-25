@@ -7,20 +7,13 @@ import {
 
 import { 
   Card,
-  Button, 
-  Collapse,
-  Icon,
-  InputGroup,
-  Intent,
-  FormGroup,
+
   Elevation,
   H2,
   Switch,
 } from '@blueprintjs/core';
 
-import {IconNames} from "@blueprintjs/icons";
 import { ContentPaneProps } from '../models/ContentPaneProps';
-import { ConnectionInformation } from '../models/ConnectionInformation';
 
 interface ComponentState {
 
