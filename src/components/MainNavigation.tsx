@@ -17,6 +17,11 @@ import {
   Alignment,
   AnchorButton,
   Text,
+  ResizeSensor,
+  IResizeEntry,
+  Drawer,
+  Position,
+  H5,
 } from '@blueprintjs/core';
 
 import {IconNames} from '@blueprintjs/icons';
@@ -31,9 +36,18 @@ export interface MainNavigationProps {
   clientHostInfo: ConnectionInformation;
 }
 
+interface ComponentState {
+  renderSmall: boolean,
+  showNavDrawer: boolean,
+}
+
+const _minWidthToRenderFull: number = 1000;
+
 export class MainNavigation extends React.PureComponent<MainNavigationProps> {
-  // public state = {
-  // };
+  public state: ComponentState = {
+    renderSmall: false,
+    showNavDrawer: false,
+  };
 
   // constructor(props: MainNavigationProps) {
   //     super(props);
@@ -41,49 +55,127 @@ export class MainNavigation extends React.PureComponent<MainNavigationProps> {
 
   public render() {
     return (
-      <Navbar className={Classes.DARK}>
-        <NavbarGroup align={Alignment.LEFT}>
-          <NavbarHeading>Argonaut Subscription Client</NavbarHeading>
-          <NavbarDivider />
-        </NavbarGroup>
-
-        <NavbarGroup align={Alignment.RIGHT}>
-          <AnchorButton
-            href='http://github.com/microsoft-healthcare-madison/argonaut-subscription-client-ui'
-            text='Github'
-            target='_blank'
-            minimal
-            rightIcon='code'
-            />
-        </NavbarGroup>
-
-        <NavbarGroup align={Alignment.LEFT}>
-            <Tabs
-              animate={true}
-              id='navbar'
-              large={true}
-              onChange={this.handleNavbarTabChange}
-              selectedTabId={this.props.selectedTabId}
-              >
-            
-              { // **** add a tab for each known one ****
-                this.props.tabs.map(function(tab, index) {
-                  return <Tab key={index} id={tab.id} title={tab.title} />
-                }) 
-              }
-              <Tabs.Expander />
-            </Tabs>
+      <ResizeSensor onResize={this.handleResize}>
+        <Navbar className={Classes.DARK}>
+          {/* Left side of nav-bar desktop */}
+          { !this.state.renderSmall &&
+          <NavbarGroup align={Alignment.LEFT}>
+            <NavbarHeading>Argonaut Subscriptions Client</NavbarHeading>
             <NavbarDivider />
-        </NavbarGroup>
+            <Tabs
+                animate={true}
+                id='navbar'
+                large={true}
+                onChange={this.handleNavbarTabChange}
+                selectedTabId={this.props.selectedTabId}
+                vertical={false}
+                >
+                { // **** add our tabs ****
+                  this.props.tabs.map(function(tab, index) {
+                    return <Tab key={index} id={tab.id} title={tab.title} />
+                  }) 
+                }
+                {/* <Tabs.Expander /> */}
+              </Tabs>
+          </NavbarGroup>
+          }
 
-        <NavbarGroup align={Alignment.RIGHT}>
-          <NavbarHeading>{this.props.fhirServerInfo.name}: {this.iconForStatus(this.props.fhirServerInfo.status)}</NavbarHeading>
-          <NavbarHeading>{this.props.clientHostInfo.name}: {this.iconForStatus(this.props.clientHostInfo.status)}</NavbarHeading>
-        </NavbarGroup>
+          {/* Left side of nav-bar mobile */}
+          { this.state.renderSmall &&
+          <NavbarGroup align={Alignment.LEFT}>
+            <NavbarHeading>Subscriptions</NavbarHeading>
+          </NavbarGroup>
+          }
 
-      </Navbar>
+          {/* Right side of nav-bar desktop */}
+          { !this.state.renderSmall &&
+          <NavbarGroup align={Alignment.RIGHT}>
+            <NavbarHeading>{this.props.fhirServerInfo.name}: {this.iconForStatus(this.props.fhirServerInfo.status)}</NavbarHeading>
+            <NavbarHeading>{this.props.clientHostInfo.name}: {this.iconForStatus(this.props.clientHostInfo.status)}</NavbarHeading>
+            <NavbarDivider />
+            <AnchorButton
+              href='http://github.com/microsoft-healthcare-madison/argonaut-subscription-client-ui'
+              text='Github'
+              target='_blank'
+              minimal
+              rightIcon='code'
+              />
+          </NavbarGroup>
+          }
 
+          {/* Right side of nav-bar mobile */}
+          { this.state.renderSmall &&
+          <NavbarGroup align={Alignment.RIGHT}>
+            <AnchorButton
+              icon={IconNames.MENU}
+              onClick={this.handleShowNavDrawer}
+              />
+            <Drawer
+              isOpen={this.state.showNavDrawer}
+              canEscapeKeyClose={true}
+              autoFocus={true}
+              hasBackdrop={true}
+              position={Position.LEFT}
+              usePortal={true}
+              onClose={this.handleNavDrawerClose}
+              size={Drawer.SIZE_LARGE}
+              >
+              <Tabs
+                animate={true}
+                id='navbar'
+                large={true}
+                onChange={this.handleNavbarTabChange}
+                selectedTabId={this.props.selectedTabId}
+                vertical={true}
+                >
+                { // **** add our tabs ****
+                  this.props.tabs.map(function(tab, index) {
+                    return <Tab key={index} id={tab.id} title={tab.title} />
+                  }) 
+                }
+              </Tabs>
+              <br />
+              <H5 style={{margin: 5}}>{this.iconForStatus(this.props.fhirServerInfo.status)} {this.props.fhirServerInfo.name}</H5>
+              <H5 style={{margin: 5}}>{this.iconForStatus(this.props.clientHostInfo.status)} {this.props.clientHostInfo.name}</H5>
+            </Drawer>
+          </NavbarGroup>
+          }
+
+        </Navbar>
+
+
+      </ResizeSensor>
     );
+  }
+
+  private handleNavDrawerClose = () => {
+    this.setState({showNavDrawer: false});
+  }
+
+  private handleShowNavDrawer = () => {
+    this.setState({showNavDrawer: true});
+  }
+
+  private handleResize = (entries: IResizeEntry[]) => {
+    if ((this.state.renderSmall) && (entries[0].contentRect.width > _minWidthToRenderFull)) {
+      // **** change to full render ****
+
+      this.setState({renderSmall: false});
+
+      // **** done ***
+
+      return;
+    }
+
+    if ((!this.state.renderSmall) && (entries[0].contentRect.width < _minWidthToRenderFull)) {
+      // **** change to small render ****
+
+      this.setState({renderSmall: true});
+
+      // **** done ****
+
+      return;
+    }
   }
 
   private iconForStatus = (status: string) => {
@@ -104,5 +196,11 @@ export class MainNavigation extends React.PureComponent<MainNavigationProps> {
 
   private handleNavbarTabChange = (navbarTabId: TabId) => {
     this.props.onSelectedTabChanged(navbarTabId.toString());
+
+    // **** close drawer if necessary ****
+
+    if (this.state.showNavDrawer) {
+      this.handleNavDrawerClose();
+    }
   }
 }

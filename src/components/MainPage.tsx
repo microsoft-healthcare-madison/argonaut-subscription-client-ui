@@ -68,7 +68,8 @@ export class MainPage extends React.PureComponent<MainPageProps> {
           url: 'http://localhost:56340/', 
           status: '', 
           showMessages: false,
-          incomingMessageHandler: ((name: string, message: string) => {}),
+          registration: '',
+          // incomingMessageHandler: ((name: string, message: string) => {}),
         },
       clientHostInfo: {
         name: 'Client Host', 
@@ -76,14 +77,19 @@ export class MainPage extends React.PureComponent<MainPageProps> {
         url: 'http://localhost:56345/', 
         status: '', 
         showMessages: true,
-        incomingMessageHandler: ((name: string, message: string) => {}),
+        registration: '',
+        // incomingMessageHandler: ((name: string, message: string) => {}),
       },
   };
+
+  // **** web socket for connecting to the client host, do not make part of state ****
+
+  private _clientHostWebSocket: WebSocket | null = null;
 
   constructor(props: MainPageProps) {
     super(props);
 
-    this.state.clientHostInfo.incomingMessageHandler = this.clientHostMessageHandler;
+    // this.state.clientHostInfo.incomingMessageHandler = this.clientHostMessageHandler;
     // this.updateFhirServerInfo = this.updateFhirServerInfo.bind(this);
     // this.updateClientHostInfo = this.updateClientHostInfo.bind(this);
     // this.onSelectedTabChanged = this.onSelectedTabChanged.bind(this);
@@ -107,6 +113,7 @@ export class MainPage extends React.PureComponent<MainPageProps> {
           clientHostInfo: this.state.clientHostInfo,
           updateFhirServerInfo: this.updateFhirServerInfo,
           updateClientHostInfo: this.updateClientHostInfo,
+          connectClientHostWebSocket: this.connectToClientHostWebSocket,
         }) }
 
         {/* <Button onClick={() => this.state.clientHostInfo.incomingMessageHandler('Me', 'Test')}>Test</Button> */}
@@ -115,14 +122,12 @@ export class MainPage extends React.PureComponent<MainPageProps> {
     );
   }
 
-  private clientHostMessageHandler = (name: string, message: string) => {
-    this.showToastMessage(message, IconNames.CLOUD_DOWNLOAD);
+  private clientHostMessageHandler = (event: MessageEvent) => {
+    this.showToastMessage(event.data, IconNames.CLOUD_DOWNLOAD, 2000);
   }
   
   private showToastMessage = (message: string, iconName?: IconName, timeout?: number) => {
-
     let toaster: IToaster = this.getOrCreateToaster();
-
     toaster.show({message: message, icon: iconName, timeout: timeout});
   }
 
@@ -148,10 +153,37 @@ export class MainPage extends React.PureComponent<MainPageProps> {
   }
 
   private updateClientHostInfo = (updatedInfo: ConnectionInformation) => {
+
+    // **** check for disconnection ****
+
+    if ((updatedInfo.status !== 'ok') && (this._clientHostWebSocket)) {
+      this._clientHostWebSocket.onmessage = null;
+      this._clientHostWebSocket.close();
+      this._clientHostWebSocket = null;
+    }
+
+    // **** update our state ****
+
     this.setState({clientHostInfo: updatedInfo});
   }
 
   private onSelectedTabChanged = (id: string) => {
     this.setState({selectedNavbarTabId: id});
+  }
+
+  private connectToClientHostWebSocket = (clientHostInfo: ConnectionInformation) => {
+    // **** build the websocket URL ****
+
+    let wsUrl: URL = new URL('/websockets?uid='+clientHostInfo.registration, clientHostInfo.url.replace('http', 'ws'));
+
+    console.log('Requesting WS connection to:', wsUrl);
+
+    // **** connect to our server ****
+
+    this._clientHostWebSocket = new WebSocket(wsUrl.toString());
+
+    // **** setup our receive handler ****
+
+    this._clientHostWebSocket.onmessage = this.clientHostMessageHandler;
   }
 }

@@ -1,11 +1,11 @@
-# argonaut-subscription-client-ui Info
+# argonaut-subscription-client-ui
 
 Goals:
 * Create a UI for testing the Argonaut Subscription changes.
 * Make source clear enough for developers to follow as a reference implementation.
 * Highlight artifacts of testing harness.
 
-# Documentation
+## Documentation
 
 
 ## More Information

@@ -19,16 +19,32 @@ import {
 import {IconNames} from "@blueprintjs/icons";
 import { ContentPaneProps } from '../models/ContentPaneProps';
 import { ConnectionInformation } from '../models/ConnectionInformation';
+import { ClientHostRegistration } from '../models/ClientHostRegistration';
+import { ApiHelper } from '../util/ApiHelper';
 
 interface ComponentState {
   fhirServerUrl: string;
+  fhirServerConnecting: boolean;
+  fhirServerConnected: boolean;
+  fhirServerMessage: string;
+  
   clientHostUrl: string;
+  clientHostConnecting: boolean;
+  clientHostConnected: boolean;
+  clientHostMessage: string;
 }
 
 export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
   public state: ComponentState = {
       fhirServerUrl: '',
-      clientHostUrl: ''
+      fhirServerConnecting: false,
+      fhirServerConnected: false,
+      fhirServerMessage: '',
+
+      clientHostUrl: '',
+      clientHostConnecting: false,
+      clientHostConnected: false,
+      clientHostMessage: '',
   };
 
   constructor(props: ContentPaneProps) {
@@ -36,6 +52,14 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
     
     this.state.fhirServerUrl = props.fhirServerInfo.url;
     this.state.clientHostUrl = props.clientHostInfo.url;
+
+    if (props.fhirServerInfo.status === 'ok') {
+      this.state.fhirServerConnected = true;
+    }
+
+    if (props.clientHostInfo.status === 'ok') {
+      this.state.clientHostConnected = true;
+    }
   }
 
   public render() {
@@ -98,11 +122,45 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
   }
 
   private handleConnectToClientHostClick = () => {
-    var updatedInfo: ConnectionInformation = {...this.props.clientHostInfo, 
-      url: this.state.clientHostUrl,
-      status: 'ok'
-    };
-    this.props.updateClientHostInfo(updatedInfo);
+
+    // **** flag we are attempting to connect ****
+
+    this.setState({clientHostConnecting: true});
+
+    let registrationUrl: URL = new URL('/api/ClientRegistration/', this.state.clientHostUrl);
+
+    // **** attempt to register ourself as a client ****
+
+    var clientHostRegistration: ClientHostRegistration = {uid: '', fhirServerUrl: this.state.fhirServerUrl};
+
+    ApiHelper.apiPost<ClientHostRegistration>(registrationUrl.toString(), JSON.stringify(clientHostRegistration))
+      .then((value: ClientHostRegistration) => {
+        // **** build a new client host info object ****
+
+        let updatedClientInfo: ConnectionInformation = {...this.props.clientHostInfo, 
+          url: this.state.clientHostUrl,
+          registration: value.uid,
+          status: 'ok',
+        };
+
+        // **** attempt to connect our websocket ****
+
+        this.props.connectClientHostWebSocket(updatedClientInfo);
+
+        // **** update our parent ****
+
+        this.props.updateClientHostInfo(updatedClientInfo);
+
+        // **** flag we are done ****
+
+        this.setState({clientHostConnecting: false, clientHostConnected: true});
+      })
+      .catch((reason: any) => {
+        // **** error ****
+
+        this.setState({clientHostConnecting: false, clientHostConnected: false, clientHostMessage: 'Could not register with Client Host'});
+      })
+      ;
   }
 
   private handleTestFhirServerClick = () => {

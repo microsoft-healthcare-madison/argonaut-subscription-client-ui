@@ -5,5 +5,6 @@ export interface ConnectionInformation {
   hint: string;
   status: string;
   showMessages: boolean;
-  incomingMessageHandler: ((name: string, message: string) => void);
+  registration: string;
+  // incomingMessageHandler: ((name: string, message: string) => void);
 }
