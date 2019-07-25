@@ -25,6 +25,7 @@ import { ContentPaneProps } from '../models/ContentPaneProps';
 import { ScenarioStepInfo } from '../models/ScenarioStepInfo';
 import { ScenarioStep } from './ScenarioStep';
 
+/** Type definition for the current object's state variable */
 interface ComponentState {
 	step01: ScenarioStepInfo,
 	step02: ScenarioStepInfo,
@@ -39,6 +40,9 @@ interface ComponentState {
 	patientFilterWarningIsOpen: boolean,
 }
 
+/**
+ * Walks a user through the steps of Scenario 1
+ */
 export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
   public state: ComponentState = {
     step01: {
@@ -121,14 +125,28 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 	constructor(props: ContentPaneProps) {
 		super(props);
 
+		// **** check if we are connected to show the proper UI ***
+
 		this.checkIfConnected(props, false);
+
+		// **** register our callback handler ****
+
+		props.registerHostMessageHandler(this.handleHostMessage);
 	}
 
 	componentDidMount() {
+		// **** check if we are connected to show the proper UI ***
+
 		this.checkIfConnected(this.props, true);
+
+		// **** register our callback handler ****
+		
+		this.props.registerHostMessageHandler(this.handleHostMessage);
 	}
 
   public render() {
+
+		// **** if we are not connected, render a NonIdealState warning and nothing else ****
 
 		if (!this.state.connected) {
 			return (
@@ -146,6 +164,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			);
 		}
 
+		// **** if we are connected, render scenario content ****
     return (
       <Flex p={1} align='center' column>
         <Box px={1} w={1} m={1}>
@@ -153,18 +172,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
             <Text>
               <H3>Scenario 1 - (<a href='http://bit.ly/argo-sub-connectathon-2019-09#scenario-1' target='_blank'>Docs</a>)</H3>
               Patient Encounter notifications to a consumer app via REST-Hook
-              {/* <UL>
-                <li>(Optional) Client requests list of Topic resources from the server.</li>
-                <li>View list of returned Topic resources</li>
-                <li>User enteres Patient information to filter the Subscription</li>
-                <li>UI asks Client Host to create a REST endpoint to receive notifications on</li>
-                <li>UI builds Subscription object</li>
-                <li>UI sends Subscription request to Server, should receive status: 'requested'</li>
-                <li>Client Host will receive handshake, should notify UI</li>
-                <li>UI asks Client Host to trigger a notification</li>
-                <li>Client Host Endpoint receives notification</li>
-                <li>Client Host notifies UI of received notification</li>
-							</UL> */}
             </Text>
           </Card>
         </Box>
@@ -294,6 +301,12 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
     );
 	}
 
+	/** Callback function to process ClientHost messages */
+	private handleHostMessage = (message: string) => {
+		console.log('Scenario1 recevied:', message);
+	}
+
+	/** Function which can render a spinner if the step is available and not completed */
 	private showSpinnerIfWaiting(step: ScenarioStepInfo) {
 		if (step.available && !step.completed) {
 			return <Spinner size={Spinner.SIZE_STANDARD} />;
@@ -301,10 +314,12 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		return null;
 	}
 
+	/** Handle user clicks on the GetTopicList button */
 	private handleGetTopicListClick = () => {
 
 	}
-
+ 
+	/** Handle user clicks on the SetPatientFilter button (validate and enable next step) */
 	private handleSetPatientFilterClick = () => {
 
 		// **** validate input ****
@@ -321,9 +336,12 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		var current: ScenarioStepInfo = {...this.state.step02, completed: true};
 		var next: ScenarioStepInfo = {...this.state.step03, available: true};
 
+		// **** update our state ****
+
 		this.setState({step02: current, step03: next});
 	}
 
+	/** Handle user clicks on the CreateEndpoint button (send request to client host, on success enable next step) */
 	private handleClientHostCreateEndpointClick = () => {
 		var current: ScenarioStepInfo = {...this.state.step03, completed: true};
 		var next: ScenarioStepInfo = {...this.state.step04, available: true};
@@ -331,6 +349,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		this.setState({step03: current, step04: next});
 	}
 
+	/** Handle user clicks on the CreateSubscription button (send request to FHIR server, on success enable next step) */
 	private handleRequestSubscriptionClick = () => {
 		var current: ScenarioStepInfo = {...this.state.step04, completed: true};
 		var next: ScenarioStepInfo = {...this.state.step05, available: true};
@@ -338,6 +357,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		this.setState({step04: current, step05: next});
 	}
 
+	/** Handle user clicks on the TriggerEvent button (send request to client host) */
 	private handleRequestTriggerEventClick = () => {
 		var current: ScenarioStepInfo = {...this.state.step06, completed: true};
 		var next: ScenarioStepInfo = {...this.state.step07, available: true};
@@ -345,43 +365,37 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		this.setState({step06: current, step07: next});
 	}
 
+	/** Handle user clicks on the CleanUp button (delete Subscription from FHIR Server, Endpoint from ClientHost) */
 	private handleCleanUpClick = () => {
 
 	}
 	
+	/** Process HTML events for the patient filter text box (update state for managed) */
   private handlePatientFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({patientFilter: event.target.value})
   }
 	
+	/** Determine if the client is connected enough to proceed and update state accordingly */
 	private checkIfConnected = (nextProps: ContentPaneProps, useSetState: boolean) => {
-		var step01: ScenarioStepInfo = {...this.state.step01};
-		var step02: ScenarioStepInfo = {...this.state.step02};
+		let lastState: boolean = this.state.connected;
 		var connected: boolean = false;
 
-		// **** check to make sure we are connected to the server and host ****
+		// **** check to make sure we are connected to the host (requires server) ****
 
-		if ((this.props.clientHostInfo.status != 'ok') || (this.props.fhirServerInfo.status != 'ok')) {
-			step01.available = false;
-			step02.available = false;
+		if (nextProps.clientHostInfo.status != 'ok') {
 			connected = false;
 		} else {
-			step01.available = true;
-			step02.available = true;
 			connected = true;
 		}
 
 		// **** update state (if necessary) ****
 
-		if ((step01.available != this.state.step01.available) ||
-				(step02.available != this.state.step02.available)) {
-			
+		if (connected !== lastState) {
 			// **** check if we are using setState (cannot be used from constructor) ****
 
 			if (useSetState) {
-				this.setState({step01: step01, step02: step02, connected: connected});
+				this.setState({connected: connected});
 			} else {
-				this.state.step01 = step01;
-				this.state.step02 = step02;
 				this.state.connected = connected;
 			}
 		}

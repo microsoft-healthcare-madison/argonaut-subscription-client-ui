@@ -1,32 +1,10 @@
 import * as React from 'react';
 
 import { 
-  Flex, 
-  Box 
-} from 'reflexbox';
-
-import { 
-  Button, 
-  Collapse,
-  Icon,
   IconName,
-  InputGroup,
-  Intent,
-  Tab,
-  TabId,
-  Tabs,
-  Navbar,
-  Classes,
-  NavbarHeading,
-  NavbarGroup,
-  NavbarDivider,
-  Alignment,
-  AnchorButton,
-  Text,
   Toaster,
   Position,
   IToasterProps,
-  IToastProps,
   IToaster,
 } from '@blueprintjs/core';
 
@@ -41,8 +19,7 @@ import { ConnectionInformation } from '../models/ConnectionInformation';
 import { ContentPaneProps } from '../models/ContentPaneProps';
 import { TriggerPane } from './TriggerPane';
 
-// **** tab configuration - MUST be in 'id' order - first tab is shown at launch ****
-
+/** tab configuration - MUST be in 'id' order - first tab is shown at launch */
 let _tabs: UiTabInformation[] = [
   {title: 'Configuration', id: '0', panel: React.createFactory(ConfigurationPane)},
   {title: 'Scenario 1', id: '1', panel: React.createFactory(Scenario1Pane)},
@@ -50,11 +27,11 @@ let _tabs: UiTabInformation[] = [
   {title: 'Triggers', id: '3', panel: React.createFactory(TriggerPane)},
 ]
 
+/** Type definition for the current object's state variable */
 interface ComponentState {
   selectedNavbarTabId: string;
   fhirServerInfo: ConnectionInformation;
   clientHostInfo: ConnectionInformation;
-  toaster?: IToaster;
 }
 
 export interface MainPageProps {}
@@ -69,7 +46,6 @@ export class MainPage extends React.PureComponent<MainPageProps> {
           status: '', 
           showMessages: false,
           registration: '',
-          // incomingMessageHandler: ((name: string, message: string) => {}),
         },
       clientHostInfo: {
         name: 'Client Host', 
@@ -78,26 +54,26 @@ export class MainPage extends React.PureComponent<MainPageProps> {
         status: '', 
         showMessages: true,
         registration: '',
-        // incomingMessageHandler: ((name: string, message: string) => {}),
       },
   };
 
-  // **** web socket for connecting to the client host, do not make part of state ****
-
+  /** WebSocket object for communicating with the client host */
   private _clientHostWebSocket: WebSocket | null = null;
 
-  constructor(props: MainPageProps) {
-    super(props);
+  /** Callback function in the active pane to handle WebSocket ClientHost notifications */
+  private _paneHostMessageHandler: ((message: string) => void) | null = null;
 
-    // this.state.clientHostInfo.incomingMessageHandler = this.clientHostMessageHandler;
-    // this.updateFhirServerInfo = this.updateFhirServerInfo.bind(this);
-    // this.updateClientHostInfo = this.updateClientHostInfo.bind(this);
-    // this.onSelectedTabChanged = this.onSelectedTabChanged.bind(this);
-  }
+  /** Toaster display object */
+  private _toaster: IToaster|null = null;
+
+  // constructor(props: MainPageProps) {
+  //   super(props);
+  // }
 
   public render() {
     return (
       <div>
+        {/* Render the navigation bar */}
         <MainNavigation 
           selectedTabId={this.state.selectedNavbarTabId} 
           tabs={_tabs} 
@@ -107,56 +83,72 @@ export class MainPage extends React.PureComponent<MainPageProps> {
           />
 
         {/* Render the correct content pane, as selected in our tabs above */}
-
         { _tabs[Number(this.state.selectedNavbarTabId)].panel({
           fhirServerInfo: this.state.fhirServerInfo,
           clientHostInfo: this.state.clientHostInfo,
           updateFhirServerInfo: this.updateFhirServerInfo,
           updateClientHostInfo: this.updateClientHostInfo,
           connectClientHostWebSocket: this.connectToClientHostWebSocket,
+          registerHostMessageHandler: this.registerPaneClientHostMessageHandler,
         }) }
-
-        {/* <Button onClick={() => this.state.clientHostInfo.incomingMessageHandler('Me', 'Test')}>Test</Button> */}
 
       </div>
     );
   }
 
+  /** Callback function to allow panes to register to receive client host notifications (max: 1) */
+  private registerPaneClientHostMessageHandler = (handler: ((message: string) => void)) => {
+    this._paneHostMessageHandler = handler;
+  }
+
+  /** Function to process client host messages received via the WebSocket */
   private clientHostMessageHandler = (event: MessageEvent) => {
+    // **** display to user ****
+
     this.showToastMessage(event.data, IconNames.CLOUD_DOWNLOAD, 2000);
+
+    // **** propagate (if necessary) ****
+
+    if (this._paneHostMessageHandler !== null) {
+      this._paneHostMessageHandler(event.data);
+    }
   }
   
+  /** Function to display a short-lived message on the main UI */
   private showToastMessage = (message: string, iconName?: IconName, timeout?: number) => {
     let toaster: IToaster = this.getOrCreateToaster();
     toaster.show({message: message, icon: iconName, timeout: timeout});
   }
 
+  /** Function to either get the current Toast (short message) object, or create a new one */
   private getOrCreateToaster = () => {
-    if (!this.state.toaster) {
+    if (!this._toaster) {
+      // **** configure our toaster display ****
+
       var toasterProps: IToasterProps = {
         autoFocus: false,
         canEscapeKeyClear: true,
         position: Position.TOP,
       }
-      let toaster = Toaster.create(toasterProps, document.body);
-  
-      this.setState({toaster: toaster});
 
-      return toaster;
+      // **** static create the toaster on the DOM ****
+      this._toaster = Toaster.create(toasterProps, document.body);
     }
 
-    return this.state.toaster;
-  } 
+    return this._toaster;
+  }
 
+  /** Callback function to allow panes to update the FHIR Server info */
   private updateFhirServerInfo = (updatedInfo: ConnectionInformation) => {
     this.setState({fhirServerInfo: updatedInfo});
   }
 
+  /** Callback function to allow panes to update the Client Host info */
   private updateClientHostInfo = (updatedInfo: ConnectionInformation) => {
 
-    // **** check for disconnection ****
+    // **** close any existing Client Host websocket connections  ****
 
-    if ((updatedInfo.status !== 'ok') && (this._clientHostWebSocket)) {
+    if (this._clientHostWebSocket) {
       this._clientHostWebSocket.onmessage = null;
       this._clientHostWebSocket.close();
       this._clientHostWebSocket = null;
@@ -167,11 +159,21 @@ export class MainPage extends React.PureComponent<MainPageProps> {
     this.setState({clientHostInfo: updatedInfo});
   }
 
+  /** Callback handler for when MainNavigation changes the active tab */
   private onSelectedTabChanged = (id: string) => {
     this.setState({selectedNavbarTabId: id});
   }
 
+  /** Function to connect a ClientHost WebSocket to the specified host (max: 1) */
   private connectToClientHostWebSocket = (clientHostInfo: ConnectionInformation) => {
+    // **** close any existing Client Host websocket connections  ****
+
+    if (this._clientHostWebSocket) {
+      this._clientHostWebSocket.onmessage = null;
+      this._clientHostWebSocket.close();
+      this._clientHostWebSocket = null;
+    }
+
     // **** build the websocket URL ****
 
     let wsUrl: URL = new URL('/websockets?uid='+clientHostInfo.registration, clientHostInfo.url.replace('http', 'ws'));

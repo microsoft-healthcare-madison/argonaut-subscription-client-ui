@@ -6,4 +6,5 @@ export interface ContentPaneProps {
   updateFhirServerInfo: ((fhirServerInfo: ConnectionInformation) => void);
   updateClientHostInfo: ((clientHostInfo: ConnectionInformation) => void);
   connectClientHostWebSocket: ((clientHostInfo: ConnectionInformation) => void);
+  registerHostMessageHandler: ((handler: ((message: string) => void)) => void);
 }
