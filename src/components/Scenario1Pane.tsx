@@ -17,7 +17,7 @@ import {
   Elevation,
   UL,
   Text,
-  H1, H2, H3, H4, H5, Spinner, Popover
+  H1, H2, H3, H4, H5, Spinner, Popover, NonIdealState
 } from '@blueprintjs/core';
 
 import {IconNames} from "@blueprintjs/icons";
@@ -129,6 +129,23 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 	}
 
   public render() {
+
+		if (!this.state.connected) {
+			return (
+				<Flex p={1} align='center' column>
+        	<Box px={1} w={1} m={1}>
+						<Card elevation={Elevation.TWO}>
+							<NonIdealState
+								icon={IconNames.ISSUE}
+								title='Not Connected to Client Host'
+								description='You must be connected to a FHIR Server and Client Host before running this scenario.'
+								/>
+						</Card>
+					</Box>
+				</Flex>
+			);
+		}
+
     return (
       <Flex p={1} align='center' column>
         <Box px={1} w={1} m={1}>
@@ -148,8 +165,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
                 <li>Client Host Endpoint receives notification</li>
                 <li>Client Host notifies UI of received notification</li>
 							</UL> */}
-							
-							{this.showNotConnectedWarning(this.state.connected)}
             </Text>
           </Card>
         </Box>
@@ -337,22 +352,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
   private handlePatientFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({patientFilter: event.target.value})
   }
-
-	private showNotConnectedWarning = (connected: boolean) => {
-		if (connected) {
-			return null;
-		}
-
-		return (
-			<H5 style={{ display: 'flex', justifyContent: 'center', marginTop: 15 }}>
-				<Icon icon={IconNames.WARNING_SIGN} intent={Intent.DANGER} iconSize={Icon.SIZE_LARGE} />
-				&nbsp;&nbsp;
-				You MUST connect to a FHIR Server and Client Host before running this scenario!
-				&nbsp;&nbsp;
-				<Icon icon={IconNames.WARNING_SIGN} intent={Intent.DANGER} iconSize={Icon.SIZE_LARGE} />
-			</H5>
-			);
-	}
 	
 	private checkIfConnected = (nextProps: ContentPaneProps, useSetState: boolean) => {
 		var step01: ScenarioStepInfo = {...this.state.step01};
