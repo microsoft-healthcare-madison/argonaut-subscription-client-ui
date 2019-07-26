@@ -168,7 +168,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
           <Card elevation={Elevation.TWO}>
             <Text>
               <H3>Scenario 1 - (<a href='http://bit.ly/argo-sub-connectathon-2019-09#scenario-1' target='_blank'>Docs</a>)</H3>
-              Patient Encounter notifications to a consumer app via REST-Hook
+              Single-Patient Encounter notifications via REST-Hook (e.g., to a consumer app)
             </Text>
           </Card>
         </Box>
@@ -300,7 +300,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 	/** Callback function to process ClientHost messages */
 	private handleHostMessage = (message: string) => {
-		console.log('Scenario1 recevied:', message);
+		// console.log('Scenario1 recevied:', message);
 	}
 
 	/** Function which can render a spinner if the step is available and not completed */

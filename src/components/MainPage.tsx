@@ -44,6 +44,7 @@ export class MainPage extends React.PureComponent<MainPageProps> {
           url: 'http://localhost:56340/', 
           status: '', 
           showMessages: false,
+          logMessages: false,
           registration: '',
         },
       clientHostInfo: {
@@ -52,6 +53,7 @@ export class MainPage extends React.PureComponent<MainPageProps> {
         url: 'http://localhost:56345/', 
         status: '', 
         showMessages: true,
+        logMessages: false,
         registration: '',
       },
   };
@@ -102,9 +104,17 @@ export class MainPage extends React.PureComponent<MainPageProps> {
 
   /** Function to process client host messages received via the WebSocket */
   private clientHostMessageHandler = (event: MessageEvent) => {
-    // **** display to user ****
+    // **** display to user (if desired) ****
 
-    this.showToastMessage(event.data, IconNames.CLOUD_DOWNLOAD, 2000);
+    if (this.state.clientHostInfo.showMessages) {
+      this.showToastMessage(event.data, IconNames.CLOUD_DOWNLOAD, 2000);
+    }
+
+    // **** log to the console (if desired) ****
+
+    if (this.state.clientHostInfo.logMessages) {
+      console.log('ClientHost:', event.data);
+    }
 
     // **** propagate (if necessary) ****
 
@@ -177,8 +187,6 @@ export class MainPage extends React.PureComponent<MainPageProps> {
 
     let wsUrl: URL = new URL('/websockets?uid='+clientHostInfo.registration, clientHostInfo.url.replace('http', 'ws'));
 
-    console.log('Requesting WS connection to:', wsUrl);
-
     // **** connect to our server ****
 
     this._clientHostWebSocket = new WebSocket(wsUrl.toString());
@@ -186,5 +194,40 @@ export class MainPage extends React.PureComponent<MainPageProps> {
     // **** setup our receive handler ****
 
     this._clientHostWebSocket.onmessage = this.clientHostMessageHandler;
+
+    // **** setup an error handler to disconnect ****
+
+    this._clientHostWebSocket.onerror = this.handleClientHostWebSocketError;
+    this._clientHostWebSocket.onclose = this.handleClientHostWebSocketClose;
+
+    // **** tell the user we are connected ****
+
+    this.showToastMessage('Connected to Client Host', IconNames.INFO_SIGN, 3000);
+  }
+
+  private handleClientHostWebSocketError = (event: Event) => {
+    // **** close our websocket ****
+
+    var updatedInfo: ConnectionInformation = {...this.state.clientHostInfo, 
+      status: ''
+    };
+    this.updateClientHostInfo(updatedInfo);
+
+    // **** warn the user ****
+
+    this.showToastMessage('Communication Error with Client Host', IconNames.ERROR, 5000);
+  }
+
+  private handleClientHostWebSocketClose = (event: Event) => {
+    // **** close our websocket ****
+
+    var updatedInfo: ConnectionInformation = {...this.state.clientHostInfo, 
+      status: ''
+    };
+    this.updateClientHostInfo(updatedInfo);
+
+    // **** warn the user ****
+
+    this.showToastMessage('Disconnected from Client Host', IconNames.INFO_SIGN, 3000);
   }
 }

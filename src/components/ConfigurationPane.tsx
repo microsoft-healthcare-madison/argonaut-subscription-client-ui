@@ -12,6 +12,7 @@ import {
   Intent,
   FormGroup,
   Elevation,
+  Switch,
 } from '@blueprintjs/core';
 
 import { ContentPaneProps } from '../models/ContentPaneProps';
@@ -50,10 +51,31 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
     
     this.state.fhirServerUrl = props.fhirServerInfo.url;
     this.state.clientHostUrl = props.clientHostInfo.url;
+
+    this.state.fhirServerConnected = props.fhirServerInfo.status === 'ok';
+    this.state.clientHostConnected = props.clientHostInfo.status === 'ok';
+  }
+
+  componentWillReceiveProps(nextProps: ContentPaneProps) {
+    var serverConnected: boolean = false;
+    
+    if (nextProps.fhirServerInfo.status === 'ok') {
+      serverConnected = true;
+    }
+
+    var clientConnected: boolean = false;
+
+    if (nextProps.clientHostInfo.status === 'ok') {
+      clientConnected = true;
+    }
+
+    if ((serverConnected !== this.state.fhirServerConnected) || 
+        (clientConnected !== this.state.clientHostConnected)) {
+      this.setState({fhirServerConnected: serverConnected, clientHostConnected: clientConnected});
+    }
   }
 
   componentDidMount() {
-
     var serverConnected: boolean = false;
     
     if (this.props.fhirServerInfo.status === 'ok') {
@@ -104,15 +126,45 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
               onClick={this.handleConnectClick}
               intent={this.state.clientHostConnected ? Intent.WARNING : Intent.PRIMARY}
               style={{margin: 5}}
+              key={'ConnectButton_'+this.props.clientHostInfo.status}
               >
               {this.state.clientHostConnected ? 'Disconnect' : 'Connect'}
             </Button>
             {/* {this.props.clientHostInfo.status === 'ok' ? 'Connected' : 'Not Connected'} */}
 
+
+            <Switch
+              checked={this.props.clientHostInfo.showMessages}
+              label='Display Client Host Messages'
+              onChange={this.handleToggleShowClientHostMessages}
+              style={{margin: 5}}
+              />
+            
+            <Switch
+              checked={this.props.clientHostInfo.logMessages}
+              label='Console Log Client Host Messages'
+              onChange={this.handleToggleLogClientHostMessages}
+              style={{margin: 5}}
+              />
+
           </Card>
         </Box>
       </Flex>
     );
+  }
+
+  private handleToggleShowClientHostMessages = () => {
+    var updatedInfo: ConnectionInformation = {...this.props.clientHostInfo, 
+      showMessages: !this.props.clientHostInfo.showMessages
+    };
+    this.props.updateClientHostInfo(updatedInfo);
+  }
+
+  private handleToggleLogClientHostMessages = () => {
+    var updatedInfo: ConnectionInformation = {...this.props.clientHostInfo, 
+      logMessages: !this.props.clientHostInfo.logMessages
+    };
+    this.props.updateClientHostInfo(updatedInfo);
   }
 
 	/** Process HTML events for the FHIR Server URL text box (update state for managed) */
@@ -197,7 +249,7 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
 
     // **** construct the registration REST url ****
 
-    let registrationUrl: URL = new URL('/api/ClientRegistration/', this.state.clientHostUrl);
+    let registrationUrl: URL = new URL('/api/Clients/', this.state.clientHostUrl);
 
     // **** attempt to register ourself as a client ****
 

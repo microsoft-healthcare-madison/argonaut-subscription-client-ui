@@ -87,8 +87,8 @@ export class MainNavigation extends React.PureComponent<MainNavigationProps> {
           {/* Right side of nav-bar desktop */}
           { !this.state.renderSmall &&
           <NavbarGroup align={Alignment.RIGHT}>
-            <NavbarHeading>{this.props.fhirServerInfo.name}: {this.iconForStatus(this.props.fhirServerInfo.status)}</NavbarHeading>
-            <NavbarHeading>{this.props.clientHostInfo.name}: {this.iconForStatus(this.props.clientHostInfo.status)}</NavbarHeading>
+            <NavbarHeading>{this.iconForStatus(this.props.fhirServerInfo.status)} {this.props.fhirServerInfo.name}</NavbarHeading>
+            <NavbarHeading>{this.iconForStatus(this.props.clientHostInfo.status)} {this.props.clientHostInfo.name}</NavbarHeading>
             <NavbarDivider />
             <AnchorButton
               href='http://github.com/microsoft-healthcare-madison/argonaut-subscription-client-ui'
@@ -178,15 +178,15 @@ export class MainNavigation extends React.PureComponent<MainNavigationProps> {
   private iconForStatus = (status: string) => {
     switch (status) {
       case 'connecting':
-        return <Icon icon={IconNames.DOT} intent={Intent.NONE} />;
+        return <Icon icon={IconNames.DOT} intent={Intent.NONE} iconSize={Icon.SIZE_LARGE} />;
       case 'testing':
-        return <Icon icon={IconNames.DOT} intent={Intent.NONE} />;
+        return <Icon icon={IconNames.DOT} intent={Intent.NONE} iconSize={Icon.SIZE_LARGE} />;
       case 'ok':
-        return <Icon icon={IconNames.TICK} intent={Intent.PRIMARY} />;
+        return <Icon icon={IconNames.DOT} intent={Intent.PRIMARY} iconSize={Icon.SIZE_LARGE} />;
       case 'error':
-          return <Icon icon={IconNames.CROSS} intent={Intent.WARNING} />;
+          return <Icon icon={IconNames.DOT} intent={Intent.WARNING} iconSize={Icon.SIZE_LARGE} />;
       default:
-          return '-';
+          return <Icon icon={IconNames.DOT} intent={Intent.NONE} iconSize={Icon.SIZE_LARGE} />;
     }
   };
 
