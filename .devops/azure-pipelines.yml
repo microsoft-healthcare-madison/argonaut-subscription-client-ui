@@ -12,12 +12,10 @@ variables:
   k8s_namespace: subscriptions-ri
 
 steps:
-- name: build
-  bash: docker build -t $(ui_tag) -f .devops/Dockerfile .
+- bash: docker build -t $(ui_tag) -f .devops/Dockerfile .
+  name: build
   
-- name: deploy
-  condition: "and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))"
-  bash: |
+- bash: |
     az login --service-principal --username $(appId) --password $(password) --tenant $(tenant)
     az aks get-credentials --resource-group $(aks_resource_group) --name $(aks_cluster_name)
     az acr login --name $(acr_registry_name)
@@ -25,3 +23,5 @@ steps:
     kubectl -n $(k8s_namespace) patch deployment ui  \
       --type json \
       --patch "[{ \"op\" : \"replace\" , \"path\" : \"/spec/template/spec/containers/0/image\" , \"value\" : \"$(ui_tag)\"}]"
+  name: deploy
+  condition: "and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))"
