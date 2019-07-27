@@ -8,8 +8,9 @@ trigger:
 
 pool:
   vmImage: 'ubuntu-latest'
-
-- script: |
+  
+steps:
+- bash: |
     echo "buildling"
     pwd
     npm install
