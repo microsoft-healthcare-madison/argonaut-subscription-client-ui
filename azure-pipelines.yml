@@ -1,0 +1,21 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+- script: |
+    echo "buildling"
+    pwd
+    npm install
+    npm run-script build
+    docker --version
+    az --version
+    echo "From env1: $(env1)"
+    echo "From env2: $(env2)"
+  displayName: 'Build'
