@@ -7,7 +7,8 @@ pool:
 variables:
   ui_tag: argonautcontainerregistry.azurecr.io/subscriptions/ui:$(Build.BuildNumber)
   aks_resource_group: argonaut
-  aks_name: argonaut-cluster
+  aks_cluster_name: argonaut-cluster
+  acr_registry_name: argonautContainerRegistry
   k8s_namespace: subscriptions-ri
 
 steps:
@@ -17,8 +18,8 @@ steps:
   
 - bash: |
     az login --service-principal --username $(appId) --password $(password) --tenant $(tenant)
-    az aks get-credentials --resource-group $(aks_resource_group) --name $(aks_name)
-    az acr login --name argonautContainerRegistry
+    az aks get-credentials --resource-group $(aks_resource_group) --name $(aks_cluster_name)
+    az acr login --name $(acr_registry_name)
     
     docker push $(ui_tag)
 
