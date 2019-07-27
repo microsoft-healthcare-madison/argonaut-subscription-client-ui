@@ -1,22 +1,29 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
 - master
 
 pool:
   vmImage: 'ubuntu-latest'
-  
+
+variables:
+  ui_tag: argonautcontainerregistry.azurecr.io/subscriptions/ui:$(Build.BuildNumber)
+  aks_resource_group: argonaut
+  aks_name: argonaut-cluster
+  k8s_namespace: subscriptions-ri
+
 steps:
 - bash: |
-    echo "buildling"
-    pwd
-    npm install
-    npm run-script build
-    docker --version
-    az --version
-    echo "From env1: $(env1)"
-    echo "From env2: $(env2)"
-  displayName: 'Build'
+    docker build -t $(ui_tag) -f .devops/Dockerfile .
+  name: build
+  
+- bash: |
+    az login --service-principal --username $(appId) --password $(password) --tenant $(tenant)
+    az aks get-credentials --resource-group $(aks_resource_group) --name $(aks_name)
+    az acr login --name argonautContainerRegistry
+    
+    docker push $(ui_tag)
+
+    kubectl -n $(k8s_namespace) patch deployment ui  \
+      --type json \
+      --patch "[{ \"op\" : \"replace\" , \"path\" : \"/spec/template/spec/containers/0/image\" , \"value\" : \"$(ui_tag)\"}]"
+  name: deploy
+  condition: "and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))"
