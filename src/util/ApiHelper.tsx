@@ -10,9 +10,9 @@ export class ApiHelper {
       })
       .then(response => {
         if (!response.ok) {
-          throw new Error(response.statusText)
+          throw new Error(response.statusText);
         }
-        return response.json() as Promise<T>
+        return response.json() as Promise<T>;
       })
   }
 
@@ -27,9 +27,28 @@ export class ApiHelper {
       })
       .then(response => {
         if (!response.ok) {
-          throw new Error(response.statusText)
+          throw new Error(response.statusText);
         }
-        return response.json() as Promise<T>
+        return response.json() as Promise<T>;
+      })
+  }
+
+  static apiDelete(url: string): Promise<boolean> {
+    return fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(response.statusText);
+        }
+        return true;
+      })
+      .catch(reason => {
+        return false;
       })
   }
 }

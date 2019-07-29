@@ -153,6 +153,7 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
     );
   }
 
+  /** Event handler for toggling the Show Client Host Messages switch */
   private handleToggleShowClientHostMessages = () => {
     var updatedInfo: ConnectionInformation = {...this.props.clientHostInfo, 
       showMessages: !this.props.clientHostInfo.showMessages
@@ -160,6 +161,7 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
     this.props.updateClientHostInfo(updatedInfo);
   }
 
+  /** Event handler for toggling the Log Client Host Messages switch */
   private handleToggleLogClientHostMessages = () => {
     var updatedInfo: ConnectionInformation = {...this.props.clientHostInfo, 
       logMessages: !this.props.clientHostInfo.logMessages
@@ -204,7 +206,11 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
     this.connectClientHost();
   }
 
+  /** Disconnect our client from the connected FHIR Server */
   private disconnectServer = () => {
+
+    // **** flag we are no longer connected to the fhir server ****
+
     var updatedInfo: ConnectionInformation = {...this.props.fhirServerInfo, 
       status: ''
     };
@@ -215,7 +221,18 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
     this.setState({fhirServerConnected: false});
   }
 
+  /** Disconnect our client from the connected Client Host */
   private disconnectClientHost = () => {
+    // **** construct the registration REST url ****
+
+    let url: URL = new URL(`/api/Clients/${this.props.clientHostInfo.registration}/`, this.state.clientHostUrl);
+
+    // **** unregister this client ****
+
+    ApiHelper.apiDelete(url.toString());
+    
+    // **** flag we are no longer connected to the client host ****
+
     var updatedInfo: ConnectionInformation = {...this.props.clientHostInfo, 
       status: ''
     };
@@ -226,6 +243,7 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
     this.setState({clientHostConnected: false});
   }
 
+  /** Connect our client to a FHIR Server */
   private connectServer = () => {
     // **** flag we are attempting to connect to the server ****
 
@@ -242,6 +260,7 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
     this.setState({fhirServerConnecting: false, fhirServerConnected: true});
   }
 
+  /** Connect our client to a Client Host (register and connect websocket) */
   private connectClientHost = () => {
     // **** try to connect to the client ****
 

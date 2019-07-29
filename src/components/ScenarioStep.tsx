@@ -10,6 +10,8 @@ import {
   Blockquote,
   Icon,
   Intent,
+  Spinner,
+  Pre,
 } from '@blueprintjs/core';
 
 import {IconNames} from '@blueprintjs/icons';
@@ -17,6 +19,7 @@ import { ScenarioStepInfo } from '../models/ScenarioStepInfo';
 
 export interface ScenarioStepProps {
   step: ScenarioStepInfo,
+  showBusy: boolean,
 }
 
 
@@ -28,10 +31,17 @@ export class ScenarioStep extends React.PureComponent<ScenarioStepProps> {
         <Card>
           <H5>{this.iconForStep()} Step {this.props.step.stepNumber}{this.props.step.optional ? ' (Optional)' : ''}: {this.props.step.heading}</H5>
           <H6>{this.props.step.description}</H6>
-          {this.props.children}
-          <Blockquote>
+          {this.props.showBusy && 
+          <Spinner />
+          }
+          {(!this.props.showBusy) &&
+          this.props.children
+          }
+          {this.props.step.data &&
+          <Pre style={{margin: 5}}>
             {this.props.step.data}
-          </Blockquote>
+          </Pre>
+          }
         </Card>
       </Box>
     );
