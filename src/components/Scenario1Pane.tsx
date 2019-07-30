@@ -41,6 +41,7 @@ interface ComponentState {
 	endpointName: string,
 	endpointNameWarningIsOpen: boolean,
 	endpoint: EndpointRegistration | null,
+	subscription: fhir.Subscription | null,
 }
 
 /**
@@ -134,6 +135,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		endpointName: '',
 		endpointNameWarningIsOpen: false,
 		endpoint: null,
+		subscription: null,
 	};
 
 	constructor(props: ContentPaneProps) {
@@ -347,7 +349,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 	/** Handle user clicks on the GetTopicList button */
 	private handleGetTopicListClick = () => {
-
 		// **** update step ****
 
 		var busyStep: ScenarioStepInfo = {...this.state.step01, showBusy: true };
@@ -429,7 +430,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 	/** Handle user clicks on the CreateEndpoint button (send request to client host, on success enable next step) */
 	private handleClientHostCreateEndpointClick = () => {
-
 		// **** grab current input, filtered to alpha-numeric ****
 
 		var endpointName: string = this.state.endpointName.replace(/[^a-z0-9]/gi,'');
@@ -446,6 +446,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		// **** update step ****
 
 		var busyStep: ScenarioStepInfo = {...this.state.step03, showBusy: true };
+
+		// TODO(ginoc): destroy any existing endpoints
 
 		// **** flag we are asking to create the endpoint (busy) ****
 
@@ -500,17 +502,103 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				// **** request failed ****
 
 				this.setState({step03: current});
-			})
+			});
+	}
 
-
+	private getInstantFromDate = (date: Date) => {
+		return (
+			date.getFullYear() +
+			((date.getMonth() < 9) ? '0' : '') + (date.getMonth()+1) +
+			((date.getDate() < 10) ? '0' : '') + date.getDate() +
+			((date.getHours() < 10) ? '0' : '') + date.getHours() +
+			((date.getMinutes() < 10) ? '0' : '') + date.getMinutes() +
+			((date.getSeconds() < 10) ? '0' : '') + date.getSeconds() 
+			)
+			;
 	}
 
 	/** Handle user clicks on the CreateSubscription button (send request to FHIR server, on success enable next step) */
 	private handleRequestSubscriptionClick = () => {
-		var current: ScenarioStepInfo = {...this.state.step04, completed: true};
-		var next: ScenarioStepInfo = {...this.state.step05, available: true};
+		// **** update step ****
 
-		this.setState({step04: current, step05: next});
+		let busyStep: ScenarioStepInfo = {...this.state.step04, showBusy: true};
+
+		// TODO(ginoc): destroy any existing Subscriptions
+
+		// **** flag we are asking to create the subscription (busy) ****
+
+		this.setState({step04: busyStep, subscription: null});
+
+		// **** build the url for our call ***
+
+    let url: URL = new URL('/baseR4/Subscription/', this.props.fhirServerInfo.url);
+ 
+		// **** build our subscription channel information ****
+
+		let channel: fhir.SubscriptionChannel = {
+			endpoint: `${this.props.clientHostInfo.url}Endpoints/${this.state.endpoint!.urlPart}`,
+			header: [],
+			heartbeatPeriod: 60,
+			payload: {content: 'id-only', contentType: 'application/fhir+json'},
+			type: { text: 'rest-hook'},
+		}
+
+		// **** build our filter information ****
+
+		let filter: fhir.SubscriptionFilterBy = {
+			matchType: '=',
+			name: 'Patient',
+			value: `Patient/${this.state.patientFilter}`
+		}
+
+		var expirationTime:Date = new Date();
+		expirationTime.setHours(expirationTime.getHours() + 1);
+
+		// **** build the subscription object ****
+
+		let subscription: fhir.Subscription = {
+			channel: channel,
+			filterBy: [filter],
+			end: this.getInstantFromDate(expirationTime),
+			topic: {reference:  new URL('/baseR4/Topic/admissions', this.props.fhirServerInfo.url).toString()},
+			reason: 'Client Testing',
+			status: 'requested',
+		}
+
+		// **** post our request to the server ****
+
+		ApiHelper.apiPost<fhir.Subscription>(url.toString(), JSON.stringify(subscription))
+			.then((value: fhir.Subscription) => {
+				// **** update steps ****
+
+				var current: ScenarioStepInfo = {...this.state.step04, completed: true, showBusy: false};
+				var next: ScenarioStepInfo = {...this.state.step05, available: true};
+	
+				// **** show the client subscription information ****
+
+				current.data = `Subscription Created (${url.toString()}):\n` +
+					`${JSON.stringify(subscription, null, '\t')}` +
+					'';
+		
+				// **** update our state ****
+
+				this.setState({
+					step04: current, 
+					step05: next, 
+					subscription: value,
+				});
+			})
+			.catch((reason: any) => {
+				
+				var current: ScenarioStepInfo = {...this.state.step04, 
+					data: 'Request for Subscription failed! Please try again.',
+					showBusy: false,
+					};
+
+				// **** request failed ****
+
+				this.setState({step04: current});
+			});
 	}
 
 	/** Handle user clicks on the TriggerEvent button (send request to client host) */

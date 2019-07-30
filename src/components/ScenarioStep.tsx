@@ -44,7 +44,8 @@ export class ScenarioStep extends React.PureComponent<ScenarioStepProps> {
           }
           {(!this.props.step.showBusy) &&
             this.props.children
-          } { this.props.step.data &&
+          }
+          { this.props.step.data &&
             <Button
               onClick={this.handleToggleDataClick}
               minimal={true}
@@ -52,7 +53,6 @@ export class ScenarioStep extends React.PureComponent<ScenarioStepProps> {
               icon={this.state.showData ? IconNames.CHEVRON_DOWN : IconNames.CHEVRON_RIGHT}
               />
           }
-
           { (this.props.step.data && this.state.showData) &&
             <Pre style={{margin: 5}}>
               {this.props.step.data}
