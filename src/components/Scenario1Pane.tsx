@@ -23,6 +23,7 @@ import { ScenarioStepInfo } from '../models/ScenarioStepInfo';
 import { ScenarioStep } from './ScenarioStep';
 import { EndpointRegistration, EndpointChannelType } from '../models/EndpointRegistration';
 import { ApiHelper } from '../util/ApiHelper';
+import { fhir } from '../models/fhir_r4_selected';
 
 /** Type definition for the current object's state variable */
 interface ComponentState {
@@ -37,7 +38,6 @@ interface ComponentState {
 	connected: boolean,
 	patientFilter: string,
 	patientFilterWarningIsOpen: boolean,
-	askingForEndpoint: boolean,
 	endpointName: string,
 	endpointNameWarningIsOpen: boolean,
 	endpoint: EndpointRegistration | null,
@@ -55,6 +55,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			optional: true,
 			available: true,
 			completed: false,
+			showBusy: false,
 			data: ''
 		},
 		step02: {
@@ -64,6 +65,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			optional: false,
 			available: true,
 			completed: false,
+			showBusy: false,
 			data: ''
 		},
 		step03: {
@@ -73,6 +75,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			optional: false,
 			available: false,
 			completed: false,
+			showBusy: false,
 			data: ''
 		},
 		step04: {
@@ -82,6 +85,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			optional: false,
 			available: false,
 			completed: false,
+			showBusy: false,
 			data: ''
 		},
 		step05: {
@@ -91,6 +95,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			optional: false,
 			available: false,
 			completed: false,
+			showBusy: false,
 			data: ''
 		},
 		step06: {
@@ -100,6 +105,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			optional: false,
 			available: false,
 			completed: false,
+			showBusy: false,
 			data: ''
 		},
 		step07: {
@@ -109,6 +115,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			optional: false,
 			available: false,
 			completed: false,
+			showBusy: false,
 			data: ''
 		},
 		step08: {
@@ -118,12 +125,12 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			optional: true,
 			available: true,
 			completed: false,
+			showBusy: false,
 			data: ''
 		},
 		connected: true,
-		patientFilter: '',
+		patientFilter: '123',
 		patientFilterWarningIsOpen: false,
-		askingForEndpoint: false,
 		endpointName: '',
 		endpointNameWarningIsOpen: false,
 		endpoint: null,
@@ -184,7 +191,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
         </Box>
 
 				{/* Get Topic list from FHIR Server */}
-        <ScenarioStep step={this.state.step01} showBusy={false}>
+        <ScenarioStep step={this.state.step01}>
           <div>
             <Button
 							disabled={!this.state.step01.available}
@@ -192,15 +199,11 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
               >
               Go
             </Button>
-            <Button
-              >
-              Toggle Results
-            </Button>
           </div>
         </ScenarioStep>
 
 				{/* Set Patient filter */}
-        <ScenarioStep step={this.state.step02} showBusy={false}>
+        <ScenarioStep step={this.state.step02}>
           <div>
 						<FormGroup
               label = 'Patient filter'
@@ -242,7 +245,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
         </ScenarioStep>
 
 				{/* Ask Client Host to create Endpoint */}
-        <ScenarioStep step={this.state.step03} showBusy={this.state.askingForEndpoint}>
+        <ScenarioStep step={this.state.step03}>
 					<div>
 						<FormGroup
               label = 'Endpoint name'
@@ -284,7 +287,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				</ScenarioStep>
 
 				{/* Request Subscription on FHIR Server */}
-        <ScenarioStep step={this.state.step04} showBusy={false}>
+        <ScenarioStep step={this.state.step04}>
 					<div>
 						<Button
 							disabled={!this.state.step04.available}
@@ -296,15 +299,14 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				</ScenarioStep>
 
 				{/* Wait on Endpoint handshake */}
-        <ScenarioStep step={this.state.step05} showBusy={false}>
+        <ScenarioStep step={this.state.step05}>
 					<div>
-						{ this.showSpinnerIfWaiting(this.state.step05) }
 						{/* <Spinner /> */}
 					</div>
 				</ScenarioStep>
 
 				{/* Ask Client Host to trigger event */}
-        <ScenarioStep step={this.state.step06} showBusy={false}>
+        <ScenarioStep step={this.state.step06}>
 					<div>
 						<Button
 							disabled={!this.state.step06.available}
@@ -316,14 +318,14 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				</ScenarioStep>
 
 				{/* Wait on Subscription Notification */}
-        <ScenarioStep step={this.state.step07} showBusy={false}>
+        <ScenarioStep step={this.state.step07}>
 					<div>
 						{/* <Spinner /> */}
 					</div>
 				</ScenarioStep>
 
 				{/* Clean up */}
-        <ScenarioStep step={this.state.step08} showBusy={false}>
+        <ScenarioStep step={this.state.step08}>
 					<div>
 						<Button
 							disabled={!this.state.step08.available}
@@ -343,17 +345,52 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		// console.log('Scenario1 recevied:', message);
 	}
 
-	/** Function which can render a spinner if the step is available and not completed */
-	private showSpinnerIfWaiting(step: ScenarioStepInfo) {
-		if (step.available && !step.completed) {
-			return <Spinner size={Spinner.SIZE_STANDARD} />;
-		}
-		return null;
-	}
-
 	/** Handle user clicks on the GetTopicList button */
 	private handleGetTopicListClick = () => {
 
+		// **** update step ****
+
+		var busyStep: ScenarioStepInfo = {...this.state.step01, showBusy: true };
+
+		// **** flag we are asking for Topics (busy) ****
+
+		this.setState({step01: busyStep});
+
+    // **** construct the registration REST url ****
+
+    let url: URL = new URL('/baseR4/Topic/', this.props.fhirServerInfo.url);
+
+    // **** attempt to get the list of Topics ****
+
+    ApiHelper.apiGet<fhir.Topic[]>(url.toString())
+      .then((value: fhir.Topic[]) => {
+
+				// **** update step ****
+
+				var current: ScenarioStepInfo = {...this.state.step01, 
+					completed: true, 
+					showBusy: false,
+					data: `Topics (${url}):\n${JSON.stringify(value, null, '\t')}`
+				};
+
+				// **** update our state ****
+
+				this.setState({ step01: current });
+      })
+      .catch((reason: any) => {
+				// **** update step ****
+
+				var current: ScenarioStepInfo = {...this.state.step01, 
+					completed: false, 
+					showBusy: false,
+					data: `Failed to get topic list from: ${url}:\n${reason}`
+				};
+
+				// **** update our state ****
+
+				this.setState({	step01: current });      
+			})
+      ;
 	}
 
 	/** Handle user clicks on the SetPatientFilter button (validate and enable next step) */
@@ -374,12 +411,20 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		// **** update steps ****
 
-		var current: ScenarioStepInfo = {...this.state.step02, completed: true};
+		var current: ScenarioStepInfo = {...this.state.step02, 
+			completed: true, 
+			data: `Patient filter set to: ${patientFilter}`
+		};
 		var next: ScenarioStepInfo = {...this.state.step03, available: true};
 
-		// **** update our state ****
+		// **** update our state, generate a default name for the endpoint ****
 
-		this.setState({step02: current, step03: next, patientFilter: patientFilter});
+		this.setState({
+			step02: current, 
+			step03: next, 
+			patientFilter: patientFilter,
+			endpointName: `p${patientFilter}-${Math.floor((Math.random() * 10000) + 1)}`,
+		});
 	}
 
 	/** Handle user clicks on the CreateEndpoint button (send request to client host, on success enable next step) */
@@ -398,9 +443,13 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			return;
 		}
 
-		// **** flag we are asking for the endpoint (busy) ****
+		// **** update step ****
 
-		this.setState({askingForEndpoint: true});
+		var busyStep: ScenarioStepInfo = {...this.state.step03, showBusy: true };
+
+		// **** flag we are asking to create the endpoint (busy) ****
+
+		this.setState({step03: busyStep});
 
 		// **** build the url for our call ***
 
@@ -422,7 +471,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			.then((value: EndpointRegistration) => {
 				// **** make the next step available ****
 
-				var current: ScenarioStepInfo = {...this.state.step03, completed: true};
+				var current: ScenarioStepInfo = {...this.state.step03, completed: true, showBusy: false};
 				var next: ScenarioStepInfo = {...this.state.step04, available: true};
 
 				// **** show the client endpoint information ****
@@ -438,21 +487,19 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				this.setState({
 					step03: current, 
 					step04: next, 
-					askingForEndpoint: false,
 					endpoint: value,
 				});
 			})
 			.catch((reason: any) => {
 				
 				var current: ScenarioStepInfo = {...this.state.step03, 
-					data: 'Request for endpoint failed! Please change your filter and try again.'
+					data: 'Request for endpoint failed! Please change your filter and try again.',
+					showBusy: false,
 					};
 
 				// **** request failed ****
 
-				this.setState({
-					step03: current, 
-					askingForEndpoint: false});
+				this.setState({step03: current});
 			})
 
 
