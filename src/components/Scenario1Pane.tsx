@@ -344,7 +344,60 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 	/** Callback function to process ClientHost messages */
 	private handleHostMessage = (message: string) => {
-		// console.log('Scenario1 recevied:', message);
+		// **** vars we want ****
+
+		var eventCount: number = NaN;
+		var status: string;
+		var topicUrl: string;
+		var subscriptionUrl: string;
+
+		// **** resolve this message into a bundle ****
+
+		let bundle: fhir.Bundle = JSON.parse(message);
+
+		// **** check for the extensions we need ****
+
+		if ((bundle) &&
+				(bundle.meta) &&
+				(bundle.meta.extension))
+		{
+			bundle.meta.extension.forEach(element => {
+				if (element.url.endsWith('subscriptionEventCount')) {
+					eventCount = element.valuePositiveInt!;
+				} else if (element.url.endsWith('subscriptionStatus')) {
+					status = element.valueString!;
+				} else if (element.url.endsWith('subscriptionTopicUrl')) {
+					topicUrl = element.valueString!;
+				} else if (element.url.endsWith('subscriptionUrl')) {
+					subscriptionUrl = element.valueString!;
+				}
+			});
+		}
+
+		// **** check for being a handshake ****
+
+		if (eventCount === 0) {
+			// **** update steps ****
+
+			var current: ScenarioStepInfo = {...this.state.step05,
+				completed: true, 
+				showBusy: false,
+				data: JSON.stringify(bundle, null, '\t'),
+			};
+			var next: ScenarioStepInfo = {...this.state.step06, available: true};
+
+	
+			// **** update our state ****
+
+			this.setState({
+				step05: current, 
+				step06: next, 
+			});
+		}
+
+		// **** log for now ****
+
+		console.log('Received bundle: ', bundle);
 	}
 
 	/** Handle user clicks on the GetTopicList button */
@@ -371,7 +424,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				var current: ScenarioStepInfo = {...this.state.step01, 
 					completed: true, 
 					showBusy: false,
-					data: `Topics (${url}):\n${JSON.stringify(value, null, '\t')}`
+					data: JSON.stringify(value, null, '\t')
 				};
 
 				// **** update our state ****
@@ -569,17 +622,15 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		ApiHelper.apiPost<fhir.Subscription>(url.toString(), JSON.stringify(subscription))
 			.then((value: fhir.Subscription) => {
-				// **** update steps ****
+				// **** update steps - note that next step starts busy since we are waiting ****
 
-				var current: ScenarioStepInfo = {...this.state.step04, completed: true, showBusy: false};
-				var next: ScenarioStepInfo = {...this.state.step05, available: true};
+				var current: ScenarioStepInfo = {...this.state.step04, 
+					completed: true, 
+					showBusy: false,
+					data: JSON.stringify(subscription, null, '\t'),
+				};
+				var next: ScenarioStepInfo = {...this.state.step05, available: true, showBusy: true};
 	
-				// **** show the client subscription information ****
-
-				current.data = `Subscription Created (${url.toString()}):\n` +
-					`${JSON.stringify(subscription, null, '\t')}` +
-					'';
-		
 				// **** update our state ****
 
 				this.setState({

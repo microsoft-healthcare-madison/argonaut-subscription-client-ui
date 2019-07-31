@@ -52,7 +52,7 @@ export class MainPage extends React.PureComponent<MainPageProps> {
         hint: 'URL for a running argonaut-client-host service',
         url: 'http://localhost:56345/', 
         status: '', 
-        showMessages: true,
+        showMessages: false,
         logMessages: false,
         registration: '',
       },

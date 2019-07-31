@@ -1,4 +1,4 @@
-/** GENERATED FILE on: 7/30/2019 11:36:31 AM **/
+/** GENERATED FILE on: 7/31/2019 9:52:29 AM **/
 
 export module fhir {
 /**
@@ -2437,6 +2437,268 @@ export interface UsageContext extends Element {
 	 * May contain extended information for property: 'valueReference'
 	 */
 	_valueReference?: Element;
+}
+/**
+ * A container for a collection of resources.
+ * From: bundle-spreadsheet.xml
+ */
+export interface Bundle extends Resource {
+	/**
+	 * An entry in a bundle resource - will either contain a resource or information about a resource (transactions and history only)
+	 */
+	entry?: BundleEntry[];
+	/**
+	 * May contain extended information for property: 'entry'
+	 */
+	_entry?: Element[];
+	/**
+	 * A persistent identifier for the bundle that won't change as a bundle is copied from server to server. 
+	 */
+	identifier?: Identifier;
+	/**
+	 * May contain extended information for property: 'identifier'
+	 */
+	_identifier?: Element;
+	/**
+	 * A series of links that provide context to this bundle 
+	 */
+	link?: BundleLink[];
+	/**
+	 * May contain extended information for property: 'link'
+	 */
+	_link?: Element[];
+	/**
+	 * Digital Signature - base64 encoded. XML-DSig or a JWT
+	 */
+	signature?: Signature;
+	/**
+	 * May contain extended information for property: 'signature'
+	 */
+	_signature?: Element;
+	/**
+	 * The date/time that the bundle was assembled - i.e. when the resources were placed in the bundle
+	 */
+	timestamp?: instant;
+	/**
+	 * May contain extended information for property: 'timestamp'
+	 */
+	_timestamp?: Element;
+	/**
+	 * If a set of search matches, this is the total number of entries of type 'match' across all pages in the search.  It does not include search.mode = 'include' or 'outcome' entries and it does not provide a count of the number of entries in the Bundle
+	 */
+	total?: unsignedInt;
+	/**
+	 * May contain extended information for property: 'total'
+	 */
+	_total?: Element;
+	/**
+	 * Indicates the purpose of this bundle - how it is intended to be used
+	 */
+	type: code;
+	/**
+	 * May contain extended information for property: 'type'
+	 */
+	_type?: Element;
+}
+/**
+ * An entry in a bundle resource - will either contain a resource or information about a resource (transactions and history only)
+ * From: bundle-spreadsheet.xml
+ */
+export interface BundleEntry extends Element {
+	/**
+	 * The Absolute URL for the resource.  The fullUrl SHALL NOT disagree with the id in the resource - i.e. if the fullUrl is not a urn:uuid, the URL shall be version-independent URL consistent with the Resource.id. The fullUrl is a version independent reference to the resource. The fullUrl element SHALL have a value except that: 
+* fullUrl can be empty on a POST (although it does not need to when specifying a temporary id for reference in the bundle)
+* Results from operations might involve resources that are not identified.
+	 */
+	fullUrl?: uri;
+	/**
+	 * May contain extended information for property: 'fullUrl'
+	 */
+	_fullUrl?: Element;
+	/**
+	 * A series of links that provide context to this entry 
+	 */
+	link?: BundleLink[];
+	/**
+	 * May contain extended information for property: 'link'
+	 */
+	_link?: Element[];
+	/**
+	 * Additional information about how this entry should be processed as part of a transaction or batch.  For history, it shows how the entry was processed to create the version contained in the entry
+	 */
+	request?: BundleEntryRequest;
+	/**
+	 * May contain extended information for property: 'request'
+	 */
+	_request?: Element;
+	/**
+	 * The Resource for the entry. The purpose/meaning of the resource is determined by the Bundle.type
+	 */
+	resource?: Resource;
+	/**
+	 * May contain extended information for property: 'resource'
+	 */
+	_resource?: Element;
+	/**
+	 * Indicates the results of processing the corresponding 'request' entry in the batch or transaction being responded to or what the results of an operation where when returning history
+	 */
+	response?: BundleEntryResponse;
+	/**
+	 * May contain extended information for property: 'response'
+	 */
+	_response?: Element;
+	/**
+	 * Information about the search process that lead to the creation of this entry
+	 */
+	search?: BundleEntrySearch;
+	/**
+	 * May contain extended information for property: 'search'
+	 */
+	_search?: Element;
+}
+/**
+ * Additional information about how this entry should be processed as part of a transaction or batch.  For history, it shows how the entry was processed to create the version contained in the entry
+ * From: bundle-spreadsheet.xml
+ */
+export interface BundleEntryRequest extends Element {
+	/**
+	 * Only perform the operation if the Etag value matches. For more information, see the API section ["Managing Resource Contention"](http.html#concurrency)
+	 */
+	ifMatch?: string;
+	/**
+	 * May contain extended information for property: 'ifMatch'
+	 */
+	_ifMatch?: Element;
+	/**
+	 * Only perform the operation if the last updated date matches. See the API documentation for ["Conditional Read"](http.html#cread)
+	 */
+	ifModifiedSince?: instant;
+	/**
+	 * May contain extended information for property: 'ifModifiedSince'
+	 */
+	_ifModifiedSince?: Element;
+	/**
+	 * Instruct the server not to perform the create if a specified resource already exists. For further information, see the API documentation for ["Conditional Create"](http.html#ccreate). This is just the query portion of the URL - what follows the "?" (not including the "?")
+	 */
+	ifNoneExist?: string;
+	/**
+	 * May contain extended information for property: 'ifNoneExist'
+	 */
+	_ifNoneExist?: Element;
+	/**
+	 * If the ETag values match, return a 304 Not Modified status. See the API documentation for ["Conditional Read"](http.html#cread)
+	 */
+	ifNoneMatch?: string;
+	/**
+	 * May contain extended information for property: 'ifNoneMatch'
+	 */
+	_ifNoneMatch?: Element;
+	/**
+	 * In a transaction or batch, this is the HTTP action to be executed for this entry. In a history bundle, this indicates the HTTP action that occurred.
+	 */
+	method: code;
+	/**
+	 * May contain extended information for property: 'method'
+	 */
+	_method?: Element;
+	/**
+	 * The URL for this entry, relative to the root (the address to which the request is posted)
+	 */
+	url: uri;
+	/**
+	 * May contain extended information for property: 'url'
+	 */
+	_url?: Element;
+}
+/**
+ * Indicates the results of processing the corresponding 'request' entry in the batch or transaction being responded to or what the results of an operation where when returning history
+ * From: bundle-spreadsheet.xml
+ */
+export interface BundleEntryResponse extends Element {
+	/**
+	 * The Etag for the resource, if the operation for the entry produced a versioned resource (see [Resource Metadata and Versioning](http.html#versioning) and [Managing Resource Contention](http.html#concurrency))
+	 */
+	etag?: string;
+	/**
+	 * May contain extended information for property: 'etag'
+	 */
+	_etag?: Element;
+	/**
+	 * The date/time that the resource was modified on the server
+	 */
+	lastModified?: instant;
+	/**
+	 * May contain extended information for property: 'lastModified'
+	 */
+	_lastModified?: Element;
+	/**
+	 * The location header created by processing this operation, populated if the operation returns a location
+	 */
+	location?: uri;
+	/**
+	 * May contain extended information for property: 'location'
+	 */
+	_location?: Element;
+	/**
+	 * An OperationOutcome containing hints and warnings produced as part of processing this entry in a batch or transaction
+	 */
+	outcome?: Resource;
+	/**
+	 * May contain extended information for property: 'outcome'
+	 */
+	_outcome?: Element;
+	/**
+	 * The status code returned by processing this entry. The status SHALL start with a 3 digit HTTP code (e.g. 404) and may contain the standard HTTP description associated with the status code
+	 */
+	status: string;
+	/**
+	 * May contain extended information for property: 'status'
+	 */
+	_status?: Element;
+}
+/**
+ * Information about the search process that lead to the creation of this entry
+ * From: bundle-spreadsheet.xml
+ */
+export interface BundleEntrySearch extends Element {
+	/**
+	 * Why this entry is in the result set - whether it's included as a match or because of an _include requirement, or to convey information or warning information about the search process
+	 */
+	mode?: code;
+	/**
+	 * May contain extended information for property: 'mode'
+	 */
+	_mode?: Element;
+	/**
+	 * When searching, the server's search ranking score for the entry
+	 */
+	score?: decimal;
+	/**
+	 * May contain extended information for property: 'score'
+	 */
+	_score?: Element;
+}
+/**
+ * A series of links that provide context to this bundle 
+ * From: bundle-spreadsheet.xml
+ */
+export interface BundleLink extends Element {
+	/**
+	 * A name which details the functional use for this link - see [http://www.iana.org/assignments/link-relations/link-relations.xhtml#link-relations-1](http://www.iana.org/assignments/link-relations/link-relations.xhtml#link-relations-1)
+	 */
+	relation: string;
+	/**
+	 * May contain extended information for property: 'relation'
+	 */
+	_relation?: Element;
+	/**
+	 * The reference details for the link
+	 */
+	url: uri;
+	/**
+	 * May contain extended information for property: 'url'
+	 */
+	_url?: Element;
 }
 /**
  * A resource that includes narrative, extensions, and contained resources.
