@@ -24,6 +24,8 @@ import { ScenarioStep } from './ScenarioStep';
 import { EndpointRegistration, EndpointChannelType } from '../models/EndpointRegistration';
 import { ApiHelper } from '../util/ApiHelper';
 import { fhir } from '../models/fhir_r4_selected';
+import { TriggerRequest } from '../models/TriggerRequest';
+import { TriggerInformation } from '../models/TriggerInformation';
 
 /** Type definition for the current object's state variable */
 interface ComponentState {
@@ -42,6 +44,7 @@ interface ComponentState {
 	endpointNameWarningIsOpen: boolean,
 	endpoint: EndpointRegistration | null,
 	subscription: fhir.Subscription | null,
+	triggerUid: string,
 }
 
 /**
@@ -136,6 +139,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		endpointNameWarningIsOpen: false,
 		endpoint: null,
 		subscription: null,
+		triggerUid: '',
 	};
 
 	constructor(props: ContentPaneProps) {
@@ -386,12 +390,25 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			};
 			var next: ScenarioStepInfo = {...this.state.step06, available: true};
 
-	
 			// **** update our state ****
 
 			this.setState({
 				step05: current, 
 				step06: next, 
+			});
+		} else {
+			// **** update step ****
+
+			var current: ScenarioStepInfo = {...this.state.step07,
+				completed: true, 
+				showBusy: false,
+				data: JSON.stringify(bundle, null, '\t'),
+			};
+
+			// **** update our state ****
+
+			this.setState({
+				step07: current,
 			});
 		}
 
@@ -654,10 +671,65 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 	/** Handle user clicks on the TriggerEvent button (send request to client host) */
 	private handleRequestTriggerEventClick = () => {
-		var current: ScenarioStepInfo = {...this.state.step06, completed: true};
-		var next: ScenarioStepInfo = {...this.state.step07, available: true};
+		// **** update step ****
 
-		this.setState({step06: current, step07: next});
+		let busyStep: ScenarioStepInfo = {...this.state.step06, showBusy: true};
+
+		// **** flag we are asking to trigger an event (busy) ****
+
+		this.setState({step06: busyStep});
+
+		// **** build the url for our call ***
+
+    let url: URL = new URL('/Triggers/', this.props.clientHostInfo.url);
+ 
+		// **** build our trigger ****
+
+		let triggerRequest: TriggerRequest = {
+			fhirServerUrl: this.props.fhirServerInfo.url,
+			resourceName: "Encounter",
+			filterName: "Patient",
+			filterMatchType: "=",
+			filterValue: `Patient/${this.state.patientFilter}`,
+			repetitions: 1,
+			delayMilliseconds: 0,
+			ignoreErrors: false,
+		}
+
+		// **** post our request to the server ****
+
+		ApiHelper.apiPost<TriggerInformation>(url.toString(), JSON.stringify(triggerRequest))
+			.then((value: TriggerInformation) => {
+				// **** update steps - note that next step starts busy since we are waiting ****
+
+				var current: ScenarioStepInfo = {...this.state.step06, 
+					showBusy: false,
+					data: `Trigger: ${value.uid}. . .`,
+				};
+				var next: ScenarioStepInfo = {...this.state.step07,
+					available: true,
+					showBusy: true,
+				};
+	
+				// **** update our state ****
+
+				this.setState({
+					step06: current,
+					step07: next,
+					triggerUid: value.uid,
+				});
+			})
+			.catch((reason: any) => {
+				
+				var current: ScenarioStepInfo = {...this.state.step06, 
+					data: 'Request for Event Trigger failed! Please try again.',
+					showBusy: false,
+					};
+
+				// **** request failed ****
+
+				this.setState({step06: current});
+			});
 	}
 
 	/** Handle user clicks on the CleanUp button (delete Subscription from FHIR Server, Endpoint from ClientHost) */

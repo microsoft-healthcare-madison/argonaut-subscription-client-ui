@@ -41,7 +41,7 @@ export class MainPage extends React.PureComponent<MainPageProps> {
       fhirServerInfo: {
           name: 'FHIR Server', 
           hint: 'URL for an R4 FHIR Server with Subscription and Topic support',
-          url: 'http://localhost:56340/', 
+          url: 'http://localhost:56340/baseR4/', 
           status: '', 
           showMessages: false,
           logMessages: false,
