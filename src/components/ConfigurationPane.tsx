@@ -225,7 +225,7 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
   private disconnectClientHost = () => {
     // **** construct the registration REST url ****
 
-    let url: URL = new URL(`/api/Clients/${this.props.clientHostInfo.registration}/`, this.state.clientHostUrl);
+    let url: URL = new URL(`api/Clients/${this.props.clientHostInfo.registration}/`, this.state.clientHostUrl);
 
     // **** unregister this client ****
 
@@ -268,7 +268,7 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
 
     // **** construct the registration REST url ****
 
-    let registrationUrl: URL = new URL('/api/Clients/', this.state.clientHostUrl);
+    let registrationUrl: URL = new URL('api/Clients/', this.state.clientHostUrl);
 
     // **** attempt to register ourself as a client ****
 

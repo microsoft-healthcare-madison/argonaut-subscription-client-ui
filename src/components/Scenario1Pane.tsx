@@ -429,7 +429,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
     // **** construct the registration REST url ****
 
-    let url: URL = new URL('/baseR4/Topic/', this.props.fhirServerInfo.url);
+    let url: URL = new URL('Topic/', this.props.fhirServerInfo.url);
 
     // **** attempt to get the list of Topics ****
 
@@ -526,7 +526,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		// **** build the url for our call ***
 
 		let url: URL = new URL(
-			`/api/Clients/${this.props.clientHostInfo.registration}/Endpoints/`, 
+			`api/Clients/${this.props.clientHostInfo.registration}/Endpoints/`, 
 			this.props.clientHostInfo.url
 			);
 
@@ -601,13 +601,13 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		// **** build the url for our call ***
 
-    let url: URL = new URL('/baseR4/Subscription/', this.props.fhirServerInfo.url);
+    let url: URL = new URL('Subscription/', this.props.fhirServerInfo.url);
  
 		// **** build our subscription channel information ****
 
 		let channel: fhir.SubscriptionChannel = {
 			endpoint: `${this.props.clientHostInfo.url}Endpoints/${this.state.endpoint!.urlPart}`,
-			header: [],
+			header: ['Authorization: Bearer secret-token-abc-123'],
 			heartbeatPeriod: 60,
 			payload: {content: 'id-only', contentType: 'application/fhir+json'},
 			type: { text: 'rest-hook'},
@@ -618,7 +618,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		let filter: fhir.SubscriptionFilterBy = {
 			matchType: '=',
 			name: 'Patient',
-			value: `Patient/${this.state.patientFilter}`
+			value: `Patient/${this.state.patientFilter}`	//`Patient/${this.state.patientFilter},Patient/K123`
 		}
 
 		var expirationTime:Date = new Date();
@@ -630,7 +630,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			channel: channel,
 			filterBy: [filter],
 			end: this.getInstantFromDate(expirationTime),
-			topic: {reference:  new URL('/baseR4/Topic/admissions', this.props.fhirServerInfo.url).toString()},
+			topic: {reference:  new URL('Topic/admissions', this.props.fhirServerInfo.url).toString()},
 			reason: 'Client Testing',
 			status: 'requested',
 		}
@@ -681,7 +681,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		// **** build the url for our call ***
 
-    let url: URL = new URL('/Triggers/', this.props.clientHostInfo.url);
+    let url: URL = new URL('Triggers/', this.props.clientHostInfo.url);
  
 		// **** build our trigger ****
 
