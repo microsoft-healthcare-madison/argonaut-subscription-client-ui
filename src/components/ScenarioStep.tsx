@@ -25,51 +25,64 @@ export interface ScenarioStepProps {
 
 /** Type definition for the current object's state variable */
 interface ComponentState {
-	showData: boolean,
+  showData: boolean,
+  showStep: boolean,
 }
 
 
 export class ScenarioStep extends React.PureComponent<ScenarioStepProps> {
   public state: ComponentState = {
     showData: true,
+    showStep: true,
   }
 
   public render() {
     return (
       <Box px={1} w={1} m={1}>
+        {/* interactive={true} onClick={this.handleToggleStepClick} */}
         <Card>
+          <Button
+            onClick={this.handleToggleStepClick}
+            minimal={true}
+            style={{margin: 5, float: 'right'}}
+            icon={this.state.showStep ? IconNames.CHEVRON_DOWN : IconNames.CHEVRON_RIGHT}
+            />
           <H5>{this.iconForStep()} Step {this.props.step.stepNumber}{this.props.step.optional ? ' (Optional)' : ''}: {this.props.step.heading}</H5>
-          <H6>{this.props.step.description}</H6>
-          {this.props.step.showBusy && 
-            <Spinner />
-          }
-          {(!this.props.step.showBusy) &&
-            this.props.children
-          }
-          { this.props.step.data &&
-          <div>
-            <Button
-              onClick={this.handleToggleDataClick}
-              minimal={true}
-              style={{margin: 5}}
-              icon={this.state.showData ? IconNames.CHEVRON_DOWN : IconNames.CHEVRON_RIGHT}
-              />
-            <Tooltip
-              content='Copy to Clipboard'
-              >
-              <Button
-                onClick={this.handleCopyClick}
-                minimal={true}
-                style={{margin: 5}}
-                icon={IconNames.DUPLICATE}
-                />
-            </Tooltip>
-          </div>
-          }
-          { (this.props.step.data && this.state.showData) &&
-            <Pre style={{margin: 5}}>
-              {this.props.step.data}
-            </Pre>
+          {this.state.showStep &&
+            <div>
+              <H6>{this.props.step.description}</H6>
+              {this.props.step.showBusy && 
+                <Spinner />
+              }
+              {(!this.props.step.showBusy) &&
+                this.props.children
+              }
+              { this.props.step.data &&
+              <div>
+                <Tooltip
+                  content='Copy to Clipboard'
+                  >
+                  <Button
+                    onClick={this.handleCopyClick}
+                    minimal={true}
+                    style={{margin: 5}}
+                    icon={IconNames.DUPLICATE}
+                    />
+                </Tooltip>
+                <Button
+                  onClick={this.handleToggleDataClick}
+                  minimal={true}
+                  style={{margin: 5}}
+                  icon={this.state.showData ? IconNames.CHEVRON_DOWN : IconNames.CHEVRON_RIGHT}
+                  />
+              </div>
+              }
+              { (this.props.step.data && this.state.showData) &&
+                <Pre style={{margin: 5}}>
+                  {this.props.step.data}
+                </Pre>
+              }
+            </div>
           }
         </Card>
       </Box>
@@ -128,6 +141,10 @@ export class ScenarioStep extends React.PureComponent<ScenarioStepProps> {
     document.body.removeChild(textArea);
   }
 
+  private handleToggleStepClick = () => {
+    this.setState({showStep: !this.state.showStep})
+  }
+
   private handleToggleDataClick = () => {
     this.setState({showData: !this.state.showData})
   }
@@ -137,7 +154,7 @@ export class ScenarioStep extends React.PureComponent<ScenarioStepProps> {
       return <Icon icon={IconNames.TICK} intent={Intent.SUCCESS} iconSize={Icon.SIZE_LARGE} />;
     }
     if (this.props.step.available) {
-      return <Icon icon={IconNames.CARET_RIGHT} intent={Intent.PRIMARY} iconSize={Icon.SIZE_LARGE} />;
+      return <Icon icon={IconNames.ARROW_RIGHT} intent={Intent.PRIMARY} iconSize={Icon.SIZE_LARGE} />;
     }
     return <Icon icon={IconNames.DISABLE} intent={Intent.WARNING} iconSize={Icon.SIZE_STANDARD} />;
   }
