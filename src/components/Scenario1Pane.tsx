@@ -14,7 +14,7 @@ import {
   FormGroup,
   Elevation,
   Text,
-  H3, H5, Spinner, Popover, NonIdealState
+  H3, H5, Spinner, Popover, NonIdealState, Tabs, Tab, ControlGroup, HTMLSelect, TabId, H6, RadioGroup, Radio
 } from '@blueprintjs/core';
 
 import {IconNames} from "@blueprintjs/icons";
@@ -26,6 +26,7 @@ import { ApiHelper } from '../util/ApiHelper';
 import { fhir } from '../models/fhir_r4_selected';
 import { TriggerRequest } from '../models/TriggerRequest';
 import { TriggerInformation } from '../models/TriggerInformation';
+import { PatientSelectionInfo } from '../models/PatientSelectionInfo';
 
 /** Type definition for the current object's state variable */
 interface ComponentState {
@@ -38,13 +39,23 @@ interface ComponentState {
 	step07: ScenarioStepInfo,
 	step08: ScenarioStepInfo,
 	connected: boolean,
-	patientFilter: string,
-	patientFilterWarningIsOpen: boolean,
 	endpointName: string,
 	endpointNameWarningIsOpen: boolean,
 	endpoint: EndpointRegistration | null,
 	subscription: fhir.Subscription | null,
 	triggerUid: string,
+	step02TabId: string,
+	step02MatchType: string,
+	step02SubBusy: boolean,
+	step02SelectedValue: string,
+	step02Patients: PatientSelectionInfo[],
+	selectedPatientId: string,
+	step02SearchFilter: string,
+	step02PatientGivenName: string,
+	step02PatientFamilyName: string,
+	step02PatientId: string,
+	step02Gender: string,
+	step02BirthDate: string,
 }
 
 /**
@@ -64,7 +75,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		},
 		step02: {
 			stepNumber: 2,
-			heading: 'Set Patient filter',
+			heading: 'Select or Create Patient',
 			description: '',
 			optional: false,
 			available: true,
@@ -133,14 +144,38 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			data: ''
 		},
 		connected: true,
-		patientFilter: '123',
-		patientFilterWarningIsOpen: false,
 		endpointName: '',
 		endpointNameWarningIsOpen: false,
 		endpoint: null,
 		subscription: null,
 		triggerUid: '',
+		step02TabId: 's2_search',
+		step02MatchType: 'name',
+		step02SubBusy: false,
+		step02SelectedValue: '',
+		step02Patients: [],
+		selectedPatientId: '',
+		step02SearchFilter: '',
+		step02PatientFamilyName: '',
+		step02PatientGivenName: '',
+		step02PatientId: '',
+		step02Gender: '',
+		step02BirthDate: '',
 	};
+
+	private getRandomChar = () => {
+		return(String.fromCharCode(65 + Math.floor((Math.random() * 26))));
+	}
+
+	private getRandomChars = (count: number) => {
+		var value = '';
+		while (count > 0)
+		{
+			value += this.getRandomChar();
+			count--;
+		}
+		return (value);
+	}
 
 	constructor(props: ContentPaneProps) {
 		super(props);
@@ -152,6 +187,17 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		// **** register our callback handler ****
 
 		props.registerHostMessageHandler(this.handleHostMessage);
+
+		let msPerYear: number = 365.25 * 24 * 60 * 60 * 1000;
+		let birthDate: Date = new Date((new Date()).valueOf() - Math.floor(Math.random() * 110));
+
+		// **** generate some info in case a new patient is created ****
+
+		this.state.step02PatientGivenName = `Argonaut-${Math.floor((Math.random() * 10000) + 1)}`;
+		this.state.step02PatientFamilyName = `Project-${Math.floor((Math.random() * 10000) + 1)}`
+		this.state.step02PatientId = `${this.getRandomChars(3)}${Math.floor((Math.random() * 10000) + 1)}`
+		this.state.step02Gender = (Math.random() < 0.51) ? 'female' : 'male';
+		this.state.step02BirthDate = this.getFhirDateFromDate(birthDate);
 	}
 
 	componentDidMount() {
@@ -208,45 +254,144 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
           </div>
         </ScenarioStep>
 
-				{/* Set Patient filter */}
+				{/* Select or Create Patient */}
         <ScenarioStep step={this.state.step02}>
           <div>
-						<FormGroup
-              label = 'Patient filter'
-              helperText = 'Patient ID to use in filtering for Admissions events'
-              labelFor='patient-filter'
-              >
-							<InputGroup
-								disabled={!this.state.step02.available}
-								id='patient-filter'
-								value={this.state.patientFilter}
-								onChange={this.handlePatientFilterChange}
-								/>
-            </FormGroup>
-						<Popover
-							isOpen={this.state.patientFilterWarningIsOpen}
-							canEscapeKeyClose={true}
-							usePortal={true}
+						<Tabs
+							animate={true}
+							id='tabsStep2'
+							vertical={false}
+							selectedTabId={this.state.step02TabId}
+							onChange={this.handleStep02TabChange}
 							>
-							<Button
-								disabled={!this.state.step02.available}
-								onClick={this.handleSetPatientFilterClick}
-								>
-								Go
-							</Button>
-							<Card key='text'>
-								<H5>Invalid Patient Filter</H5>
-								<p>A valid patient filter is required for this scenario</p>
-								<div style={{ display: "flex", justifyContent: "flex-end", marginTop: 15 }}>
-									<Button
-										className={Classes.POPOVER_DISMISS}
-										onClick={() => this.setState({patientFilterWarningIsOpen: false})}
+							<Tab id='s2_search' title='Search' />
+							<Tab id='s2_create' title='Create' />
+						</Tabs>
+						{ (this.state.step02TabId === 's2_search') &&
+							<Card>
+								<H6>Search and Select Existing Patient</H6>
+								<ControlGroup>
+									<HTMLSelect
+										onChange={this.handleStep02MatchTypeChange}
+										defaultValue={this.state.step02MatchType}
 										>
-										OK
+										<option>family</option>
+										<option>given</option>
+										<option>_id</option>
+										<option>name</option>
+									</HTMLSelect>
+									<InputGroup
+										id='step02_searchFilter'
+										value={this.state.step02SearchFilter}
+										onChange={this.handleSearchFilterChange}
+										/>
+									<Button
+										onClick={this.handleStep02SearchClick}
+										>
+										Search
 									</Button>
-								</div>
+								</ControlGroup>
+								<br />
+								{ (this.state.step02SubBusy) &&
+									<Spinner />
+								}
+								{ (!this.state.step02SubBusy) &&
+									<RadioGroup
+										label={`Select a patient, ${this.state.step02Patients.length} found`}
+										onChange={this.handleStep02RadioChange}
+										selectedValue={this.state.step02SelectedValue}
+										>
+											{ this.state.step02Patients.map((patientInfo) => (
+												<Radio 
+													key={`s02_p_${patientInfo.key}`} 
+													label={patientInfo.value} 
+													value={patientInfo.key} 
+													checked={patientInfo.key === this.state.step02SelectedValue}
+													/>
+											))}
+									</RadioGroup>
+								}
+								{ (!this.state.step02SubBusy) &&
+									<Button
+										disabled={(this.state.step02SelectedValue === '')}
+										onClick={this.handleSetSearchedPatientClick}
+										style={{margin: 5}}
+										>
+										Use Selected Patient
+									</Button>
+								}
 							</Card>
-						</Popover>
+						}
+						{ (this.state.step02TabId === 's2_create') &&
+							<Card>
+								<H6>Create and PUT a new Patient</H6>
+								<FormGroup
+									label = 'Patient Given Name'
+									helperText = 'Given Name for the new Patient'
+									labelFor='patient-given-name'
+									>
+									<InputGroup
+										id='patient-given-name'
+										value={this.state.step02PatientGivenName}
+										onChange={this.handlePatientGivenNameChange}
+										/>
+								</FormGroup>
+								<FormGroup
+									label = 'Patient Family Name'
+									helperText = 'Family Name for the new Patient'
+									labelFor='patient-family-name'
+									>
+									<InputGroup
+										id='patient-family-name'
+										value={this.state.step02PatientFamilyName}
+										onChange={this.handlePatientFamilyNameChange}
+										/>
+								</FormGroup>
+								<FormGroup
+									label='Patient ID'
+									helperText='ID for the new Patient (must contain at least one letter)'
+									labelFor='patient-id'
+									>
+									<InputGroup
+										id='patient-id'
+										value={this.state.step02PatientId}
+										onChange={this.handlePatientIdChange}
+										/>
+								</FormGroup>
+								<HTMLSelect
+									onChange={this.handleStep02GenderChange}
+									defaultValue={this.state.step02Gender}
+									>
+									<option>female</option>
+									<option>male</option>
+								</HTMLSelect>
+								<FormGroup
+									label='Patient Birth Date'
+									helperText='YYYYMMDD format for the birth date of this patient'
+									labelFor='patient-birthdate'
+									>
+									<InputGroup
+										id='patient-birthdate'
+										value={this.state.step02BirthDate}
+										onChange={this.handlePatientBirthDateChange}
+										/>
+								</FormGroup>
+								{ (!this.state.step02SubBusy) &&
+									<Button
+										disabled={(this.state.step02PatientId === '')}
+										onClick={this.handleSetCreatedPatientClick}
+										style={{margin: 5}}
+										>
+										Create Patient
+									</Button>
+								}
+								{ (this.state.step02SubBusy) &&
+									<Spinner />
+								}
+
+							</Card>
+						}
+						
           </div>
         </ScenarioStep>
 
@@ -271,8 +416,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 							usePortal={true}
 							>
 							<Button
-							disabled={!this.state.step03.available}
-							onClick={this.handleClientHostCreateEndpointClick}
+								disabled={!this.state.step03.available}
+								onClick={this.handleClientHostCreateEndpointClick}
 								>
 								Go
 							</Button>
@@ -305,11 +450,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				</ScenarioStep>
 
 				{/* Wait on Endpoint handshake */}
-        <ScenarioStep step={this.state.step05}>
-					<div>
-						{/* <Spinner /> */}
-					</div>
-				</ScenarioStep>
+        <ScenarioStep step={this.state.step05} />
 
 				{/* Ask Client Host to trigger event */}
         <ScenarioStep step={this.state.step06}>
@@ -324,11 +465,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				</ScenarioStep>
 
 				{/* Wait on Subscription Notification */}
-        <ScenarioStep step={this.state.step07}>
-					<div>
-						{/* <Spinner /> */}
-					</div>
-				</ScenarioStep>
+        <ScenarioStep step={this.state.step07} />
 
 				{/* Clean up */}
         <ScenarioStep step={this.state.step08}>
@@ -344,6 +481,82 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
       </Flex>
     );
+	}
+
+	private handleStep02GenderChange = (event: React.FormEvent<HTMLSelectElement>) => {
+		this.setState({step02BirthDate: event.currentTarget.value})
+	}
+
+	private handleStep02MatchTypeChange = (event: React.FormEvent<HTMLSelectElement>) => {
+		this.setState({step02MatchType: event.currentTarget.value})
+	}
+
+	private handleStep02SearchClick = () => {
+		// **** flag we are searching ****
+
+		this.setState({step02SubBusy: true});
+
+    // **** construct the search url ****
+
+		var url: string = new URL('Patient/', this.props.fhirServerInfo.url).toString();
+		
+		if (this.state.step02SearchFilter) {
+				url += `?${encodeURIComponent(this.state.step02MatchType)}=${encodeURIComponent(this.state.step02SearchFilter)}`;
+		}
+
+    // **** attempt to get the list of Patients ****
+
+    ApiHelper.apiGet<fhir.Bundle>(url)
+      .then((value: fhir.Bundle) => {
+
+				// **** check for no values ****
+
+				if ((!value) || (!value.entry) || (!value.entry)) {
+						this.setState({step02SubBusy: false, step02Patients: []});
+				}
+
+				var patients: PatientSelectionInfo[] = [];
+
+				// **** loop over patients ****
+
+				value.entry!.forEach(entry => {
+					if (!entry.resource) return;
+
+					let patient: fhir.Patient = entry.resource as fhir.Patient;
+
+					if ((patient.id) && (patient.name)) {
+						patients.push({
+							key: patient.id!, 
+							value: `${patient.name![0].family}, ${patient.name![0].given} (${patient.id!})`});
+					}
+				});
+
+				// **** update our state ****
+
+				this.setState({ step02Patients: patients, step02SubBusy: false});
+      })
+      .catch((reason: any) => {
+				// **** update step ****
+
+				var current: ScenarioStepInfo = {...this.state.step01, 
+					completed: false, 
+					showBusy: false,
+					data: `Failed to get topic list from: ${url}:\n${reason}`
+				};
+
+				// **** update our state ****
+
+				this.setState({	step01: current });      
+			})
+      ;
+	}
+
+	private handleStep02RadioChange = (event: React.FormEvent<HTMLInputElement>) => {
+		this.setState({step02SelectedValue: event.currentTarget.value});
+	}
+
+	private handleStep02TabChange = (navbarTabId: TabId) => {
+		this.setState({step02TabId: navbarTabId.toString()})
 	}
 
 	/** Callback function to process ClientHost messages */
@@ -411,10 +624,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				step07: current,
 			});
 		}
-
-		// **** log for now ****
-
-		console.log('Received bundle: ', bundle);
 	}
 
 	/** Handle user clicks on the GetTopicList button */
@@ -464,27 +673,15 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
       ;
 	}
 
-	/** Handle user clicks on the SetPatientFilter button (validate and enable next step) */
-	private handleSetPatientFilterClick = () => {
-
-		// **** grab current input, filtered to alpha-numeric ****
-
-		var patientFilter: string = this.state.patientFilter.replace(/[^a-z0-9]/gi,'');
-
-		// **** validate input ****
-
-		if (!patientFilter) {
-			// **** warn user ****
-
-			this.setState({patientFilterWarningIsOpen: true});
-			return;
-		}
+	/** Handle user clicks on the SetPatient button from Search (validate and enable next step) */
+	private handleSetSearchedPatientClick = () => {
+		let selectedPatientId: string = this.state.step02SelectedValue;
 
 		// **** update steps ****
 
 		var current: ScenarioStepInfo = {...this.state.step02, 
 			completed: true, 
-			data: `Patient filter set to: ${patientFilter}`
+			data: `Using Existing Patient (id): ${selectedPatientId}`
 		};
 		var next: ScenarioStepInfo = {...this.state.step03, available: true};
 
@@ -493,9 +690,75 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		this.setState({
 			step02: current, 
 			step03: next, 
-			patientFilter: patientFilter,
-			endpointName: `p${patientFilter}-${Math.floor((Math.random() * 10000) + 1)}`,
+			selectedPatientId: selectedPatientId,
+			endpointName: `p${selectedPatientId}-${Math.floor((Math.random() * 10000) + 1)}`,
 		});
+	}
+
+	
+	/** Handle user clicks on the SetPatient button from Create (validate and enable next step) */
+	private handleSetCreatedPatientClick = () => {
+		// **** flag we are creating ****
+
+		this.setState({step02SubBusy: true});
+		
+		// **** create a new patient ****
+
+		var patient: fhir.Patient = {
+			resourceType: 'Patient',
+			id: this.state.step02PatientId,
+			name: [{
+				family: this.state.step02PatientFamilyName,
+				given: [this.state.step02PatientGivenName],
+				use: 'official'
+			}],
+			gender: this.state.step02Gender,
+			birthDate: this.state.step02BirthDate,
+		}
+
+		console.log('Patient:', patient);
+		console.log('Patient (JSON):', JSON.stringify(patient));
+
+		// **** PUT this on the server ****
+
+		let url = new URL(`Patient/${patient.id!}?_format=json`, this.props.fhirServerInfo.url);
+
+		console.log('URL:', url);
+
+		ApiHelper.apiPutFhir<fhir.Patient>(url.toString(), JSON.stringify(patient))
+			.then((value: fhir.Patient) => {
+				// **** update steps ****
+
+				let current: ScenarioStepInfo = {...this.state.step02, 
+					completed: true, 
+					data: `Using New Patient (id): ${value.id!}`
+				};
+				let next: ScenarioStepInfo = {...this.state.step03, available: true};
+
+				// **** update our state, generate a default name for the endpoint ****
+
+				this.setState({
+					step02: current, 
+					step03: next, 
+					selectedPatientId: value.id!,
+					endpointName: `rest-hook-${value.id!}-${Math.floor((Math.random() * 10000) + 1)}`,
+					step02SubBusy: false,
+				});
+			})
+			.catch((reason: any) => {
+				// **** update step ****
+
+				let failed: ScenarioStepInfo = {...this.state.step02,
+					completed: false,
+					data: `Request to create patient (${patient.id!}) failed:\n${reason}`,
+				}; 
+
+				// **** update our state ****
+
+				this.setState({step02: failed, step02SubBusy: false});
+			})
+			;
+
 	}
 
 	/** Handle user clicks on the CreateEndpoint button (send request to client host, on success enable next step) */
@@ -575,6 +838,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			});
 	}
 
+	/** Get a FHIR Instant value from a JavaScript Date */
 	private getInstantFromDate = (date: Date) => {
 		return (
 			date.getFullYear() +
@@ -583,6 +847,18 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			((date.getHours() < 10) ? '0' : '') + date.getHours() +
 			((date.getMinutes() < 10) ? '0' : '') + date.getMinutes() +
 			((date.getSeconds() < 10) ? '0' : '') + date.getSeconds() 
+			)
+			;
+	}
+	
+	/** Get a FHIR Date String from a JavaScript Date */
+	private getFhirDateFromDate = (date: Date) => {
+		return (
+			date.getFullYear() +
+			'-' +
+			((date.getMonth() < 9) ? '0' : '') + (date.getMonth()+1) +
+			'-' +
+			((date.getDate() < 10) ? '0' : '') + date.getDate() 
 			)
 			;
 	}
@@ -618,7 +894,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		let filter: fhir.SubscriptionFilterBy = {
 			matchType: '=',
 			name: 'Patient',
-			value: `Patient/${this.state.patientFilter}`	//`Patient/${this.state.patientFilter},Patient/K123`
+			value: `Patient/${this.state.selectedPatientId}`	//`Patient/${this.state.patientFilter},Patient/K123`
 		}
 
 		var expirationTime:Date = new Date();
@@ -690,7 +966,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			resourceName: "Encounter",
 			filterName: "Patient",
 			filterMatchType: "=",
-			filterValue: `Patient/${this.state.patientFilter}`,
+			filterValue: `Patient/${this.state.selectedPatientId}`,
 			repetitions: 1,
 			delayMilliseconds: 0,
 			ignoreErrors: false,
@@ -738,13 +1014,29 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 	}
 
 	/** Process HTML events for the patient filter text box (update state for managed) */
-  private handlePatientFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({patientFilter: event.target.value})
+  private handleSearchFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({searchFilter: event.target.value});
 	}
 
 	/** Process HTML events for the endpoint name text box (update state for managed) */
 	private handleEndpointNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({endpointName: event.target.value})
+    this.setState({endpointName: event.target.value});
+	}
+
+	private handlePatientGivenNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		this.setState({step02PatientGivenName: event.target.value});
+	}
+
+	private handlePatientFamilyNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		this.setState({step02PatientFamilyName: event.target.value});
+	}
+
+	private handlePatientIdChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		this.setState({step02PatientId: event.target.value});
+	}
+
+	private handlePatientBirthDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		this.setState({step02PatientId: event.target.value});
 	}
 
 	/** Determine if the client is connected enough to proceed and update state accordingly */
