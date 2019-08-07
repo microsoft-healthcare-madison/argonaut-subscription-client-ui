@@ -56,6 +56,7 @@ interface ComponentState {
 	step02PatientId: string,
 	step02Gender: string,
 	step02BirthDate: string,
+	step04Payload: string,
 }
 
 /**
@@ -161,6 +162,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		step02PatientId: '',
 		step02Gender: '',
 		step02BirthDate: '',
+		step04Payload: 'id-only'
 	};
 
 	private getRandomChar = () => {
@@ -440,6 +442,14 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				{/* Request Subscription on FHIR Server */}
         <ScenarioStep step={this.state.step04}>
 					<div>
+						<HTMLSelect
+							onChange={this.handleStep04PayloadChange}
+							defaultValue={this.state.step04Payload}
+							>
+							<option>empty</option>
+							<option>id-only</option>
+							<option>full-resource</option>
+						</HTMLSelect>
 						<Button
 							disabled={!this.state.step04.available}
 							onClick={this.handleRequestSubscriptionClick}
@@ -481,6 +491,10 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
       </Flex>
     );
+	}
+
+	private handleStep04PayloadChange = (event: React.FormEvent<HTMLSelectElement>) => {
+		this.setState({step04Payload: event.currentTarget.value})
 	}
 
 	private handleStep02GenderChange = (event: React.FormEvent<HTMLSelectElement>) => {
@@ -533,12 +547,12 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 				// **** update our state ****
 
-				this.setState({ step02Patients: patients, step02SubBusy: false});
+				this.setState({step02Patients: patients, step02SubBusy: false});
       })
       .catch((reason: any) => {
 				// **** update step ****
 
-				var current: ScenarioStepInfo = {...this.state.step01, 
+				var current: ScenarioStepInfo = {...this.state.step02, 
 					completed: false, 
 					showBusy: false,
 					data: `Failed to get topic list from: ${url}:\n${reason}`
@@ -546,7 +560,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 				// **** update our state ****
 
-				this.setState({	step01: current });      
+				this.setState({step02: current, step02SubBusy: false});      
 			})
       ;
 	}
@@ -885,7 +899,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			endpoint: `${this.props.clientHostInfo.url}Endpoints/${this.state.endpoint!.urlPart}`,
 			header: ['Authorization: Bearer secret-token-abc-123'],
 			heartbeatPeriod: 60,
-			payload: {content: 'id-only', contentType: 'application/fhir+json'},
+			payload: {content: this.state.step04Payload, contentType: 'application/fhir+json'},
 			type: { text: 'rest-hook'},
 		}
 
@@ -903,10 +917,11 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		// **** build the subscription object ****
 
 		let subscription: fhir.Subscription = {
+			resourceType: 'Subscription',
 			channel: channel,
 			filterBy: [filter],
 			end: this.getInstantFromDate(expirationTime),
-			topic: {reference:  new URL('Topic/admissions', this.props.fhirServerInfo.url).toString()},
+			topic: {reference:  new URL('Topic/admission', this.props.fhirServerInfo.url).toString()},
 			reason: 'Client Testing',
 			status: 'requested',
 		}
