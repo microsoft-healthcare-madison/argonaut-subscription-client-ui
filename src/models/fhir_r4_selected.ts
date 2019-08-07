@@ -4123,7 +4123,7 @@ export module fhir {
 		/**
 		 * A record of  the number of events for which the server has attempted delivery on this subscription (i.e., the number of events that occurred while the subscription is in an "active" or "error" state -- not "requested" or "off").   Server Initializes to 0 for a new subscription.  Repeated attempts at delivery of the *same* event notification do not increment this counter.
 		 */
-		eventCount?: positiveInt;
+		eventCount?: unsignedInt;
 		/**
 		 * May contain extended information for property: 'eventCount'
 		 */

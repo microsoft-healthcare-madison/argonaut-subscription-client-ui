@@ -854,15 +854,16 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 	/** Get a FHIR Instant value from a JavaScript Date */
 	private getInstantFromDate = (date: Date) => {
-		return (
-			date.getFullYear() +
-			((date.getMonth() < 9) ? '0' : '') + (date.getMonth()+1) +
-			((date.getDate() < 10) ? '0' : '') + date.getDate() +
-			((date.getHours() < 10) ? '0' : '') + date.getHours() +
-			((date.getMinutes() < 10) ? '0' : '') + date.getMinutes() +
-			((date.getSeconds() < 10) ? '0' : '') + date.getSeconds() 
-			)
-			;
+		return (JSON.stringify(date));
+		// return (
+		// 	date.getFullYear() +
+		// 	((date.getMonth() < 9) ? '0' : '') + (date.getMonth()+1) +
+		// 	((date.getDate() < 10) ? '0' : '') + date.getDate() +
+		// 	((date.getHours() < 10) ? '0' : '') + date.getHours() +
+		// 	((date.getMinutes() < 10) ? '0' : '') + date.getMinutes() +
+		// 	((date.getSeconds() < 10) ? '0' : '') + date.getSeconds() 
+		// 	)
+		// 	;
 	}
 	
 	/** Get a FHIR Date String from a JavaScript Date */
