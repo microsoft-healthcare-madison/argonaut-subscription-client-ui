@@ -13,13 +13,19 @@ import {
   Pre,
   Button,
   Tooltip,
+  Tabs,
+  Tab,
+  TabId,
 } from '@blueprintjs/core';
 
 import {IconNames} from '@blueprintjs/icons';
 import { ScenarioStepInfo } from '../models/ScenarioStepInfo';
+import { ScenarioStepData } from '../models/ScenarioStepData';
+import { ScenarioDataPanel } from './ScenarioDataPanel';
 
 export interface ScenarioStepProps {
-  step: ScenarioStepInfo
+  step: ScenarioStepInfo,
+  data: ScenarioStepData[]
 }
 
 
@@ -27,13 +33,14 @@ export interface ScenarioStepProps {
 interface ComponentState {
   showData: boolean,
   showStep: boolean,
+  selectedTabId: string,
 }
-
 
 export class ScenarioStep extends React.PureComponent<ScenarioStepProps> {
   public state: ComponentState = {
     showData: true,
     showStep: true,
+    selectedTabId: ''
   }
 
   public render() {
@@ -57,8 +64,28 @@ export class ScenarioStep extends React.PureComponent<ScenarioStepProps> {
               {(!this.props.step.showBusy) &&
                 this.props.children
               }
-              { this.props.step.data &&
-              <div>
+              <br />
+              { (this.props.data.length > 0) &&
+              <Tabs
+                animate={true}
+                vertical={false}
+                selectedTabId={this.state.selectedTabId}
+                onChange={this.handleTabChange}
+                >
+                {this.props.data.map((data) => (
+                  <Tab
+                    id={data.id}
+                    title={data.title}
+                    panel={<ScenarioDataPanel data={data}/>}
+                    />
+                )
+
+                )}
+              </Tabs>
+              
+              }
+              {/* { (this.props.step.data && this.state.showData) &&
+                <div>
                 <Tooltip
                   content='Copy to Clipboard'
                   >
@@ -76,12 +103,7 @@ export class ScenarioStep extends React.PureComponent<ScenarioStepProps> {
                   icon={this.state.showData ? IconNames.CHEVRON_DOWN : IconNames.CHEVRON_RIGHT}
                   />
               </div>
-              }
-              { (this.props.step.data && this.state.showData) &&
-                <Pre style={{margin: 5}}>
-                  {this.props.step.data}
-                </Pre>
-              }
+              } */}
             </div>
           }
         </Card>
@@ -89,58 +111,10 @@ export class ScenarioStep extends React.PureComponent<ScenarioStepProps> {
     );
   }
 
-  private handleCopyClick = () => {
-    // **** create a textarea so we can select our text ****
-
-    var textArea = document.createElement("textarea");
-
-    // **** set in top-left corner of screen regardless of scroll position ****
-
-    textArea.style.position = 'fixed';
-    textArea.style.top = '0';
-    textArea.style.left = '0';
-
-    // **** small as poosible - 1px / 1em gives a negative w/h on some browsers ****
-
-    textArea.style.width = '2em';
-    textArea.style.height = '2em';
-
-    // **** don't want padding or borders, reduce size in case it flash renders ****
-
-    textArea.style.padding = '0';
-    textArea.style.border = 'none';
-    textArea.style.outline = 'none';
-    textArea.style.boxShadow = 'none';
-
-    // **** avoid flash of white box if rendered for any reason ****
-
-    textArea.style.background = 'transparent';
-
-    // **** set our text to our data ****
-
-    textArea.value = this.props.step.data;
-
-    // **** add to the DOM ****
-
-    document.body.appendChild(textArea);
-
-    // **** select our element and text ****
-
-    textArea.focus();
-    textArea.select();
-
-    // **** copy, ignore errors ****
-
-    try {
-      document.execCommand('copy');
-    } catch (err) {
-    }
-    
-    // **** remove our textarea ****
-
-    document.body.removeChild(textArea);
+	private handleTabChange = (navbarTabId: TabId) => {
+		this.setState({selectedTabId: navbarTabId.toString()})
   }
-
+  
   private handleToggleStepClick = () => {
     this.setState({showStep: !this.state.showStep})
   }

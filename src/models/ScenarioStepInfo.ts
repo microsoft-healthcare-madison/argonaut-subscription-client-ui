@@ -8,5 +8,4 @@ export interface ScenarioStepInfo {
   available: boolean;
   completed: boolean;
   showBusy: boolean;
-  data: string;
 }

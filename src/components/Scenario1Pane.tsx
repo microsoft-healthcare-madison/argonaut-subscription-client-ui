@@ -17,6 +17,8 @@ import {
   H3, H5, Spinner, Popover, NonIdealState, Tabs, Tab, ControlGroup, HTMLSelect, TabId, H6, RadioGroup, Radio
 } from '@blueprintjs/core';
 
+import {DatePicker, DateInput} from '@blueprintjs/datetime';
+
 import {IconNames} from "@blueprintjs/icons";
 import { ContentPaneProps } from '../models/ContentPaneProps';
 import { ScenarioStepInfo } from '../models/ScenarioStepInfo';
@@ -27,17 +29,26 @@ import { fhir } from '../models/fhir_r4_selected';
 import { TriggerRequest } from '../models/TriggerRequest';
 import { TriggerInformation } from '../models/TriggerInformation';
 import { PatientSelectionInfo } from '../models/PatientSelectionInfo';
+import { ScenarioStepData } from '../models/ScenarioStepData';
 
 /** Type definition for the current object's state variable */
 interface ComponentState {
 	step01: ScenarioStepInfo,
+	stepData01: ScenarioStepData[],
 	step02: ScenarioStepInfo,
-	step03: ScenarioStepInfo,
+	stepData02: ScenarioStepData[],
+	step03: ScenarioStepInfo, 
+	stepData03: ScenarioStepData[],
 	step04: ScenarioStepInfo,
+	stepData04: ScenarioStepData[],
 	step05: ScenarioStepInfo,
+	stepData05: ScenarioStepData[],
 	step06: ScenarioStepInfo,
+	stepData06: ScenarioStepData[],
 	step07: ScenarioStepInfo,
+	stepData07: ScenarioStepData[],
 	step08: ScenarioStepInfo,
+	stepData08: ScenarioStepData[],
 	connected: boolean,
 	endpointName: string,
 	endpointNameWarningIsOpen: boolean,
@@ -55,7 +66,7 @@ interface ComponentState {
 	step02PatientFamilyName: string,
 	step02PatientId: string,
 	step02Gender: string,
-	step02BirthDate: string,
+	step02BirthDate: Date,
 	step04Payload: string,
 }
 
@@ -72,8 +83,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			available: true,
 			completed: false,
 			showBusy: false,
-			data: ''
 		},
+		stepData01: [],
 		step02: {
 			stepNumber: 2,
 			heading: 'Select or Create Patient',
@@ -82,8 +93,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			available: true,
 			completed: false,
 			showBusy: false,
-			data: ''
 		},
+		stepData02: [],
 		step03: {
 			stepNumber: 3,
 			heading: 'Ask Client Host to create Endpoint',
@@ -92,8 +103,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			available: false,
 			completed: false,
 			showBusy: false,
-			data: ''
 		},
+		stepData03: [],
 		step04: {
 			stepNumber: 4,
 			heading: 'Request Subscription on FHIR Server',
@@ -102,8 +113,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			available: false,
 			completed: false,
 			showBusy: false,
-			data: ''
 		},
+		stepData04: [],
 		step05: {
 			stepNumber: 5,
 			heading: 'Wait on Endpoint handshake',
@@ -112,8 +123,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			available: false,
 			completed: false,
 			showBusy: false,
-			data: ''
 		},
+		stepData05: [],
 		step06: {
 			stepNumber: 6,
 			heading: 'Ask Client Host to trigger event',
@@ -122,8 +133,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			available: false,
 			completed: false,
 			showBusy: false,
-			data: ''
 		},
+		stepData06: [],
 		step07: {
 			stepNumber: 7,
 			heading: 'Wait on Subscription Notification',
@@ -132,8 +143,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			available: false,
 			completed: false,
 			showBusy: false,
-			data: ''
 		},
+		stepData07: [],
 		step08: {
 			stepNumber: 8,
 			heading: 'Clean up',
@@ -142,8 +153,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			available: true,
 			completed: false,
 			showBusy: false,
-			data: ''
 		},
+		stepData08: [],
 		connected: true,
 		endpointName: '',
 		endpointNameWarningIsOpen: false,
@@ -161,7 +172,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		step02PatientGivenName: '',
 		step02PatientId: '',
 		step02Gender: '',
-		step02BirthDate: '',
+		step02BirthDate: new Date(),
 		step04Payload: 'id-only'
 	};
 
@@ -199,7 +210,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		this.state.step02PatientFamilyName = `Project-${Math.floor((Math.random() * 10000) + 1)}`
 		this.state.step02PatientId = `${this.getRandomChars(3)}${Math.floor((Math.random() * 10000) + 1)}`
 		this.state.step02Gender = (Math.random() < 0.51) ? 'female' : 'male';
-		this.state.step02BirthDate = this.getFhirDateFromDate(birthDate);
+		this.state.step02BirthDate = birthDate;
 	}
 
 	componentDidMount() {
@@ -245,7 +256,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
         </Box>
 
 				{/* Get Topic list from FHIR Server */}
-        <ScenarioStep step={this.state.step01}>
+        <ScenarioStep step={this.state.step01} data={this.state.stepData01}>
           <div>
             <Button
 							disabled={!this.state.step01.available}
@@ -257,7 +268,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
         </ScenarioStep>
 
 				{/* Select or Create Patient */}
-        <ScenarioStep step={this.state.step02}>
+        <ScenarioStep step={this.state.step02} data={this.state.stepData02}>
           <div>
 						<Tabs
 							animate={true}
@@ -369,13 +380,14 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 								</HTMLSelect>
 								<FormGroup
 									label='Patient Birth Date'
-									helperText='YYYYMMDD format for the birth date of this patient'
+									helperText='Birth date of this patient'
 									labelFor='patient-birthdate'
 									>
-									<InputGroup
-										id='patient-birthdate'
-										value={this.state.step02BirthDate}
+									<DateInput
 										onChange={this.handlePatientBirthDateChange}
+										formatDate={date => date.toLocaleDateString()}
+										parseDate={str => new Date(str)}
+										value={this.state.step02BirthDate}
 										/>
 								</FormGroup>
 								{ (!this.state.step02SubBusy) &&
@@ -398,7 +410,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
         </ScenarioStep>
 
 				{/* Ask Client Host to create Endpoint */}
-        <ScenarioStep step={this.state.step03}>
+        <ScenarioStep step={this.state.step03} data={this.state.stepData03}>
 					<div>
 						<FormGroup
               label = 'Endpoint name'
@@ -440,7 +452,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				</ScenarioStep>
 
 				{/* Request Subscription on FHIR Server */}
-        <ScenarioStep step={this.state.step04}>
+        <ScenarioStep step={this.state.step04} data={this.state.stepData04}>
 					<div>
 						<HTMLSelect
 							onChange={this.handleStep04PayloadChange}
@@ -460,10 +472,10 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				</ScenarioStep>
 
 				{/* Wait on Endpoint handshake */}
-        <ScenarioStep step={this.state.step05} />
+        <ScenarioStep step={this.state.step05} data={this.state.stepData05} />
 
 				{/* Ask Client Host to trigger event */}
-        <ScenarioStep step={this.state.step06}>
+        <ScenarioStep step={this.state.step06} data={this.state.stepData06}>
 					<div>
 						<Button
 							disabled={!this.state.step06.available}
@@ -475,10 +487,10 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				</ScenarioStep>
 
 				{/* Wait on Subscription Notification */}
-        <ScenarioStep step={this.state.step07} />
+        <ScenarioStep step={this.state.step07} data={this.state.stepData07} />
 
 				{/* Clean up */}
-        <ScenarioStep step={this.state.step08}>
+        <ScenarioStep step={this.state.step08} data={this.state.stepData08}>
 					<div>
 						<Button
 							disabled={!this.state.step08.available}
@@ -552,15 +564,18 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
       .catch((reason: any) => {
 				// **** update step ****
 
-				var current: ScenarioStepInfo = {...this.state.step02, 
+				let current: ScenarioStepInfo = {...this.state.step02, 
 					completed: false, 
 					showBusy: false,
-					data: `Failed to get topic list from: ${url}:\n${reason}`
 				};
+				let data: ScenarioStepData[] = [
+					{id: 'request', title: 'Request', data: url},
+					{id: 'error', title: 'Error', data: `Failed to get topic list from: ${url}:\n${reason}`},
+				];
 
 				// **** update our state ****
 
-				this.setState({step02: current, step02SubBusy: false});      
+				this.setState({step02: current, stepData02: data, step02SubBusy: false});      
 			})
       ;
 	}
@@ -610,33 +625,43 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		if (eventCount === 0) {
 			// **** update steps ****
 
-			var current: ScenarioStepInfo = {...this.state.step05,
+			let current: ScenarioStepInfo = {...this.state.step05,
 				completed: true, 
 				showBusy: false,
-				data: JSON.stringify(bundle, null, '\t'),
 			};
-			var next: ScenarioStepInfo = {...this.state.step06, available: true};
+			let data: ScenarioStepData[] = [
+				{id: 'handshake', title: 'Handshake', data: JSON.stringify(bundle, null, '\t')}
+			];
+
+			let next: ScenarioStepInfo = {...this.state.step06, available: true};
 
 			// **** update our state ****
 
 			this.setState({
 				step05: current, 
+				stepData05: data,
 				step06: next, 
 			});
 		} else {
 			// **** update step ****
 
-			var current: ScenarioStepInfo = {...this.state.step07,
+			let current: ScenarioStepInfo = {...this.state.step07,
 				completed: true, 
 				showBusy: false,
-				data: JSON.stringify(bundle, null, '\t'),
 			};
+
+			let rec:ScenarioStepData = {
+				id:`event_${this.state.stepData07.length}`, 
+				title: `Event ${this.state.stepData07.length}`, 
+				data: JSON.stringify(bundle, null, '\t'),
+			}
+
+			let data: ScenarioStepData[] = this.state.stepData07.slice();
+			data.push(rec);
 
 			// **** update our state ****
 
-			this.setState({
-				step07: current,
-			});
+			this.setState({step07: current, stepData07: data});
 		}
 	}
 
@@ -652,37 +677,44 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
     // **** construct the registration REST url ****
 
-    let url: URL = new URL('Topic/', this.props.fhirServerInfo.url);
+    let url: string = new URL('Topic/', this.props.fhirServerInfo.url).toString();
 
     // **** attempt to get the list of Topics ****
 
-    ApiHelper.apiGet<fhir.Topic[]>(url.toString())
+    ApiHelper.apiGet<fhir.Topic[]>(url)
       .then((value: fhir.Topic[]) => {
 
 				// **** update step ****
 
-				var current: ScenarioStepInfo = {...this.state.step01, 
+				let current: ScenarioStepInfo = {...this.state.step01, 
 					completed: true, 
 					showBusy: false,
-					data: JSON.stringify(value, null, '\t')
 				};
+
+				let data: ScenarioStepData[] = [
+					{id:'request', title:'Request', data:url},
+					{id:'topics', title:'Topics', data:JSON.stringify(value, null, '\t')}
+				];
 
 				// **** update our state ****
 
-				this.setState({ step01: current });
+				this.setState({ step01: current, stepData01: data });
       })
       .catch((reason: any) => {
 				// **** update step ****
 
-				var current: ScenarioStepInfo = {...this.state.step01, 
+				let current: ScenarioStepInfo = {...this.state.step01, 
 					completed: false, 
 					showBusy: false,
-					data: `Failed to get topic list from: ${url}:\n${reason}`
 				};
 
+				let data: ScenarioStepData[] = [
+					{id:'request', title:'Request', data:url},
+					{id:'error', title:'Error', data:`Failed to get topic list from: ${url}:\n${reason}`}
+				];
 				// **** update our state ****
 
-				this.setState({	step01: current });      
+				this.setState({	step01: current, stepData01: data });      
 			})
       ;
 	}
@@ -693,23 +725,32 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		// **** update steps ****
 
-		var current: ScenarioStepInfo = {...this.state.step02, 
+		let current: ScenarioStepInfo = {...this.state.step02, 
 			completed: true, 
-			data: `Using Existing Patient (id): ${selectedPatientId}`
 		};
-		var next: ScenarioStepInfo = {...this.state.step03, available: true};
+
+		let rec:ScenarioStepData = {
+			id:'info', 
+			title:'Info', 
+			data:`Using Existing Patient (id): ${selectedPatientId}`
+		}
+
+		var data: ScenarioStepData[] = this.state.stepData02.slice();
+		data.push(rec);
+
+		let next: ScenarioStepInfo = {...this.state.step03, available: true};
 
 		// **** update our state, generate a default name for the endpoint ****
 
 		this.setState({
 			step02: current, 
+			stepData02: data,
 			step03: next, 
 			selectedPatientId: selectedPatientId,
 			endpointName: `p${selectedPatientId}-${Math.floor((Math.random() * 10000) + 1)}`,
 		});
 	}
 
-	
 	/** Handle user clicks on the SetPatient button from Create (validate and enable next step) */
 	private handleSetCreatedPatientClick = () => {
 		// **** flag we are creating ****
@@ -727,32 +768,34 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				use: 'official'
 			}],
 			gender: this.state.step02Gender,
-			birthDate: this.state.step02BirthDate,
+			birthDate: this.getFhirDateFromDate(this.state.step02BirthDate),
 		}
-
-		console.log('Patient:', patient);
-		console.log('Patient (JSON):', JSON.stringify(patient));
 
 		// **** PUT this on the server ****
 
-		let url = new URL(`Patient/${patient.id!}?_format=json`, this.props.fhirServerInfo.url);
-
-		console.log('URL:', url);
+		let url: string = new URL(`Patient/${patient.id!}?_format=json`, this.props.fhirServerInfo.url).toString();
 
 		ApiHelper.apiPutFhir<fhir.Patient>(url.toString(), JSON.stringify(patient))
 			.then((value: fhir.Patient) => {
 				// **** update steps ****
 
 				let current: ScenarioStepInfo = {...this.state.step02, 
-					completed: true, 
-					data: `Using New Patient (id): ${value.id!}`
+					completed: true,
 				};
+
+				let data: ScenarioStepData[] = [
+					{id:'request', title:'Request', data:JSON.stringify(patient, null, '\t')},
+					{id:'response', title:'Response', data:JSON.stringify(value, null, '\t')},
+					{id:'info', title:'Info', data:`Using New Patient (id): ${value.id!}`},
+				];
+
 				let next: ScenarioStepInfo = {...this.state.step03, available: true};
 
 				// **** update our state, generate a default name for the endpoint ****
 
 				this.setState({
 					step02: current, 
+					stepData02: data,
 					step03: next, 
 					selectedPatientId: value.id!,
 					endpointName: `rest-hook-${value.id!}-${Math.floor((Math.random() * 10000) + 1)}`,
@@ -764,8 +807,12 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 				let failed: ScenarioStepInfo = {...this.state.step02,
 					completed: false,
-					data: `Request to create patient (${patient.id!}) failed:\n${reason}`,
 				}; 
+
+				let data: ScenarioStepData[] = [
+					{id:'request', title:'Request', data:JSON.stringify(patient, null, '\t')},
+					{id:'error', title:'Error', data:`Request to create patient (${url}) failed:\n${reason}`},
+				];
 
 				// **** update our state ****
 
@@ -792,7 +839,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		// **** update step ****
 
-		var busyStep: ScenarioStepInfo = {...this.state.step03, showBusy: true };
+		let busyStep: ScenarioStepInfo = {...this.state.step03, showBusy: true };
 
 		// TODO(ginoc): destroy any existing endpoints
 
@@ -820,41 +867,51 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			.then((value: EndpointRegistration) => {
 				// **** make the next step available ****
 
-				var current: ScenarioStepInfo = {...this.state.step03, completed: true, showBusy: false};
-				var next: ScenarioStepInfo = {...this.state.step04, available: true};
+				let current: ScenarioStepInfo = {...this.state.step03, completed: true, showBusy: false};
+				let next: ScenarioStepInfo = {...this.state.step04, available: true};
 
 				// **** show the client endpoint information ****
 
-				current.data = 'Endpoint Created:\n' +
-					`\tUID: ${value.uid}\n` +
-					`\tURL: ${this.props.clientHostInfo.url}Endpoints/${value.urlPart}/\n` +
-					`\tOR:  ${this.props.clientHostInfo.url}Endpoints/${value.uid}/\n` +
-					'';
-		
+				let data: ScenarioStepData[] = [
+					{id:'request', title:'Request', data:JSON.stringify(endpointRegistration, null, '\t')},
+					{id:'response', title:'Response', data:JSON.stringify(value, null, '\t')},
+					{id:'info', title:'Info', 
+						data:'Endpoint Created:\n' +
+						`\tUID: ${value.uid}\n` +
+						`\tURL: ${this.props.clientHostInfo.url}Endpoints/${value.urlPart}/\n` +
+						`\tOR:  ${this.props.clientHostInfo.url}Endpoints/${value.uid}/\n` +
+						''},
+				];
+
 				// **** update our state ****
 
 				this.setState({
-					step03: current, 
+					step03: current,
+					stepData03: data, 
 					step04: next, 
 					endpoint: value,
 				});
 			})
 			.catch((reason: any) => {
 				
-				var current: ScenarioStepInfo = {...this.state.step03, 
-					data: 'Request for endpoint failed! Please change your filter and try again.',
+				let current: ScenarioStepInfo = {...this.state.step03,
 					showBusy: false,
 					};
+				
+				let data: ScenarioStepData[] = [
+					{id:'request', title:'Request', data:JSON.stringify(endpointRegistration, null, '\t')},
+					{id:'error', title:'Error', data:`Request to for endpoint (${url}) failed:\n${reason}`},
+				];
 
 				// **** request failed ****
 
-				this.setState({step03: current});
+				this.setState({step03: current, stepData03: data});
 			});
 	}
 
 	/** Get a FHIR Instant value from a JavaScript Date */
 	private getInstantFromDate = (date: Date) => {
-		return (JSON.stringify(date));
+		return (JSON.stringify(date).replace(/['"]+/g, ''));
 		// return (
 		// 	date.getFullYear() +
 		// 	((date.getMonth() < 9) ? '0' : '') + (date.getMonth()+1) +
@@ -933,31 +990,41 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			.then((value: fhir.Subscription) => {
 				// **** update steps - note that next step starts busy since we are waiting ****
 
-				var current: ScenarioStepInfo = {...this.state.step04, 
+				let current: ScenarioStepInfo = {...this.state.step04, 
 					completed: true, 
 					showBusy: false,
-					data: JSON.stringify(subscription, null, '\t'),
 				};
-				var next: ScenarioStepInfo = {...this.state.step05, available: true, showBusy: true};
+
+				let data: ScenarioStepData[] = [
+					{id:'request', title:'Request', data:JSON.stringify(subscription, null, '\t')},
+					{id:'response', title:'Response', data:JSON.stringify(value, null, '\t')},
+				];
+
+				let next: ScenarioStepInfo = {...this.state.step05, available: true, showBusy: true};
 	
 				// **** update our state ****
 
 				this.setState({
 					step04: current, 
+					stepData04: data,
 					step05: next, 
 					subscription: value,
 				});
 			})
 			.catch((reason: any) => {
 				
-				var current: ScenarioStepInfo = {...this.state.step04, 
-					data: 'Request for Subscription failed! Please try again.',
+				let current: ScenarioStepInfo = {...this.state.step04, 
 					showBusy: false,
 					};
 
+				let data: ScenarioStepData[] = [
+					{id:'request', title:'Request', data:JSON.stringify(subscription, null, '\t')},
+					{id:'error', title:'Error', data:`Request for Subscription (${url}) failed:\n${reason}`},
+				];
+
 				// **** request failed ****
 
-				this.setState({step04: current});
+				this.setState({step04: current, stepData04: data});
 			});
 	}
 
@@ -980,7 +1047,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		let triggerRequest: TriggerRequest = {
 			fhirServerUrl: this.props.fhirServerInfo.url,
 			resourceName: "Encounter",
-			filterName: "Patient",
+			filterName: "patient",
 			filterMatchType: "=",
 			filterValue: `Patient/${this.state.selectedPatientId}`,
 			repetitions: 1,
@@ -994,11 +1061,17 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			.then((value: TriggerInformation) => {
 				// **** update steps - note that next step starts busy since we are waiting ****
 
-				var current: ScenarioStepInfo = {...this.state.step06, 
+				let current: ScenarioStepInfo = {...this.state.step06, 
 					showBusy: false,
-					data: `Trigger: ${value.uid}. . .`,
 				};
-				var next: ScenarioStepInfo = {...this.state.step07,
+
+				let data: ScenarioStepData[] = [
+					{id:'request', title:'Request', data:JSON.stringify(triggerRequest, null, '\t')},
+					{id:'response', title:'Response', data:JSON.stringify(value, null, '\t')},
+					{id:'info', title:'Info', data:`Trigger request accepted: ${value.uid}...`},
+				];
+
+				let next: ScenarioStepInfo = {...this.state.step07,
 					available: true,
 					showBusy: true,
 				};
@@ -1007,20 +1080,25 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 				this.setState({
 					step06: current,
+					stepData06: data,
 					step07: next,
 					triggerUid: value.uid,
 				});
 			})
 			.catch((reason: any) => {
 				
-				var current: ScenarioStepInfo = {...this.state.step06, 
-					data: 'Request for Event Trigger failed! Please try again.',
+				let current: ScenarioStepInfo = {...this.state.step06, 
 					showBusy: false,
 					};
 
+				let data: ScenarioStepData[] = [
+					{id:'request', title:'Request', data:JSON.stringify(triggerRequest, null, '\t')},
+					{id:'error', title:'Error', data:`Request to create trigger (${url}) failed:\n${reason}`},
+				];
+
 				// **** request failed ****
 
-				this.setState({step06: current});
+				this.setState({step06: current, stepData06: data});
 			});
 	}
 
@@ -1051,8 +1129,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		this.setState({step02PatientId: event.target.value});
 	}
 
-	private handlePatientBirthDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		this.setState({step02PatientId: event.target.value});
+	private handlePatientBirthDateChange = (selectedDate: Date, isUserChange: boolean) => {
+		this.setState({step02BirthDate: selectedDate});
 	}
 
 	/** Determine if the client is connected enough to proceed and update state accordingly */
