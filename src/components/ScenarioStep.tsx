@@ -16,6 +16,7 @@ import {
   Tabs,
   Tab,
   TabId,
+  NavbarDivider,
 } from '@blueprintjs/core';
 
 import {IconNames} from '@blueprintjs/icons';
@@ -25,7 +26,8 @@ import { ScenarioDataPanel } from './ScenarioDataPanel';
 
 export interface ScenarioStepProps {
   step: ScenarioStepInfo,
-  data: ScenarioStepData[]
+  data: ScenarioStepData[],
+  toaster: ((message: string, iconName?: string, timeout?: number) => void)
 }
 
 
@@ -41,6 +43,14 @@ export class ScenarioStep extends React.PureComponent<ScenarioStepProps> {
     showData: true,
     showStep: true,
     selectedTabId: ''
+  }
+
+  componentWillReceiveProps(nextProps: ScenarioStepProps) {
+    // **** check for tabs ****
+
+    if ((nextProps.data) && (nextProps.data.length > 0)) {
+      this.setState({selectedTabId: nextProps.data[nextProps.data.length-1].id});
+    }
   }
 
   public render() {
@@ -66,18 +76,21 @@ export class ScenarioStep extends React.PureComponent<ScenarioStepProps> {
               }
               <br />
               { (this.props.data.length > 0) &&
-              <Tabs
-                animate={true}
-                vertical={false}
-                selectedTabId={this.state.selectedTabId}
-                onChange={this.handleTabChange}
-                >
+                <Tabs
+                  animate={true}
+                  vertical={false}
+                  selectedTabId={this.state.selectedTabId}
+                  onChange={this.handleTabChange}
+                  >
                 {this.props.data.map((data) => (
-                  <Tab
-                    id={data.id}
-                    title={data.title}
-                    panel={<ScenarioDataPanel data={data}/>}
-                    />
+                  [ <NavbarDivider />,
+                    <Tab
+                      id={data.id}
+                      panel={<ScenarioDataPanel data={data} toaster={this.props.toaster} />}
+                      >
+                      {data.iconName && <Icon icon={data.iconName} />} {data.title}
+                      </Tab>
+                  ]
                 )
 
                 )}

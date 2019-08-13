@@ -7,4 +7,5 @@ export interface ContentPaneProps {
   updateClientHostInfo: ((clientHostInfo: ConnectionInformation) => void);
   connectClientHostWebSocket: ((clientHostInfo: ConnectionInformation) => void);
   registerHostMessageHandler: ((handler: ((message: string) => void)) => void);
+  toaster: ((message: string, iconName?: string, timeout?: number) => void);
 }

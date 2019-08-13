@@ -4,8 +4,11 @@ import { Card, H6, Tooltip, Button, Pre, } from '@blueprintjs/core';
 import {IconNames} from '@blueprintjs/icons';
 import { ScenarioStepData } from '../models/ScenarioStepData';
 
+import SyntaxHighlighter from 'react-syntax-highlighter';
+
 export interface ScenarioDataPanelProps {
-  data: ScenarioStepData
+  data: ScenarioStepData,
+  toaster: ((message: string, iconName?: string, timeout?: number) => void)
 }
 
 /** Type definition for the current object's state variable */
@@ -17,22 +20,13 @@ export class ScenarioDataPanel extends React.PureComponent<ScenarioDataPanelProp
   }
 
   public render() {
-    return (
-      <div>
-        <Tooltip
-          content='Copy to Clipboard'
-          >
-          <Button
-            onClick={this.handleCopyClick}
-            minimal={true}
-            style={{margin: 5}}
-            icon={IconNames.DUPLICATE}
-            />
-        </Tooltip>
-        <Pre style={{margin: 5}}>
-          {this.props.data.data}
-        </Pre>
-      </div>
+  return (
+      <SyntaxHighlighter
+        language='json'
+        onClick={this.handleCopyClick}
+        >
+        {this.props.data.data}
+      </SyntaxHighlighter>
     );
   }
   
@@ -86,6 +80,10 @@ export class ScenarioDataPanel extends React.PureComponent<ScenarioDataPanelProp
     // **** remove our textarea ****
 
     document.body.removeChild(textArea);
+
+    // *** notify the user ****
+
+    this.props.toaster(`Copied '${this.props.data.title}' to Clipboard.`, IconNames.CLIPBOARD);
   }
 
 }

@@ -9,7 +9,8 @@ import {
   Card,
 	Button,
 	Classes,
-  Collapse,
+	Collapse,
+	Icon,
   InputGroup,
   FormGroup,
   Elevation,
@@ -30,6 +31,7 @@ import { TriggerRequest } from '../models/TriggerRequest';
 import { TriggerInformation } from '../models/TriggerInformation';
 import { PatientSelectionInfo } from '../models/PatientSelectionInfo';
 import { ScenarioStepData } from '../models/ScenarioStepData';
+
 
 /** Type definition for the current object's state variable */
 interface ComponentState {
@@ -256,7 +258,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
         </Box>
 
 				{/* Get Topic list from FHIR Server */}
-        <ScenarioStep step={this.state.step01} data={this.state.stepData01}>
+        <ScenarioStep step={this.state.step01} data={this.state.stepData01} toaster={this.props.toaster}>
           <div>
             <Button
 							disabled={!this.state.step01.available}
@@ -268,7 +270,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
         </ScenarioStep>
 
 				{/* Select or Create Patient */}
-        <ScenarioStep step={this.state.step02} data={this.state.stepData02}>
+        <ScenarioStep step={this.state.step02} data={this.state.stepData02} toaster={this.props.toaster}>
           <div>
 						<Tabs
 							animate={true}
@@ -410,7 +412,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
         </ScenarioStep>
 
 				{/* Ask Client Host to create Endpoint */}
-        <ScenarioStep step={this.state.step03} data={this.state.stepData03}>
+        <ScenarioStep step={this.state.step03} data={this.state.stepData03} toaster={this.props.toaster}>
 					<div>
 						<FormGroup
               label = 'Endpoint name'
@@ -452,7 +454,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				</ScenarioStep>
 
 				{/* Request Subscription on FHIR Server */}
-        <ScenarioStep step={this.state.step04} data={this.state.stepData04}>
+        <ScenarioStep step={this.state.step04} data={this.state.stepData04} toaster={this.props.toaster}>
 					<div>
 						<HTMLSelect
 							onChange={this.handleStep04PayloadChange}
@@ -472,10 +474,10 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				</ScenarioStep>
 
 				{/* Wait on Endpoint handshake */}
-        <ScenarioStep step={this.state.step05} data={this.state.stepData05} />
+        <ScenarioStep step={this.state.step05} data={this.state.stepData05} toaster={this.props.toaster} />
 
 				{/* Ask Client Host to trigger event */}
-        <ScenarioStep step={this.state.step06} data={this.state.stepData06}>
+        <ScenarioStep step={this.state.step06} data={this.state.stepData06} toaster={this.props.toaster}>
 					<div>
 						<Button
 							disabled={!this.state.step06.available}
@@ -487,10 +489,10 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				</ScenarioStep>
 
 				{/* Wait on Subscription Notification */}
-        <ScenarioStep step={this.state.step07} data={this.state.stepData07} />
+        <ScenarioStep step={this.state.step07} data={this.state.stepData07} toaster={this.props.toaster} />
 
 				{/* Clean up */}
-        <ScenarioStep step={this.state.step08} data={this.state.stepData08}>
+        <ScenarioStep step={this.state.step08} data={this.state.stepData08} toaster={this.props.toaster}>
 					<div>
 						<Button
 							disabled={!this.state.step08.available}
@@ -569,8 +571,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 					showBusy: false,
 				};
 				let data: ScenarioStepData[] = [
-					{id: 'request', title: 'Request', data: url},
-					{id: 'error', title: 'Error', data: `Failed to get topic list from: ${url}:\n${reason}`},
+					{id: 'request', title: 'Request', data: url, iconName:IconNames.GLOBE_NETWORK},
+					{id: 'error', title: 'Error', data: `Failed to get topic list from: ${url}:\n${reason}`, iconName:IconNames.ERROR},
 				];
 
 				// **** update our state ****
@@ -630,7 +632,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				showBusy: false,
 			};
 			let data: ScenarioStepData[] = [
-				{id: 'handshake', title: 'Handshake', data: JSON.stringify(bundle, null, '\t')}
+				{id: 'handshake', title: 'Handshake', data: JSON.stringify(bundle, null, 2), iconName:IconNames.FLAME}
 			];
 
 			let next: ScenarioStepInfo = {...this.state.step06, available: true};
@@ -653,7 +655,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			let rec:ScenarioStepData = {
 				id:`event_${this.state.stepData07.length}`, 
 				title: `Event ${this.state.stepData07.length}`, 
-				data: JSON.stringify(bundle, null, '\t'),
+				data: JSON.stringify(bundle, null, 2),
+				iconName:IconNames.FLAME
 			}
 
 			let data: ScenarioStepData[] = this.state.stepData07.slice();
@@ -692,8 +695,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				};
 
 				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:url},
-					{id:'topics', title:'Topics', data:JSON.stringify(value, null, '\t')}
+					{id:'request', title:'Request', data:url, iconName:IconNames.GLOBE_NETWORK},
+					{id:'topics', title:'Topics', data:JSON.stringify(value, null, 2), iconName:IconNames.FLAME}
 				];
 
 				// **** update our state ****
@@ -709,8 +712,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				};
 
 				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:url},
-					{id:'error', title:'Error', data:`Failed to get topic list from: ${url}:\n${reason}`}
+					{id:'request', title:'Request', data:url, iconName:IconNames.GLOBE_NETWORK},
+					{id:'error', title:'Error', data:`Failed to get topic list from: ${url}:\n${reason}`, iconName:IconNames.ERROR}
 				];
 				// **** update our state ****
 
@@ -732,7 +735,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		let rec:ScenarioStepData = {
 			id:'info', 
 			title:'Info', 
-			data:`Using Existing Patient (id): ${selectedPatientId}`
+			data:`Using Existing Patient (id): ${selectedPatientId}`,
+			iconName: IconNames.INFO_SIGN
 		}
 
 		var data: ScenarioStepData[] = this.state.stepData02.slice();
@@ -784,9 +788,9 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				};
 
 				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:JSON.stringify(patient, null, '\t')},
-					{id:'response', title:'Response', data:JSON.stringify(value, null, '\t')},
-					{id:'info', title:'Info', data:`Using New Patient (id): ${value.id!}`},
+					{id:'request', title:'Request', data:JSON.stringify(patient, null, 2), iconName:IconNames.GLOBE_NETWORK},
+					{id:'response', title:'Response', data:JSON.stringify(value, null, 2), iconName:IconNames.FLAME},
+					{id:'info', title:'Info', data:`Using New Patient (id): ${value.id!}`, iconName:IconNames.INFO_SIGN},
 				];
 
 				let next: ScenarioStepInfo = {...this.state.step03, available: true};
@@ -810,8 +814,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				}; 
 
 				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:JSON.stringify(patient, null, '\t')},
-					{id:'error', title:'Error', data:`Request to create patient (${url}) failed:\n${reason}`},
+					{id:'request', title:'Request', data:JSON.stringify(patient, null, 2), iconName:IconNames.GLOBE_NETWORK},
+					{id:'error', title:'Error', data:`Request to create patient (${url}) failed:\n${reason}`, iconName:IconNames.ERROR},
 				];
 
 				// **** update our state ****
@@ -873,9 +877,9 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				// **** show the client endpoint information ****
 
 				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:JSON.stringify(endpointRegistration, null, '\t')},
-					{id:'response', title:'Response', data:JSON.stringify(value, null, '\t')},
-					{id:'info', title:'Info', 
+					{id:'request', title:'Request', data:JSON.stringify(endpointRegistration, null, 2), iconName:IconNames.GLOBE_NETWORK},
+					{id:'response', title:'Response', data:JSON.stringify(value, null, 2), iconName:IconNames.INFO_SIGN},
+					{id:'info', title:'Info', iconName:IconNames.INFO_SIGN, 
 						data:'Endpoint Created:\n' +
 						`\tUID: ${value.uid}\n` +
 						`\tURL: ${this.props.clientHostInfo.url}Endpoints/${value.urlPart}/\n` +
@@ -899,8 +903,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 					};
 				
 				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:JSON.stringify(endpointRegistration, null, '\t')},
-					{id:'error', title:'Error', data:`Request to for endpoint (${url}) failed:\n${reason}`},
+					{id:'request', title:'Request', data:JSON.stringify(endpointRegistration, null, 2), iconName:IconNames.INFO_SIGN},
+					{id:'error', title:'Error', data:`Request to for endpoint (${url}) failed:\n${reason}`, iconName:IconNames.ERROR},
 				];
 
 				// **** request failed ****
@@ -996,8 +1000,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				};
 
 				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:JSON.stringify(subscription, null, '\t')},
-					{id:'response', title:'Response', data:JSON.stringify(value, null, '\t')},
+					{id:'request', title:'Request', data:JSON.stringify(subscription, null, 2), iconName:IconNames.FLAME},
+					{id:'response', title:'Response', data:JSON.stringify(value, null, 2), iconName:IconNames.FLAME},
 				];
 
 				let next: ScenarioStepInfo = {...this.state.step05, available: true, showBusy: true};
@@ -1018,8 +1022,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 					};
 
 				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:JSON.stringify(subscription, null, '\t')},
-					{id:'error', title:'Error', data:`Request for Subscription (${url}) failed:\n${reason}`},
+					{id:'request', title:'Request', data:JSON.stringify(subscription, null, 2), iconName:IconNames.FLAME},
+					{id:'error', title:'Error', data:`Request for Subscription (${url}) failed:\n${reason}`, iconName:IconNames.ERROR},
 				];
 
 				// **** request failed ****
@@ -1066,9 +1070,9 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				};
 
 				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:JSON.stringify(triggerRequest, null, '\t')},
-					{id:'response', title:'Response', data:JSON.stringify(value, null, '\t')},
-					{id:'info', title:'Info', data:`Trigger request accepted: ${value.uid}...`},
+					{id:'request', title:'Request', data:JSON.stringify(triggerRequest, null, 2), iconName:IconNames.INFO_SIGN},
+					{id:'response', title:'Response', data:JSON.stringify(value, null, 2), iconName:IconNames.INFO_SIGN},
+					{id:'info', title:'Info', data:`Trigger request accepted: ${value.uid}...`, iconName:IconNames.INFO_SIGN},
 				];
 
 				let next: ScenarioStepInfo = {...this.state.step07,
@@ -1092,8 +1096,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 					};
 
 				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:JSON.stringify(triggerRequest, null, '\t')},
-					{id:'error', title:'Error', data:`Request to create trigger (${url}) failed:\n${reason}`},
+					{id:'request', title:'Request', data:JSON.stringify(triggerRequest, null, 2), iconName:IconNames.INFO_SIGN},
+					{id:'error', title:'Error', data:`Request to create trigger (${url}) failed:\n${reason}`, iconName:IconNames.ERROR},
 				];
 
 				// **** request failed ****

@@ -91,6 +91,7 @@ export class MainPage extends React.PureComponent<MainPageProps> {
           updateClientHostInfo: this.updateClientHostInfo,
           connectClientHostWebSocket: this.connectToClientHostWebSocket,
           registerHostMessageHandler: this.registerPaneClientHostMessageHandler,
+          toaster: this.showToastMessage,
         }) }
 
       </div>
