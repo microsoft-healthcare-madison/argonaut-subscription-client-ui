@@ -5,11 +5,18 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  ui_tag: argonautcontainerregistry.azurecr.io/subscriptions/ui:$(Build.BuildNumber)
-  aks_resource_group: argonaut
-  aks_cluster_name: argonaut-cluster
-  acr_registry_name: argonautContainerRegistry
-  k8s_namespace: subscriptions-ri
+  - group: argonaut-variables
+  - name: ui_tag
+    value: argonautcontainerregistry.azurecr.io/subscriptions/ui:$(Build.BuildNumber)
+  - name: aks_resource_group
+    value: argonaut
+  - name: aks_cluster_name
+    value: argonaut-cluster
+  - name: acr_registry_name
+    value: argonautContainerRegistry
+  - name: k8s_namespace
+    value: subscriptions-ri
+
 
 steps:
 - bash: docker build -t $(ui_tag) -f .devops/Dockerfile .
