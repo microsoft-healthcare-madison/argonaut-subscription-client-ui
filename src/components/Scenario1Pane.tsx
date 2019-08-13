@@ -594,10 +594,11 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 	private handleHostMessage = (message: string) => {
 		// **** vars we want ****
 
-		var eventCount: number = NaN;
-		var status: string;
-		var topicUrl: string;
-		var subscriptionUrl: string;
+		let eventCount: number = NaN;
+		let bundleEventCount: number = NaN;
+		let status: string;
+		let topicUrl: string;
+		let subscriptionUrl: string;
 
 		// **** resolve this message into a bundle ****
 
@@ -611,7 +612,9 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		{
 			bundle.meta.extension.forEach(element => {
 				if (element.url.endsWith('subscriptionEventCount')) {
-					eventCount = element.valuePositiveInt!;
+					eventCount = element.valueUnsignedInt!;
+				} else if (element.url.endsWith('bundleEventCount')) {
+					bundleEventCount = element.valueUnsignedInt!;
 				} else if (element.url.endsWith('subscriptionStatus')) {
 					status = element.valueString!;
 				} else if (element.url.endsWith('subscriptionTopicUrl')) {
