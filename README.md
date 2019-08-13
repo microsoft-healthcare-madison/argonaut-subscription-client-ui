@@ -1,4 +1,5 @@
 # argonaut-subscription-client-ui
+[![Build Status](https://dev.azure.com/fhir-build/argonaut/_apis/build/status/microsoft-healthcare-madison.argonaut-subscription-client-ui?branchName=master)](https://dev.azure.com/fhir-build/argonaut/_build/latest?definitionId=6&branchName=master)
 
 Goals:
 * Create a UI for testing the Argonaut Subscription changes.
