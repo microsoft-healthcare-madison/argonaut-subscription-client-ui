@@ -5,7 +5,10 @@ Goals:
 * Make source clear enough for developers to follow as a reference implementation.
 * Highlight artifacts of testing harness.
 
+
 ## Documentation
+
+For background on use cases, technical architecture, and related projects, [see here](https://github.com/microsoft-healthcare-madison/argo-subscription-docs/tree/master/connectathon-scenarios-201909).
 
 
 ## More Information
