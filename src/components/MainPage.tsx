@@ -31,6 +31,8 @@ interface ComponentState {
   selectedNavbarTabId: string;
   fhirServerInfo: ConnectionInformation;
   clientHostInfo: ConnectionInformation;
+  uiDark: boolean;
+  codePaneDark: boolean;
 }
 
 export interface MainPageProps {}
@@ -56,6 +58,8 @@ export class MainPage extends React.PureComponent<MainPageProps> {
         logMessages: false,
         registration: '',
       },
+      uiDark: false,
+      codePaneDark: false,
   };
 
   /** WebSocket object for communicating with the client host */
@@ -92,10 +96,31 @@ export class MainPage extends React.PureComponent<MainPageProps> {
           connectClientHostWebSocket: this.connectToClientHostWebSocket,
           registerHostMessageHandler: this.registerPaneClientHostMessageHandler,
           toaster: this.showToastMessage,
+          uiDark: this.state.uiDark,
+          toggleUiColors: this.toggleUiColors,
+          codePaneDark: this.state.codePaneDark,
+          toggleCodePaneColors: this.toggleCodePaneColors,
         }) }
 
       </div>
     );
+  }
+
+  private toggleUiColors = () => {
+    // **** update DOM elements ****
+
+    var rootElement: HTMLElement = document.getElementById("root")!;
+    rootElement.className = rootElement.className === 'bp3-dark' ? '' : 'bp3-dark';
+
+    document.body.className = document.body.className === 'body-dark' ? '' : 'body-dark';
+
+    // **** update state ****
+
+    this.setState({uiDark: !this.state.uiDark});
+  }
+
+  private toggleCodePaneColors = () => {
+    this.setState({codePaneDark: !this.state.codePaneDark});
   }
 
   /** Callback function to allow panes to register to receive client host notifications (max: 1) */

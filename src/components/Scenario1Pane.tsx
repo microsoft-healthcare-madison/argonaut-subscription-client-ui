@@ -1,16 +1,9 @@
 import * as React from 'react';
 
 import {
-  Flex,
-  Box
-} from 'reflexbox';
-
-import {
   Card,
 	Button,
 	Classes,
-	Collapse,
-	Icon,
   InputGroup,
   FormGroup,
   Elevation,
@@ -18,7 +11,7 @@ import {
   H3, H5, Spinner, Popover, NonIdealState, Tabs, Tab, ControlGroup, HTMLSelect, TabId, H6, RadioGroup, Radio
 } from '@blueprintjs/core';
 
-import {DatePicker, DateInput} from '@blueprintjs/datetime';
+import {DateInput} from '@blueprintjs/datetime';
 
 import {IconNames} from "@blueprintjs/icons";
 import { ContentPaneProps } from '../models/ContentPaneProps';
@@ -31,7 +24,6 @@ import { TriggerRequest } from '../models/TriggerRequest';
 import { TriggerInformation } from '../models/TriggerInformation';
 import { PatientSelectionInfo } from '../models/PatientSelectionInfo';
 import { ScenarioStepData } from '../models/ScenarioStepData';
-
 
 /** Type definition for the current object's state variable */
 interface ComponentState {
@@ -231,279 +223,300 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		if (!this.state.connected) {
 			return (
-				<Flex p={1} align='center' column>
-        	<Box px={1} w={1} m={1}>
-						<Card elevation={Elevation.TWO}>
-							<NonIdealState
-								icon={IconNames.ISSUE}
-								title='Not Connected to Client Host'
-								description='You must be connected to a FHIR Server and Client Host before running this scenario.'
-								/>
-						</Card>
-					</Box>
-				</Flex>
+				<Card elevation={Elevation.TWO}>
+					<NonIdealState
+						icon={IconNames.ISSUE}
+						title='Not Connected to Client Host'
+						description='You must be connected to a FHIR Server and Client Host before running this scenario.'
+						/>
+				</Card>
 			);
 		}
 
 		// **** if we are connected, render scenario content ****
-    return (
-      <Flex p={1} align='center' column>
-        <Box px={1} w={1} m={1}>
-          <Card elevation={Elevation.TWO}>
-            <Text>
-              <H3>Scenario 1 - (<a href='http://bit.ly/argo-sub-connectathon-2019-09#scenario-1' target='_blank'>Docs</a>)</H3>
-              Single-Patient Encounter notifications via REST-Hook (e.g., to a consumer app)
-            </Text>
-          </Card>
-        </Box>
+    return ( [
+			<Card elevation={Elevation.TWO} style={{margin: 5}}>
+				<Text>
+					<H3>Scenario 1 - (<a href='http://bit.ly/argo-sub-connectathon-2019-09#scenario-1' target='_blank'>Docs</a>)</H3>
+					Single-Patient Encounter notifications via REST-Hook (e.g., to a consumer app)
+				</Text>
+			</Card>,
 
-				{/* Get Topic list from FHIR Server */}
-        <ScenarioStep step={this.state.step01} data={this.state.stepData01} toaster={this.props.toaster}>
-          <div>
-            <Button
-							disabled={!this.state.step01.available}
-							onClick={this.handleGetTopicListClick}
-              >
-              Go
-            </Button>
-          </div>
-        </ScenarioStep>
+			/* Get Topic list from FHIR Server */
+			<ScenarioStep 
+				step={this.state.step01} 
+				data={this.state.stepData01} 
+				toaster={this.props.toaster} 
+				codePaneDark={this.props.codePaneDark}
+				>
+				<Button
+					disabled={!this.state.step01.available}
+					onClick={this.handleGetTopicListClick}
+					>
+					Go
+				</Button>
+			</ScenarioStep>,
 
-				{/* Select or Create Patient */}
-        <ScenarioStep step={this.state.step02} data={this.state.stepData02} toaster={this.props.toaster}>
-          <div>
-						<Tabs
-							animate={true}
-							id='tabsStep2'
-							vertical={false}
-							selectedTabId={this.state.step02TabId}
-							onChange={this.handleStep02TabChange}
-							>
-							<Tab id='s2_search' title='Search' />
-							<Tab id='s2_create' title='Create' />
-						</Tabs>
-						{ (this.state.step02TabId === 's2_search') &&
-							<Card>
-								<H6>Search and Select Existing Patient</H6>
-								<ControlGroup>
-									<HTMLSelect
-										onChange={this.handleStep02MatchTypeChange}
-										defaultValue={this.state.step02MatchType}
-										>
-										<option>family</option>
-										<option>given</option>
-										<option>_id</option>
-										<option>name</option>
-									</HTMLSelect>
-									<InputGroup
-										id='step02_searchFilter'
-										value={this.state.step02SearchFilter}
-										onChange={this.handleSearchFilterChange}
-										/>
-									<Button
-										onClick={this.handleStep02SearchClick}
-										>
-										Search
-									</Button>
-								</ControlGroup>
-								<br />
-								{ (this.state.step02SubBusy) &&
-									<Spinner />
-								}
-								{ (!this.state.step02SubBusy) &&
-									<RadioGroup
-										label={`Select a patient, ${this.state.step02Patients.length} found`}
-										onChange={this.handleStep02RadioChange}
-										selectedValue={this.state.step02SelectedValue}
-										>
-											{ this.state.step02Patients.map((patientInfo) => (
-												<Radio 
-													key={`s02_p_${patientInfo.key}`} 
-													label={patientInfo.value} 
-													value={patientInfo.key} 
-													checked={patientInfo.key === this.state.step02SelectedValue}
-													/>
-											))}
-									</RadioGroup>
-								}
-								{ (!this.state.step02SubBusy) &&
-									<Button
-										disabled={(this.state.step02SelectedValue === '')}
-										onClick={this.handleSetSearchedPatientClick}
-										style={{margin: 5}}
-										>
-										Use Selected Patient
-									</Button>
-								}
-							</Card>
-						}
-						{ (this.state.step02TabId === 's2_create') &&
-							<Card>
-								<H6>Create and PUT a new Patient</H6>
-								<FormGroup
-									label = 'Patient Given Name'
-									helperText = 'Given Name for the new Patient'
-									labelFor='patient-given-name'
-									>
-									<InputGroup
-										id='patient-given-name'
-										value={this.state.step02PatientGivenName}
-										onChange={this.handlePatientGivenNameChange}
-										/>
-								</FormGroup>
-								<FormGroup
-									label = 'Patient Family Name'
-									helperText = 'Family Name for the new Patient'
-									labelFor='patient-family-name'
-									>
-									<InputGroup
-										id='patient-family-name'
-										value={this.state.step02PatientFamilyName}
-										onChange={this.handlePatientFamilyNameChange}
-										/>
-								</FormGroup>
-								<FormGroup
-									label='Patient ID'
-									helperText='ID for the new Patient (must contain at least one letter)'
-									labelFor='patient-id'
-									>
-									<InputGroup
-										id='patient-id'
-										value={this.state.step02PatientId}
-										onChange={this.handlePatientIdChange}
-										/>
-								</FormGroup>
-								<HTMLSelect
-									onChange={this.handleStep02GenderChange}
-									defaultValue={this.state.step02Gender}
-									>
-									<option>female</option>
-									<option>male</option>
-								</HTMLSelect>
-								<FormGroup
-									label='Patient Birth Date'
-									helperText='Birth date of this patient'
-									labelFor='patient-birthdate'
-									>
-									<DateInput
-										onChange={this.handlePatientBirthDateChange}
-										formatDate={date => date.toLocaleDateString()}
-										parseDate={str => new Date(str)}
-										value={this.state.step02BirthDate}
-										/>
-								</FormGroup>
-								{ (!this.state.step02SubBusy) &&
-									<Button
-										disabled={(this.state.step02PatientId === '')}
-										onClick={this.handleSetCreatedPatientClick}
-										style={{margin: 5}}
-										>
-										Create Patient
-									</Button>
-								}
-								{ (this.state.step02SubBusy) &&
-									<Spinner />
-								}
-
-							</Card>
-						}
-						
-          </div>
-        </ScenarioStep>
-
-				{/* Ask Client Host to create Endpoint */}
-        <ScenarioStep step={this.state.step03} data={this.state.stepData03} toaster={this.props.toaster}>
-					<div>
-						<FormGroup
-              label = 'Endpoint name'
-              helperText = 'Name of the endpoint (appears in URL)'
-              labelFor='endpoint-name'
-              >
-							<InputGroup
-								disabled={!this.state.step03.available}
-								id='endpoint-name'
-								value={this.state.endpointName}
-								onChange={this.handleEndpointNameChange}
-								/>
-            </FormGroup>
-						<Popover
-							isOpen={this.state.endpointNameWarningIsOpen}
-							canEscapeKeyClose={true}
-							usePortal={true}
-							>
-							<Button
-								disabled={!this.state.step03.available}
-								onClick={this.handleClientHostCreateEndpointClick}
+			/* Select or Create Patient */
+			<ScenarioStep 
+				step={this.state.step02} 
+				data={this.state.stepData02} 
+				toaster={this.props.toaster} 
+				codePaneDark={this.props.codePaneDark}
+				>
+				<Tabs
+					animate={true}
+					id='tabsStep2'
+					vertical={false}
+					selectedTabId={this.state.step02TabId}
+					onChange={this.handleStep02TabChange}
+					>
+					<Tab id='s2_search' title='Search' />
+					<Tab id='s2_create' title='Create' />
+				</Tabs>
+				{ (this.state.step02TabId === 's2_search') &&
+					<Card>
+						<H6>Search and Select Existing Patient</H6>
+						<ControlGroup>
+							<HTMLSelect
+								onChange={this.handleStep02MatchTypeChange}
+								defaultValue={this.state.step02MatchType}
 								>
-								Go
+								<option>family</option>
+								<option>given</option>
+								<option>_id</option>
+								<option>name</option>
+							</HTMLSelect>
+							<InputGroup
+								id='step02_searchFilter'
+								value={this.state.step02SearchFilter}
+								onChange={this.handleSearchFilterChange}
+								/>
+							<Button
+								onClick={this.handleStep02SearchClick}
+								>
+								Search
 							</Button>
-							<Card key='text'>
-								<H5>Invalid Endpoint Name</H5>
-								<p>A valid endpoint name is required for this scenario</p>
-								<div style={{ display: "flex", justifyContent: "flex-end", marginTop: 15 }}>
-									<Button
-										className={Classes.POPOVER_DISMISS}
-										onClick={() => this.setState({patientFilterWarningIsOpen: false})}
-										>
-										OK
-									</Button>
-								</div>
-							</Card>
-						</Popover>
-          </div>
-				</ScenarioStep>
-
-				{/* Request Subscription on FHIR Server */}
-        <ScenarioStep step={this.state.step04} data={this.state.stepData04} toaster={this.props.toaster}>
-					<div>
-						<HTMLSelect
-							onChange={this.handleStep04PayloadChange}
-							defaultValue={this.state.step04Payload}
+						</ControlGroup>
+						<br />
+						{ (this.state.step02SubBusy) &&
+							<Spinner />
+						}
+						{ (!this.state.step02SubBusy) &&
+							<RadioGroup
+								label={`Select a patient, ${this.state.step02Patients.length} found`}
+								onChange={this.handleStep02RadioChange}
+								selectedValue={this.state.step02SelectedValue}
+								>
+									{ this.state.step02Patients.map((patientInfo) => (
+										<Radio 
+											key={`s02_p_${patientInfo.key}`} 
+											label={patientInfo.value} 
+											value={patientInfo.key} 
+											checked={patientInfo.key === this.state.step02SelectedValue}
+											/>
+									))}
+							</RadioGroup>
+						}
+						{ (!this.state.step02SubBusy) &&
+							<Button
+								disabled={(this.state.step02SelectedValue === '')}
+								onClick={this.handleSetSearchedPatientClick}
+								style={{margin: 5}}
+								>
+								Use Selected Patient
+							</Button>
+						}
+					</Card>
+				}
+				{ (this.state.step02TabId === 's2_create') &&
+					<Card>
+						<H6>Create and PUT a new Patient</H6>
+						<FormGroup
+							label = 'Patient Given Name'
+							helperText = 'Given Name for the new Patient'
+							labelFor='patient-given-name'
 							>
-							<option>empty</option>
-							<option>id-only</option>
-							<option>full-resource</option>
+							<InputGroup
+								id='patient-given-name'
+								value={this.state.step02PatientGivenName}
+								onChange={this.handlePatientGivenNameChange}
+								/>
+						</FormGroup>
+						<FormGroup
+							label = 'Patient Family Name'
+							helperText = 'Family Name for the new Patient'
+							labelFor='patient-family-name'
+							>
+							<InputGroup
+								id='patient-family-name'
+								value={this.state.step02PatientFamilyName}
+								onChange={this.handlePatientFamilyNameChange}
+								/>
+						</FormGroup>
+						<FormGroup
+							label='Patient ID'
+							helperText='ID for the new Patient (must contain at least one letter)'
+							labelFor='patient-id'
+							>
+							<InputGroup
+								id='patient-id'
+								value={this.state.step02PatientId}
+								onChange={this.handlePatientIdChange}
+								/>
+						</FormGroup>
+						<HTMLSelect
+							onChange={this.handleStep02GenderChange}
+							defaultValue={this.state.step02Gender}
+							>
+							<option>female</option>
+							<option>male</option>
 						</HTMLSelect>
+						<FormGroup
+							label='Patient Birth Date'
+							helperText='Birth date of this patient'
+							labelFor='patient-birthdate'
+							>
+							<DateInput
+								onChange={this.handlePatientBirthDateChange}
+								formatDate={date => date.toLocaleDateString()}
+								parseDate={str => new Date(str)}
+								value={this.state.step02BirthDate}
+								/>
+						</FormGroup>
+						{ (!this.state.step02SubBusy) &&
+							<Button
+								disabled={(this.state.step02PatientId === '')}
+								onClick={this.handleSetCreatedPatientClick}
+								style={{margin: 5}}
+								>
+								Create Patient
+							</Button>
+						}
+						{ (this.state.step02SubBusy) &&
+							<Spinner />
+						}
+
+					</Card>
+				}
+			</ScenarioStep>,
+
+			/* Ask Client Host to create Endpoint */
+			<ScenarioStep 
+				step={this.state.step03} 
+				data={this.state.stepData03} 
+				toaster={this.props.toaster} 
+				codePaneDark={this.props.codePaneDark}
+				>
+				<div>
+					<FormGroup
+						label = 'Endpoint name'
+						helperText = 'Name of the endpoint (appears in URL)'
+						labelFor='endpoint-name'
+						>
+						<InputGroup
+							disabled={!this.state.step03.available}
+							id='endpoint-name'
+							value={this.state.endpointName}
+							onChange={this.handleEndpointNameChange}
+							/>
+					</FormGroup>
+					<Popover
+						isOpen={this.state.endpointNameWarningIsOpen}
+						canEscapeKeyClose={true}
+						usePortal={true}
+						>
 						<Button
-							disabled={!this.state.step04.available}
-							onClick={this.handleRequestSubscriptionClick}
-              >
-              Go
-            </Button>
-					</div>
-				</ScenarioStep>
+							disabled={!this.state.step03.available}
+							onClick={this.handleClientHostCreateEndpointClick}
+							>
+							Go
+						</Button>
+						<Card key='text'>
+							<H5>Invalid Endpoint Name</H5>
+							<p>A valid endpoint name is required for this scenario</p>
+							<div style={{ display: "flex", justifyContent: "flex-end", marginTop: 15 }}>
+								<Button
+									className={Classes.POPOVER_DISMISS}
+									onClick={() => this.setState({patientFilterWarningIsOpen: false})}
+									>
+									OK
+								</Button>
+							</div>
+						</Card>
+					</Popover>
+				</div>
+			</ScenarioStep>,
 
-				{/* Wait on Endpoint handshake */}
-        <ScenarioStep step={this.state.step05} data={this.state.stepData05} toaster={this.props.toaster} />
+			/* Request Subscription on FHIR Server */
+			<ScenarioStep 
+				step={this.state.step04} 
+				data={this.state.stepData04} 
+				toaster={this.props.toaster} 
+				codePaneDark={this.props.codePaneDark}
+				>
+				<HTMLSelect
+					onChange={this.handleStep04PayloadChange}
+					defaultValue={this.state.step04Payload}
+					>
+					<option>empty</option>
+					<option>id-only</option>
+					<option>full-resource</option>
+				</HTMLSelect>
+				<Button
+					disabled={!this.state.step04.available}
+					onClick={this.handleRequestSubscriptionClick}
+					>
+					Go
+				</Button>
+			</ScenarioStep>,
 
-				{/* Ask Client Host to trigger event */}
-        <ScenarioStep step={this.state.step06} data={this.state.stepData06} toaster={this.props.toaster}>
-					<div>
-						<Button
-							disabled={!this.state.step06.available}
-							onClick={this.handleRequestTriggerEventClick}
-              >
-              Go
-            </Button>
-					</div>
-				</ScenarioStep>
+			/* Wait on Endpoint handshake */
+			<ScenarioStep 
+				step={this.state.step05} 
+				data={this.state.stepData05} 
+				toaster={this.props.toaster} 
+				codePaneDark={this.props.codePaneDark} 
+				/>,
 
-				{/* Wait on Subscription Notification */}
-        <ScenarioStep step={this.state.step07} data={this.state.stepData07} toaster={this.props.toaster} />
+			/* Ask Client Host to trigger event */
+			<ScenarioStep 
+				step={this.state.step06} 
+				data={this.state.stepData06} 
+				toaster={this.props.toaster} 
+				codePaneDark={this.props.codePaneDark}
+				>
+				<Button
+					disabled={!this.state.step06.available}
+					onClick={this.handleRequestTriggerEventClick}
+					>
+					Go
+				</Button>
+			</ScenarioStep>,
 
-				{/* Clean up */}
-        <ScenarioStep step={this.state.step08} data={this.state.stepData08} toaster={this.props.toaster}>
-					<div>
-						<Button
-							disabled={!this.state.step08.available}
-							onClick={this.handleCleanUpClick}
-              >
-              Go
-            </Button>
-					</div>
-				</ScenarioStep>
+			/* Wait on Subscription Notification */
+			<ScenarioStep 
+				step={this.state.step07} 
+				data={this.state.stepData07} 
+				toaster={this.props.toaster} 
+				codePaneDark={this.props.codePaneDark} 
+				/>,
 
-      </Flex>
+			/* Clean up */
+			<ScenarioStep 
+				step={this.state.step08} 
+				data={this.state.stepData08} 
+				toaster={this.props.toaster} 
+				codePaneDark={this.props.codePaneDark}
+				>
+				<Button
+					disabled={!this.state.step08.available}
+					onClick={this.handleCleanUpClick}
+					>
+					Go
+				</Button>
+			</ScenarioStep>,
+		]
     );
 	}
 

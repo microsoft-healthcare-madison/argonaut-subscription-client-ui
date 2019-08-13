@@ -93,63 +93,68 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
 
   public render() {
     return (
-      <Flex p={1} align='center' column>
-        <Box px={1} w={1} m={1}>
-          <Card elevation={Elevation.TWO}>
-            <FormGroup
-              label = {this.props.fhirServerInfo.name + ' URL'}
-              helperText = {this.props.fhirServerInfo.hint}
-              labelFor='fhir-server-url'
-              >
-              <InputGroup 
-                id='fhir-server-url'
-                value={this.state.fhirServerUrl}
-                onChange={this.handleFhirServerUrlChange}
-                disabled={this.state.clientHostConnected}
-                />
-            </FormGroup>
+      <Card elevation={Elevation.TWO}>
+        <FormGroup
+          label = {this.props.fhirServerInfo.name + ' URL'}
+          helperText = {this.props.fhirServerInfo.hint}
+          labelFor='fhir-server-url'
+          >
+          <InputGroup 
+            id='fhir-server-url'
+            value={this.state.fhirServerUrl}
+            onChange={this.handleFhirServerUrlChange}
+            disabled={this.state.clientHostConnected}
+            />
+        </FormGroup>
 
-            <FormGroup
-              label = {this.props.clientHostInfo.name + ' URL'}
-              helperText = {this.props.clientHostInfo.hint}
-              labelFor='fhir-client-url'
-              >
-              <InputGroup 
-                id='fhir-client-url'
-                value={this.state.clientHostUrl}
-                onChange={this.handleClientHostUrlChange}
-                disabled={this.state.clientHostConnected}
-                />
-            </FormGroup>
+        <FormGroup
+          label = {this.props.clientHostInfo.name + ' URL'}
+          helperText = {this.props.clientHostInfo.hint}
+          labelFor='fhir-client-url'
+          >
+          <InputGroup 
+            id='fhir-client-url'
+            value={this.state.clientHostUrl}
+            onChange={this.handleClientHostUrlChange}
+            disabled={this.state.clientHostConnected}
+            />
+        </FormGroup>
 
-            <Button
-              onClick={this.handleConnectClick}
-              intent={this.state.clientHostConnected ? Intent.WARNING : Intent.PRIMARY}
-              style={{margin: 5}}
-              key={'ConnectButton_'+this.props.clientHostInfo.status}
-              >
-              {this.state.clientHostConnected ? 'Disconnect' : 'Connect'}
-            </Button>
-            {/* {this.props.clientHostInfo.status === 'ok' ? 'Connected' : 'Not Connected'} */}
+        <Button
+          onClick={this.handleConnectClick}
+          intent={this.state.clientHostConnected ? Intent.WARNING : Intent.PRIMARY}
+          key={'ConnectButton_'+this.props.clientHostInfo.status}
+          >
+          {this.state.clientHostConnected ? 'Disconnect' : 'Connect'}
+        </Button>
+        {/* {this.props.clientHostInfo.status === 'ok' ? 'Connected' : 'Not Connected'} */}
 
 
-            <Switch
-              checked={this.props.clientHostInfo.showMessages}
-              label='Display Client Host Messages'
-              onChange={this.handleToggleShowClientHostMessages}
-              style={{margin: 5}}
-              />
-            
-            <Switch
-              checked={this.props.clientHostInfo.logMessages}
-              label='Console Log Client Host Messages'
-              onChange={this.handleToggleLogClientHostMessages}
-              style={{margin: 5}}
-              />
+        <Switch
+          checked={this.props.clientHostInfo.showMessages}
+          label='Display Client Host Messages'
+          onChange={this.handleToggleShowClientHostMessages}
+          />
+        
+        <Switch
+          checked={this.props.clientHostInfo.logMessages}
+          label='Console Log Client Host Messages'
+          onChange={this.handleToggleLogClientHostMessages}
+          />
+        
+        <Switch
+          checked={this.props.uiDark}
+          label='Use Dark Theme for UI'
+          onChange={this.props.toggleUiColors}
+          />
 
-          </Card>
-        </Box>
-      </Flex>
+        <Switch
+          checked={this.props.codePaneDark}
+          label='Use Dark Theme for Code Pane'
+          onChange={this.props.toggleCodePaneColors}
+          />
+          
+      </Card>
     );
   }
 

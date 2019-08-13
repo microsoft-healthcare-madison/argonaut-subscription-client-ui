@@ -8,4 +8,8 @@ export interface ContentPaneProps {
   connectClientHostWebSocket: ((clientHostInfo: ConnectionInformation) => void);
   registerHostMessageHandler: ((handler: ((message: string) => void)) => void);
   toaster: ((message: string, iconName?: string, timeout?: number) => void);
+  uiDark: boolean;
+  toggleUiColors: (() => void);
+  codePaneDark: boolean;
+  toggleCodePaneColors: (() => void);
 }
