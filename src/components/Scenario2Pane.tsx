@@ -5,16 +5,16 @@ import {
   Box 
 } from 'reflexbox';
 
-import { 
-  Button, 
-  Collapse,
-  Icon,
-  InputGroup,
-  Intent,
+// import { 
+//   Button, 
+//   Collapse,
+//   Icon,
+//   InputGroup,
+//   Intent,
   
-} from '@blueprintjs/core';
+// } from '@blueprintjs/core';
 
-import {IconNames} from "@blueprintjs/icons";
+// import {IconNames} from "@blueprintjs/icons";
 import { ContentPaneProps } from '../models/ContentPaneProps';
 
 export class Scenario2Pane extends React.PureComponent<ContentPaneProps> {

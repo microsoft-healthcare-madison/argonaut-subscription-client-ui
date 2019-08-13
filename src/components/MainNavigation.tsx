@@ -18,6 +18,7 @@ import {
   Drawer,
   Position,
   H5,
+  Tooltip,
 } from '@blueprintjs/core';
 
 import {IconNames} from '@blueprintjs/icons';
@@ -68,9 +69,13 @@ export class MainNavigation extends React.PureComponent<MainNavigationProps> {
                 vertical={false}
                 >
                 { // **** add our tabs ****
-                  this.props.tabs.map(function(tab, index) {
-                    return <Tab key={index} id={tab.id} title={tab.title} />
-                  }) 
+                  this.props.tabs.map((tab) => (
+                    <Tab key={tab.id} id={tab.id}>
+                      <Tooltip content={tab.tip}>
+                        {tab.title}
+                      </Tooltip>
+                    </Tab>
+                  ))
                 }
                 {/* <Tabs.Expander /> */}
               </Tabs>
@@ -126,9 +131,9 @@ export class MainNavigation extends React.PureComponent<MainNavigationProps> {
                 vertical={true}
                 >
                 { // **** add our tabs ****
-                  this.props.tabs.map(function(tab, index) {
-                    return <Tab key={index} id={tab.id} title={tab.title} />
-                  }) 
+                  this.props.tabs.map((tab) => (
+                    <Tab key={tab.id} id={tab.id} title={tab.title}/>
+                  ))
                 }
               </Tabs>
               <br />

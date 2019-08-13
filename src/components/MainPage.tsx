@@ -16,14 +16,14 @@ import {Scenario2Pane} from './Scenario2Pane';
 import { UiTabInformation } from '../models/UiTabInformation';
 import { MainNavigation } from './MainNavigation';
 import { ConnectionInformation } from '../models/ConnectionInformation';
-import { TriggerPane } from './TriggerPane';
+// import { TriggerPane } from './TriggerPane';
 
 /** tab configuration - MUST be in 'id' order - first tab is shown at launch */
 let _tabs: UiTabInformation[] = [
-  {title: 'Config', id: '0', panel: React.createFactory(ConfigurationPane)},
-  {title: 'One', id: '1', panel: React.createFactory(Scenario1Pane)},
-  {title: 'Two', id: '2', panel: React.createFactory(Scenario2Pane)},
-  {title: 'Trigger', id: '3', panel: React.createFactory(TriggerPane)},
+  {title: 'Config', tip: 'Configure Settings and Servers', id: '0', panel: React.createFactory(ConfigurationPane)},
+  {title: 'One', tip:'Single Patient to REST-Hook', id: '1', panel: React.createFactory(Scenario1Pane)},
+  {title: 'Two', tip:'Patient Group to REST-Hook', id: '2', panel: React.createFactory(Scenario2Pane)},
+  // {title: 'Trigger', tip:'Manual trigger events', id: '3', panel: React.createFactory(TriggerPane)},
 ]
 
 /** Type definition for the current object's state variable */
