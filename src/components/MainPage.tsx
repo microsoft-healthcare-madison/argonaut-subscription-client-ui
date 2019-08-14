@@ -35,6 +35,8 @@ interface ComponentState {
   codePaneDark: boolean;
 }
 
+// **** extend the Window to include our _env settings ****
+
 declare global {
   interface Window { _env?:any }
 }

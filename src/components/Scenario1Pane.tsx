@@ -678,7 +678,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 			let rec:ScenarioStepData = {
 				id:`event_${this.state.stepData07.length}`, 
-				title: `Event ${this.state.stepData07.length}`, 
+				title: `# ${this.state.stepData07.length}`, 
 				data: JSON.stringify(bundle, null, 2),
 				iconName:IconNames.FLAME
 			}
