@@ -8,6 +8,8 @@ variables:
   - group: argonaut-variables
   - name: ui_tag
     value: argonautcontainerregistry.azurecr.io/subscriptions/ui:$(Build.BuildNumber)
+  - name: latest_tag
+    value: argonautcontainerregistry.azurecr.io/subscriptions/ui:latest
   - name: aks_resource_group
     value: argonaut
   - name: aks_cluster_name
@@ -26,7 +28,9 @@ steps:
     az login --service-principal --username $(appId) --password $(password) --tenant $(tenant)
     az aks get-credentials --resource-group $(aks_resource_group) --name $(aks_cluster_name)
     az acr login --name $(acr_registry_name)
+    docker tag $(ui_tag) $(latest_tag)
     docker push $(ui_tag)
+    docker push $(latest_tag)
     kubectl -n $(k8s_namespace) patch deployment ui  \
       --type json \
       --patch "[{ \"op\" : \"replace\" , \"path\" : \"/spec/template/spec/containers/0/image\" , \"value\" : \"$(ui_tag)\"}]"
