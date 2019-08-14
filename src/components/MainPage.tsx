@@ -35,6 +35,10 @@ interface ComponentState {
   codePaneDark: boolean;
 }
 
+declare global {
+  interface Window { _env?:any }
+}
+
 export interface MainPageProps {}
 
 export class MainPage extends React.PureComponent<MainPageProps> {
@@ -43,7 +47,7 @@ export class MainPage extends React.PureComponent<MainPageProps> {
       fhirServerInfo: {
           name: 'FHIR Server', 
           hint: 'URL for an R4 FHIR Server with Subscription and Topic support',
-          url: 'http://localhost:56340/baseR4/', 
+          url: window._env.Server_Public_Url, 
           status: '', 
           showMessages: false,
           logMessages: false,
@@ -52,7 +56,7 @@ export class MainPage extends React.PureComponent<MainPageProps> {
       clientHostInfo: {
         name: 'Client Host', 
         hint: 'URL for a running argonaut-client-host service',
-        url: 'http://localhost:56345/', 
+        url: window._env.Client_Public_Url, 
         status: '', 
         showMessages: false,
         logMessages: false,
