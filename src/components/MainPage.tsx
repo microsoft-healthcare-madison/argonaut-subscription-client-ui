@@ -130,6 +130,12 @@ export class MainPage extends React.PureComponent<MainPageProps> {
 
   /** Function to process client host messages received via the WebSocket */
   private clientHostMessageHandler = (event: MessageEvent) => {
+    // **** check for keepalive message (discard) ****
+
+    if ((event.data) && ((event.data as string).startsWith('keepalive'))) {
+      console.log('Recevied keepalive on ClientHost WebSocket', event.data);
+      return;
+    }
     // **** display to user (if desired) ****
 
     if (this.state.clientHostInfo.showMessages) {

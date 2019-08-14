@@ -235,7 +235,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		// **** if we are connected, render scenario content ****
     return ( [
-			<Card elevation={Elevation.TWO} style={{margin: 5}}>
+			<Card key='title' elevation={Elevation.TWO} style={{margin: 5}}>
 				<Text>
 					<H3>Scenario 1 - (<a href='http://bit.ly/argo-sub-connectathon-2019-09#scenario-1' target='_blank'>Docs</a>)</H3>
 					Single-Patient Encounter notifications via REST-Hook (e.g., to a consumer app)
@@ -244,6 +244,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 			/* Get Topic list from FHIR Server */
 			<ScenarioStep 
+				key='step01'
 				step={this.state.step01} 
 				data={this.state.stepData01} 
 				toaster={this.props.toaster} 
@@ -259,6 +260,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 			/* Select or Create Patient */
 			<ScenarioStep 
+				key='step02'
 				step={this.state.step02} 
 				data={this.state.stepData02} 
 				toaster={this.props.toaster} 
@@ -403,6 +405,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 			/* Ask Client Host to create Endpoint */
 			<ScenarioStep 
+				key='step03'
 				step={this.state.step03} 
 				data={this.state.stepData03} 
 				toaster={this.props.toaster} 
@@ -450,6 +453,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 			/* Request Subscription on FHIR Server */
 			<ScenarioStep 
+				key='step04'
 				step={this.state.step04} 
 				data={this.state.stepData04} 
 				toaster={this.props.toaster} 
@@ -473,6 +477,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 			/* Wait on Endpoint handshake */
 			<ScenarioStep 
+				key='step05'
 				step={this.state.step05} 
 				data={this.state.stepData05} 
 				toaster={this.props.toaster} 
@@ -481,6 +486,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 			/* Ask Client Host to trigger event */
 			<ScenarioStep 
+				key='step06'
 				step={this.state.step06} 
 				data={this.state.stepData06} 
 				toaster={this.props.toaster} 
@@ -496,6 +502,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 			/* Wait on Subscription Notification */
 			<ScenarioStep 
+				key='step07'
 				step={this.state.step07} 
 				data={this.state.stepData07} 
 				toaster={this.props.toaster} 
@@ -504,6 +511,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 			/* Clean up */
 			<ScenarioStep 
+				key='step08'
 				step={this.state.step08} 
 				data={this.state.stepData08} 
 				toaster={this.props.toaster} 
