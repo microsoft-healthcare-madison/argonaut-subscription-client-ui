@@ -21,8 +21,8 @@ import { ConnectionInformation } from '../models/ConnectionInformation';
 /** tab configuration - MUST be in 'id' order - first tab is shown at launch */
 let _tabs: UiTabInformation[] = [
   {title: 'Config', tip: 'Configure Settings and Servers', id: '0', panel: React.createFactory(ConfigurationPane)},
-  {title: 'One', tip:'Single Patient to REST-Hook', id: '1', panel: React.createFactory(Scenario1Pane)},
-  {title: 'Two', tip:'Patient Group to REST-Hook', id: '2', panel: React.createFactory(Scenario2Pane)},
+  {title: 'Patient+REST', tip:'Single Patient to REST-Hook', id: '1', panel: React.createFactory(Scenario1Pane)},
+  {title: 'Group+REST', tip:'Patient Group to REST-Hook', id: '2', panel: React.createFactory(Scenario2Pane)},
   // {title: 'Trigger', tip:'Manual trigger events', id: '3', panel: React.createFactory(TriggerPane)},
 ]
 
@@ -133,7 +133,7 @@ export class MainPage extends React.PureComponent<MainPageProps> {
     // **** check for keepalive message (discard) ****
 
     if ((event.data) && ((event.data as string).startsWith('keepalive'))) {
-      console.log('Recevied keepalive on ClientHost WebSocket', event.data);
+      // console.log('Recevied keepalive on ClientHost WebSocket', event.data);
       return;
     }
     // **** display to user (if desired) ****
