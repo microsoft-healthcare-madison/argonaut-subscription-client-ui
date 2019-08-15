@@ -44,8 +44,6 @@ interface ComponentState {
 	step08: ScenarioStepInfo,
 	stepData08: ScenarioStepData[],
 	connected: boolean,
-	endpointName: string,
-	endpointNameWarningIsOpen: boolean,
 	endpoint: EndpointRegistration | null,
 	subscription: fhir.Subscription | null,
 	triggerUid: string,
@@ -150,8 +148,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		},
 		stepData08: [],
 		connected: true,
-		endpointName: '',
-		endpointNameWarningIsOpen: false,
 		endpoint: null,
 		subscription: null,
 		triggerUid: '',
@@ -415,47 +411,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				step={this.state.step03} 
 				data={this.state.stepData03} 
 				toaster={this.props.toaster} 
-				codePaneDark={this.props.codePaneDark}
-				>
-				<div>
-					<FormGroup
-						label = 'Endpoint name'
-						helperText = 'Name of the endpoint (appears in URL)'
-						labelFor='endpoint-name'
-						>
-						<InputGroup
-							disabled={!this.state.step03.available}
-							id='endpoint-name'
-							value={this.state.endpointName}
-							onChange={this.handleEndpointNameChange}
-							/>
-					</FormGroup>
-					<Popover
-						isOpen={this.state.endpointNameWarningIsOpen}
-						canEscapeKeyClose={true}
-						usePortal={true}
-						>
-						<Button
-							disabled={!this.state.step03.available}
-							onClick={this.handleClientHostCreateEndpointClick}
-							>
-							Go
-						</Button>
-						<Card key='text'>
-							<H5>Invalid Endpoint Name</H5>
-							<p>A valid endpoint name is required for this scenario</p>
-							<div style={{ display: "flex", justifyContent: "flex-end", marginTop: 15 }}>
-								<Button
-									className={Classes.POPOVER_DISMISS}
-									onClick={() => this.setState({patientFilterWarningIsOpen: false})}
-									>
-									OK
-								</Button>
-							</div>
-						</Card>
-					</Popover>
-				</div>
-			</ScenarioStep>,
+				codePaneDark={this.props.codePaneDark} 
+				/>,
 
 			/* Request Subscription on FHIR Server */
 			<ScenarioStep 
@@ -806,8 +763,12 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			stepData02: data,
 			step03: next, 
 			selectedPatientId: selectedPatientId,
-			endpointName: `p${selectedPatientId}-${Math.floor((Math.random() * 10000) + 1)}`,
+			// endpointName: `p${selectedPatientId}-${Math.floor((Math.random() * 10000) + 1)}`,
 		});
+
+		// **** request an endpoint ****
+
+		this.step03CreateEndpoint();
 	}
 
 	/** Handle user clicks on the SetPatient button from Create (validate and enable next step) */
@@ -857,9 +818,13 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 					stepData02: data,
 					step03: next, 
 					selectedPatientId: value.id!,
-					endpointName: `rest-hook-${value.id!}-${Math.floor((Math.random() * 10000) + 1)}`,
+					// endpointName: `rest-hook-${value.id!}-${Math.floor((Math.random() * 10000) + 1)}`,
 					step02SubBusy: false,
 				});
+
+				// **** request an endpoint ****
+
+				this.step03CreateEndpoint();
 			})
 			.catch((reason: any) => {
 				// **** update step ****
@@ -881,21 +846,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 	}
 
-	/** Handle user clicks on the CreateEndpoint button (send request to client host, on success enable next step) */
-	private handleClientHostCreateEndpointClick = () => {
-		// **** grab current input, filtered to alpha-numeric ****
-
-		var endpointName: string = this.state.endpointName.replace(/[^a-z0-9]/gi,'');
-
-		// **** validate input ****
-
-		if (!endpointName) {
-			// **** warn user ****
-
-			this.setState({endpointNameWarningIsOpen: true});
-			return;
-		}
-
+	/** Create an endpoint: send request to client host, on success enable next step */
+	private step03CreateEndpoint = () => {
 		// **** update step ****
 
 		let busyStep: ScenarioStepInfo = {...this.state.step03, showBusy: true };
@@ -908,21 +860,14 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		// **** build the url for our call ***
 
-		let url: URL = new URL(
-			`api/Clients/${this.props.clientHostInfo.registration}/Endpoints/`, 
+		let url: string = new URL(
+			`api/Clients/${this.props.clientHostInfo.registration}/Endpoints/REST/`, 
 			this.props.clientHostInfo.url
-			);
-
-		// **** build the endpoint registration object ****
-
-		var endpointRegistration: EndpointRegistration = {
-			urlPart: this.state.endpointName, 
-			channelType: EndpointChannelType.RestHook,
-		}
+			).toString();
 
 		// **** ask for this endpoint to be created ****
 
-		ApiHelper.apiPost<EndpointRegistration>(url.toString(), JSON.stringify(endpointRegistration))
+		ApiHelper.apiPost<EndpointRegistration>(url, '')
 			.then((value: EndpointRegistration) => {
 				// **** make the next step available ****
 
@@ -932,13 +877,12 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				// **** show the client endpoint information ****
 
 				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:JSON.stringify(endpointRegistration, null, 2), iconName:IconNames.GLOBE_NETWORK},
+					{id:'request', title:'Request', data:url, iconName:IconNames.GLOBE_NETWORK},
 					{id:'response', title:'Response', data:JSON.stringify(value, null, 2), iconName:IconNames.INFO_SIGN},
 					{id:'info', title:'Info', iconName:IconNames.INFO_SIGN, 
 						data:'Endpoint Created:\n' +
 						`\tUID: ${value.uid}\n` +
-						`\tURL: ${this.props.clientHostInfo.url}Endpoints/${value.urlPart}/\n` +
-						`\tOR:  ${this.props.clientHostInfo.url}Endpoints/${value.uid}/\n` +
+						`\tURL: ${this.props.clientHostInfo.url}Endpoints/${value.uid}/\n` +
 						''},
 				];
 
@@ -958,7 +902,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 					};
 				
 				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:JSON.stringify(endpointRegistration, null, 2), iconName:IconNames.INFO_SIGN},
+					{id:'request', title:'Request', data:url, iconName:IconNames.INFO_SIGN},
 					{id:'error', title:'Error', data:`Request to for endpoint (${url}) failed:\n${reason}`, iconName:IconNames.ERROR},
 				];
 
@@ -971,15 +915,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 	/** Get a FHIR Instant value from a JavaScript Date */
 	private getInstantFromDate = (date: Date) => {
 		return (JSON.stringify(date).replace(/['"]+/g, ''));
-		// return (
-		// 	date.getFullYear() +
-		// 	((date.getMonth() < 9) ? '0' : '') + (date.getMonth()+1) +
-		// 	((date.getDate() < 10) ? '0' : '') + date.getDate() +
-		// 	((date.getHours() < 10) ? '0' : '') + date.getHours() +
-		// 	((date.getMinutes() < 10) ? '0' : '') + date.getMinutes() +
-		// 	((date.getSeconds() < 10) ? '0' : '') + date.getSeconds() 
-		// 	)
-		// 	;
 	}
 	
 	/** Get a FHIR Date String from a JavaScript Date */
@@ -1170,11 +1105,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 	/** Process HTML events for the patient filter text box (update state for managed) */
   private handleSearchFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({searchFilter: event.target.value});
-	}
-
-	/** Process HTML events for the endpoint name text box (update state for managed) */
-	private handleEndpointNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({endpointName: event.target.value});
 	}
 
 	private handlePatientGivenNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
