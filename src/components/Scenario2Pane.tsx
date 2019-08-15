@@ -1,21 +1,8 @@
 import * as React from 'react';
 
-import { 
-  Flex, 
-  Box 
-} from 'reflexbox';
-
-// import { 
-//   Button, 
-//   Collapse,
-//   Icon,
-//   InputGroup,
-//   Intent,
-  
-// } from '@blueprintjs/core';
-
 // import {IconNames} from "@blueprintjs/icons";
 import { ContentPaneProps } from '../models/ContentPaneProps';
+import { Card } from '@blueprintjs/core';
 
 export class Scenario2Pane extends React.PureComponent<ContentPaneProps> {
   public state = {
@@ -24,11 +11,10 @@ export class Scenario2Pane extends React.PureComponent<ContentPaneProps> {
 
   public render() {
     return (
-      <Flex p={1} align='center' column>
-        <Box px={1} w={1}>
-          <h5>Scenario Two</h5>
-        </Box>
-      </Flex>
+      <Card>
+        <h5>Not Yet Implemented</h5>
+      </Card>
+
     );
   }
 
