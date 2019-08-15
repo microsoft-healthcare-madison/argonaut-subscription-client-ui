@@ -1008,12 +1008,13 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		// **** build the url for our call ***
 
-    let url: URL = new URL('Subscription/', this.props.fhirServerInfo.url);
+		let url: URL = new URL('Subscription/', this.props.fhirServerInfo.url);
+		let endpointUrl: string = new URL(`Endpoints/${this.state.endpoint!.uid!}`, this.props.clientHostInfo.url).toString();
  
 		// **** build our subscription channel information ****
 
 		let channel: fhir.SubscriptionChannel = {
-			endpoint: `${this.props.clientHostInfo.url}Endpoints/${this.state.endpoint!.urlPart}`,
+			endpoint: endpointUrl,
 			header: ['Authorization: Bearer secret-token-abc-123'],
 			heartbeatPeriod: 60,
 			payload: {content: this.state.step04Payload, contentType: 'application/fhir+json'},
@@ -1024,7 +1025,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		let filter: fhir.SubscriptionFilterBy = {
 			matchType: '=',
-			name: 'Patient',
+			name: 'patient',
 			value: `Patient/${this.state.selectedPatientId}`	//`Patient/${this.state.patientFilter},Patient/K123`
 		}
 
