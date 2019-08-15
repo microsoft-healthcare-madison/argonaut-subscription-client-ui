@@ -196,7 +196,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		props.registerHostMessageHandler(this.handleHostMessage);
 
 		let msPerYear: number = 365.25 * 24 * 60 * 60 * 1000;
-		let birthDate: Date = new Date((new Date()).valueOf() - Math.floor(Math.random() * 110));
+		let birthDate: Date = new Date((new Date()).valueOf() - Math.floor((Math.random() * 110) * msPerYear));
 
 		// **** generate some info in case a new patient is created ****
 
@@ -235,9 +235,13 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		// **** if we are connected, render scenario content ****
     return ( [
-			<Card key='title' elevation={Elevation.TWO} style={{margin: 5}}>
+				<Card key='title' elevation={Elevation.TWO} style={{margin: 5}}>
 				<Text>
-					<H3>Scenario 1 - (<a href='http://bit.ly/argo-sub-connectathon-2019-09#scenario-1' target='_blank'>Docs</a>)</H3>
+					<H3>Scenario 1 - (<a 
+						href='http://bit.ly/argo-sub-connectathon-2019-09#scenario-1' 
+						target='_blank'
+						rel="noopener noreferrer"
+						>Docs</a>)</H3>
 					Single-Patient Encounter notifications via REST-Hook (e.g., to a consumer app)
 				</Text>
 			</Card>,
@@ -277,7 +281,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 					<Tab id='s2_create' title='Create' />
 				</Tabs>
 				{ (this.state.step02TabId === 's2_search') &&
-					<Card>
+					<Card style={{margin:0}}>
 						<H6>Search and Select Existing Patient</H6>
 						<ControlGroup>
 							<HTMLSelect
@@ -323,7 +327,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 						{ (!this.state.step02SubBusy) &&
 							<Button
 								disabled={(this.state.step02SelectedValue === '')}
-								onClick={this.handleSetSearchedPatientClick}
+								onClick={this.handleStep02SetPatientSearchedClick}
 								style={{margin: 5}}
 								>
 								Use Selected Patient
@@ -384,12 +388,14 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 								formatDate={date => date.toLocaleDateString()}
 								parseDate={str => new Date(str)}
 								value={this.state.step02BirthDate}
+								minDate={new Date(1900, 1, 1)}
+								maxDate={new Date()}
 								/>
 						</FormGroup>
 						{ (!this.state.step02SubBusy) &&
 							<Button
 								disabled={(this.state.step02PatientId === '')}
-								onClick={this.handleSetCreatedPatientClick}
+								onClick={this.handleStep02SetPatientCreatedClick}
 								style={{margin: 5}}
 								>
 								Create Patient
@@ -678,7 +684,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 			let rec:ScenarioStepData = {
 				id:`event_${this.state.stepData07.length}`, 
-				title: `# ${this.state.stepData07.length}`, 
+				title: `Notification`, 								// title: `# ${this.state.stepData07.length}`
 				data: JSON.stringify(bundle, null, 2),
 				iconName:IconNames.FLAME
 			}
@@ -746,8 +752,18 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
       ;
 	}
 
+	private checkForMatchingTitle = (data: ScenarioStepData[], rec: ScenarioStepData) => {
+		for (var i:number = 0; i < data.length; i++) {
+			if (data[i].title === rec.title) {
+				return i;
+			}
+		}
+
+		return -1;
+	}
+
 	/** Handle user clicks on the SetPatient button from Search (validate and enable next step) */
-	private handleSetSearchedPatientClick = () => {
+	private handleStep02SetPatientSearchedClick = () => {
 		let selectedPatientId: string = this.state.step02SelectedValue;
 
 		// **** update steps ****
@@ -763,8 +779,23 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			iconName: IconNames.INFO_SIGN
 		}
 
+		// **** check for mathcing data ****
+
+		let pos: number = this.checkForMatchingTitle(this.state.stepData02, rec);
+
 		var data: ScenarioStepData[] = this.state.stepData02.slice();
+		
+		// **** remove matching record ***
+
+		if (pos !== -1) {
+			data.splice(pos, 1);
+		}
+
+		// **** add this info ****
+
 		data.push(rec);
+
+		// **** ****
 
 		let next: ScenarioStepInfo = {...this.state.step03, available: true};
 
@@ -780,7 +811,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 	}
 
 	/** Handle user clicks on the SetPatient button from Create (validate and enable next step) */
-	private handleSetCreatedPatientClick = () => {
+	private handleStep02SetPatientCreatedClick = () => {
 		// **** flag we are creating ****
 
 		this.setState({step02SubBusy: true});

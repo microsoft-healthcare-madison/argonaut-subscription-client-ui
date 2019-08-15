@@ -14,3 +14,10 @@
 .bp3-switch {
   margin: 5px;
 }
+
+#mainContent {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+}

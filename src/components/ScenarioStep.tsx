@@ -72,7 +72,7 @@ export class ScenarioStep extends React.PureComponent<ScenarioStepProps> {
             { (this.props.data.length > 0) &&
               <Tabs
                 animate={true}
-                vertical={false}
+                vertical={true}
                 selectedTabId={this.state.selectedTabId}
                 onChange={this.handleTabChange}
                 >
@@ -80,17 +80,27 @@ export class ScenarioStep extends React.PureComponent<ScenarioStepProps> {
                   <Button icon={IconNames.DUPLICATE} minimal style={{marginLeft:5, marginRight:0, marginTop:10}}/>
                 </Tooltip>
               {this.props.data.map((data) => (
-                [ <NavbarDivider />,
-                  <Tab
-                    id={data.id}
-                    panel={<ScenarioDataPanel 
-                      data={data} 
-                      codePaneDark={this.props.codePaneDark} 
-                      />}
-                    >
-                    {data.iconName && <Icon icon={data.iconName} />} {data.title}
-                    </Tab>
-                ]
+               <Tab
+                key={data.id}
+                id={data.id}
+                panel={<ScenarioDataPanel 
+                  data={data} 
+                  codePaneDark={this.props.codePaneDark} 
+                  />}
+                >
+                {data.iconName && <Icon icon={data.iconName} />} {data.title}
+                </Tab>
+                // [ <NavbarDivider />,
+                //   <Tab
+                //     id={data.id}
+                //     panel={<ScenarioDataPanel 
+                //       data={data} 
+                //       codePaneDark={this.props.codePaneDark} 
+                //       />}
+                //     >
+                //     {data.iconName && <Icon icon={data.iconName} />} {data.title}
+                //     </Tab>
+                // ]
               )
               )}
             </Tabs>

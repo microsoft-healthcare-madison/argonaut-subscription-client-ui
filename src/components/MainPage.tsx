@@ -93,21 +93,22 @@ export class MainPage extends React.PureComponent<MainPageProps> {
           clientHostInfo={this.state.clientHostInfo}
           />
 
-        {/* Render the correct content pane, as selected in our tabs above */}
-        { _tabs[Number(this.state.selectedNavbarTabId)].panel({
-          fhirServerInfo: this.state.fhirServerInfo,
-          clientHostInfo: this.state.clientHostInfo,
-          updateFhirServerInfo: this.updateFhirServerInfo,
-          updateClientHostInfo: this.updateClientHostInfo,
-          connectClientHostWebSocket: this.connectToClientHostWebSocket,
-          registerHostMessageHandler: this.registerPaneClientHostMessageHandler,
-          toaster: this.showToastMessage,
-          uiDark: this.state.uiDark,
-          toggleUiColors: this.toggleUiColors,
-          codePaneDark: this.state.codePaneDark,
-          toggleCodePaneColors: this.toggleCodePaneColors,
-        }) }
-
+        <div id='mainContent'>
+          {/* Render the correct content pane, as selected in our tabs above */}
+          { _tabs[Number(this.state.selectedNavbarTabId)].panel({
+            fhirServerInfo: this.state.fhirServerInfo,
+            clientHostInfo: this.state.clientHostInfo,
+            updateFhirServerInfo: this.updateFhirServerInfo,
+            updateClientHostInfo: this.updateClientHostInfo,
+            connectClientHostWebSocket: this.connectToClientHostWebSocket,
+            registerHostMessageHandler: this.registerPaneClientHostMessageHandler,
+            toaster: this.showToastMessage,
+            uiDark: this.state.uiDark,
+            toggleUiColors: this.toggleUiColors,
+            codePaneDark: this.state.codePaneDark,
+            toggleCodePaneColors: this.toggleCodePaneColors,
+          }) }
+        </div>
       </div>
     );
   }
