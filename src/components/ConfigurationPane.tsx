@@ -51,6 +51,7 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
     this.state.fhirServerConnected = props.fhirServerInfo.status === 'ok';
     this.state.clientHostConnected = props.clientHostInfo.status === 'ok';
 
+    // **** attempt to connect if we were last connected ****
     if ((StorageHelper.isLocalStorageAvailable) &&
         (!this.state.fhirServerConnected) &&
         (!this.state.clientHostConnected) &&
@@ -131,8 +132,6 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
           >
           {this.state.clientHostConnected ? 'Disconnect' : 'Connect'}
         </Button>
-        {/* {this.props.clientHostInfo.status === 'ok' ? 'Connected' : 'Not Connected'} */}
-
 
         <Switch
           checked={this.props.clientHostInfo.showMessages}
