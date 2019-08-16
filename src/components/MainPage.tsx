@@ -58,7 +58,7 @@ export class MainPage extends React.PureComponent<MainPageProps> {
         },
       clientHostInfo: {
         name: 'Client Host', 
-        hint: 'URL for a running argonaut-client-host service',
+        hint: 'URL for a running argonaut-client-host service - creates endpoints and forwards notifications to this UI',
         url: window._env.Client_Public_Url, 
         status: '', 
         showMessages: false,
