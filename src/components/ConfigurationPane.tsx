@@ -14,6 +14,7 @@ import { ContentPaneProps } from '../models/ContentPaneProps';
 import { ConnectionInformation } from '../models/ConnectionInformation';
 import { ClientHostRegistration } from '../models/ClientHostRegistration';
 import { ApiHelper } from '../util/ApiHelper';
+import { StorageHelper } from '../util/StorageHelper';
 
 /** Type definition for the current object's state variable */
 interface ComponentState {
@@ -140,13 +141,13 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
         <Switch
           checked={this.props.uiDark}
           label='Use Dark Theme for UI'
-          onChange={this.props.toggleUiColors}
+          onChange={() => this.props.toggleUiColors(true)}
           />
 
         <Switch
           checked={this.props.codePaneDark}
           label='Use Dark Theme for Code Pane'
-          onChange={this.props.toggleCodePaneColors}
+          onChange={() => this.props.toggleCodePaneColors(true)}
           />
           
       </Card>
@@ -159,6 +160,10 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
       showMessages: !this.props.clientHostInfo.showMessages
     };
     this.props.updateClientHostInfo(updatedInfo);
+
+    if (StorageHelper.isLocalStorageAvailable) {
+      localStorage.setItem('showMessages', updatedInfo.showMessages.toString());
+    }
   }
 
   /** Event handler for toggling the Log Client Host Messages switch */
@@ -167,16 +172,28 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
       logMessages: !this.props.clientHostInfo.logMessages
     };
     this.props.updateClientHostInfo(updatedInfo);
+
+    if (StorageHelper.isLocalStorageAvailable) {
+      localStorage.setItem('logMessages', updatedInfo.logMessages.toString());
+    }
   }
 
 	/** Process HTML events for the FHIR Server URL text box (update state for managed) */
   private handleFhirServerUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({fhirServerUrl: event.target.value})
+
+    if (StorageHelper.isLocalStorageAvailable) {
+      localStorage.setItem('fhirServerUrl', event.target.value);
+    }
   }
 
 	/** Process HTML events for the Client Host URL text box (update state for managed) */
   private handleClientHostUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({clientHostUrl: event.target.value})
+
+    if (StorageHelper.isLocalStorageAvailable) {
+      localStorage.setItem('clientHostUrl', event.target.value);
+    }
   }
 
   /** Conect to a FHIR Server and Client Host */
@@ -192,6 +209,11 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
 
       this.disconnectClientHost();
 
+      // **** flag we want to be disconnected ****
+
+      if (StorageHelper.isLocalStorageAvailable) {
+        localStorage.setItem('connectionRequested', false.toString());
+      }
       // **** done ****
 
       return;
@@ -204,6 +226,12 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
     // **** connect to the client ****
 
     this.connectClientHost();
+
+    // **** flag we want to be connected ****
+
+    if (StorageHelper.isLocalStorageAvailable) {
+      localStorage.setItem('connectionRequested', true.toString());
+    }
   }
 
   /** Disconnect our client from the connected FHIR Server */

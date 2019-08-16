@@ -10,7 +10,6 @@ import {
   Tabs,
   Tab,
   TabId,
-  NavbarDivider,
   Tooltip,
 } from '@blueprintjs/core';
 

@@ -3,12 +3,11 @@ import * as React from 'react';
 import {
   Card,
 	Button,
-	Classes,
   InputGroup,
   FormGroup,
   Elevation,
   Text,
-  H3, H5, Spinner, Popover, NonIdealState, Tabs, Tab, ControlGroup, HTMLSelect, TabId, H6, RadioGroup, Radio
+  H3, Spinner, NonIdealState, Tabs, Tab, ControlGroup, HTMLSelect, TabId, H6, RadioGroup, Radio
 } from '@blueprintjs/core';
 
 import {DateInput} from '@blueprintjs/datetime';
@@ -756,14 +755,13 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		let next: ScenarioStepInfo = {...this.state.step03, available: true};
 
-		// **** update our state, generate a default name for the endpoint ****
+		// **** update our state ****
 
 		this.setState({
 			step02: current, 
 			stepData02: data,
 			step03: next, 
 			selectedPatientId: selectedPatientId,
-			// endpointName: `p${selectedPatientId}-${Math.floor((Math.random() * 10000) + 1)}`,
 		});
 
 		// **** request an endpoint ****
@@ -818,7 +816,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 					stepData02: data,
 					step03: next, 
 					selectedPatientId: value.id!,
-					// endpointName: `rest-hook-${value.id!}-${Math.floor((Math.random() * 10000) + 1)}`,
 					step02SubBusy: false,
 				});
 
@@ -935,7 +932,9 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		let busyStep: ScenarioStepInfo = {...this.state.step04, showBusy: true};
 
-		// TODO(ginoc): destroy any existing Subscriptions
+		// **** delete any existing subscriptions, but don't update state (doing that here) ****
+
+		this.deleteSubscription(false);
 
 		// **** flag we are asking to create the subscription (busy) ****
 
@@ -1099,7 +1098,9 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 	/** Handle user clicks on the CleanUp button (delete Subscription from FHIR Server, Endpoint from ClientHost) */
 	private handleCleanUpClick = () => {
+		// **** delete any existing subscriptions ****
 
+		this.deleteSubscription(true);
 	}
 
 	/** Process HTML events for the patient filter text box (update state for managed) */
@@ -1121,6 +1122,31 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 	private handlePatientBirthDateChange = (selectedDate: Date, isUserChange: boolean) => {
 		this.setState({step02BirthDate: selectedDate});
+	}
+
+	private deleteSubscription = (updateState: boolean) => {
+		// **** check for no subscription ****
+
+		if (!this.state.subscription) {
+			return;
+		}
+
+		// **** build url to remove subscription ****
+
+		let url:string = new URL(
+			`Subscription/${this.state.subscription.id!}`, 
+			this.props.fhirServerInfo.url
+			).toString();
+
+		// **** regardless of what happens, stop using this subscription ****
+
+		if (updateState) {
+			this.setState({subscription: null});
+		}
+
+		// **** ask for this subscription to be deleted ****
+
+		ApiHelper.apiDelete(url);
 	}
 
 	/** Determine if the client is connected enough to proceed and update state accordingly */

@@ -16,6 +16,7 @@ import {Scenario2Pane} from './Scenario2Pane';
 import { UiTabInformation } from '../models/UiTabInformation';
 import { MainNavigation } from './MainNavigation';
 import { ConnectionInformation } from '../models/ConnectionInformation';
+import { StorageHelper } from '../util/StorageHelper';
 // import { TriggerPane } from './TriggerPane';
 
 /** tab configuration - MUST be in 'id' order - first tab is shown at launch */
@@ -77,9 +78,40 @@ export class MainPage extends React.PureComponent<MainPageProps> {
   /** Toaster display object */
   private _toaster: IToaster|null = null;
 
-  // constructor(props: MainPageProps) {
-  //   super(props);
-  // }
+  constructor(props: MainPageProps) {
+    super(props);
+
+    console.log('LocalStorageIsAvailable:', StorageHelper.isLocalStorageAvailable);
+    // **** check for local storage settings ****
+
+    if (StorageHelper.isLocalStorageAvailable) {
+      // **** update local settings ****
+
+      if (localStorage.getItem('fhirServerUrl')) {
+        this.state.fhirServerInfo.url = localStorage.getItem('fhirServerUrl')!;
+      }
+
+      if (localStorage.getItem('clientHostUrl')) {
+        this.state.clientHostInfo.url = localStorage.getItem('clientHostUrl')!;
+      }
+
+      if (localStorage.getItem('showMessages') === 'true') {
+        this.state.clientHostInfo.showMessages = true;
+      }
+
+      if (localStorage.getItem('logMessages') === 'true') {
+        this.state.clientHostInfo.logMessages = true;
+      }
+
+      if (localStorage.getItem('uiDark') === 'true') {
+        this.toggleUiColors(false);
+      }
+
+      if (localStorage.getItem('codePaneDark') === 'true') {
+        this.toggleCodePaneColors(false);
+      }
+    }
+  }
 
   public render() {
     return (
@@ -113,7 +145,7 @@ export class MainPage extends React.PureComponent<MainPageProps> {
     );
   }
 
-  private toggleUiColors = () => {
+  private toggleUiColors = (useSetState: boolean) => {
     // **** update DOM elements ****
 
     var rootElement: HTMLElement = document.getElementById("root")!;
@@ -121,13 +153,30 @@ export class MainPage extends React.PureComponent<MainPageProps> {
 
     document.body.className = document.body.className === 'body-dark' ? '' : 'body-dark';
 
-    // **** update state ****
+    if (StorageHelper.isLocalStorageAvailable) {
+      localStorage.setItem('uiDark', (!this.state.uiDark).toString());
+    }
 
-    this.setState({uiDark: !this.state.uiDark});
+    // **** update state ****
+    
+    if (useSetState) {
+      this.setState({uiDark: !this.state.uiDark});
+    } else {
+      this.state.uiDark = !this.state.uiDark;
+    }
   }
 
-  private toggleCodePaneColors = () => {
-    this.setState({codePaneDark: !this.state.codePaneDark});
+  private toggleCodePaneColors = (useSetState: boolean) => {
+
+    if (StorageHelper.isLocalStorageAvailable) {
+      localStorage.setItem('codePaneDark', (!this.state.codePaneDark).toString());
+    }
+
+    if (useSetState) {
+      this.setState({codePaneDark: !this.state.codePaneDark});
+    } else {
+      this.state.codePaneDark = !this.state.codePaneDark;
+    }
   }
 
   /** Callback function to allow panes to register to receive client host notifications (max: 1) */

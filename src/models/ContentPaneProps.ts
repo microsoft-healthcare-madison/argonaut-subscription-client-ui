@@ -9,7 +9,7 @@ export interface ContentPaneProps {
   registerHostMessageHandler: ((handler: ((message: string) => void)) => void);
   toaster: ((message: string, iconName?: string, timeout?: number) => void);
   uiDark: boolean;
-  toggleUiColors: (() => void);
+  toggleUiColors: ((useSetState: boolean) => void);
   codePaneDark: boolean;
-  toggleCodePaneColors: (() => void);
+  toggleCodePaneColors: ((useSetState: boolean) => void);
 }
