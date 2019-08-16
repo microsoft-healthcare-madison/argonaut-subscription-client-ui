@@ -6,14 +6,16 @@ Goals:
 * Make source clear enough for developers to follow as a reference implementation.
 * Highlight artifacts of testing harness.
 
-
 ## Documentation
 
 For background on use cases, technical architecture, and related projects, [see here](https://github.com/microsoft-healthcare-madison/argo-subscription-docs/tree/master/connectathon-scenarios-201909).
 
+## Demo
+There is a [live demo site](https://subscriptions.argo.run) currently available.
 
-## More Information
-
+* The site is hosted on Azure courtesy of Microsoft.
+* The site is built directly from this repo (on commit to master), so is under active development.
+* While we try to have the system up as much as possible, no guarantees of uptime are provided.
 
 ## Contributing
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
