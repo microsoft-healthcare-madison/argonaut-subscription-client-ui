@@ -720,6 +720,10 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 	/** Handle user clicks on the SetPatient button from Search (validate and enable next step) */
 	private handleStep02SetPatientSearchedClick = () => {
+		// **** disable subsequent steps if they aren't ****
+
+		this.disableSteps(3);
+		
 		let selectedPatientId: string = this.state.step02SelectedValue;
 
 		// **** update steps ****
@@ -771,6 +775,10 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 	/** Handle user clicks on the SetPatient button from Create (validate and enable next step) */
 	private handleStep02SetPatientCreatedClick = () => {
+		// **** disable subsequent steps if they aren't ****
+
+		this.disableSteps(3);
+
 		// **** flag we are creating ****
 
 		this.setState({step02SubBusy: true});
@@ -840,7 +848,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				this.setState({step02: failed, step02SubBusy: false});
 			})
 			;
-
 	}
 
 	/** Create an endpoint: send request to client host, on success enable next step */
@@ -849,11 +856,17 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		let busyStep: ScenarioStepInfo = {...this.state.step03, showBusy: true };
 
-		// TODO(ginoc): destroy any existing endpoints
+		// **** changing the endpoint invalidates the subscription ****
+
+		this.deleteSubscription(false);
+
+		// **** delete any existing endpoints (do not update state, since we are right away here) ****
+
+		this.deleteEndpoint(false);
 
 		// **** flag we are asking to create the endpoint (busy) ****
 
-		this.setState({step03: busyStep});
+		this.setState({step03: busyStep, endpoint: null, subscription: null});
 
 		// **** build the url for our call ***
 
@@ -1098,9 +1111,9 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 	/** Handle user clicks on the CleanUp button (delete Subscription from FHIR Server, Endpoint from ClientHost) */
 	private handleCleanUpClick = () => {
-		// **** delete any existing subscriptions ****
+		// **** reset to step 2 (removes endpoints and subscriptions) ****
 
-		this.deleteSubscription(true);
+		this.disableSteps(2);
 	}
 
 	/** Process HTML events for the patient filter text box (update state for managed) */
@@ -1147,6 +1160,70 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		// **** ask for this subscription to be deleted ****
 
 		ApiHelper.apiDelete(url);
+	}
+
+	private deleteEndpoint = (updateState: boolean) => {
+		// **** check for no endpoint ****
+
+		if (!this.state.endpoint) {
+			return;
+		}
+
+		// **** build the URL to delete teh endpoint ****
+
+		let url: string = new URL(
+			`api/Clients/${this.props.clientHostInfo.registration}/Endpoints/${this.state.endpoint.uid!}/`, 
+			this.props.clientHostInfo.url
+			).toString();
+			
+		// **** regardless of what happens, stop using this endpoint ****
+
+		if (updateState) {
+			this.setState({endpoint: null});
+		}
+
+		// **** ask for this endpoint to be deleted ****
+
+		ApiHelper.apiDelete(url);
+	}
+
+	private disableSteps = (startingAt: number) => {
+		if (startingAt > 7) {
+			return;
+		}
+
+		if (startingAt <= 2) {
+			let step: ScenarioStepInfo = {...this.state.step02, available: true, completed: false};
+			this.setState({step02: step, stepData02: [], step02Patients: []});
+		}
+
+		if (startingAt <= 3) {
+			let step: ScenarioStepInfo = {...this.state.step03, available: false, completed: false};
+			this.deleteEndpoint(false);
+			this.setState({step03: step, stepData03: [], endpoint: null});
+		}
+
+		if (startingAt <= 4) {
+			let step: ScenarioStepInfo = {...this.state.step04, available: false, completed: false};
+			this.deleteSubscription(false);
+			this.setState({step04: step, stepData04: [], subscription: null});
+		}
+
+		if (startingAt <= 5) {
+			let step: ScenarioStepInfo = {...this.state.step05, available: false, completed: false};
+			this.setState({step05: step, stepData05: []});
+		}
+
+		if (startingAt <= 6) {
+			let step: ScenarioStepInfo = {...this.state.step06, available: false, completed: false};
+			this.setState({step06: step, stepData06: []});
+		}
+
+		if (startingAt <= 7) {
+			let step: ScenarioStepInfo = {...this.state.step07, available: false, completed: false};
+			this.setState({step07: step, stepData07: []});
+		}
+
 	}
 
 	/** Determine if the client is connected enough to proceed and update state accordingly */

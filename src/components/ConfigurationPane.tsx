@@ -50,6 +50,14 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
 
     this.state.fhirServerConnected = props.fhirServerInfo.status === 'ok';
     this.state.clientHostConnected = props.clientHostInfo.status === 'ok';
+
+    if ((StorageHelper.isLocalStorageAvailable) &&
+        (!this.state.fhirServerConnected) &&
+        (!this.state.clientHostConnected) &&
+        (localStorage.getItem('connectionRequested') === 'true')) {
+          this.connectServer();
+          this.connectClientHost();
+      }
   }
 
   componentWillReceiveProps(nextProps: ContentPaneProps) {
