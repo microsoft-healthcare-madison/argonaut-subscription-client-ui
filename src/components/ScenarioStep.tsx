@@ -76,7 +76,12 @@ export class ScenarioStep extends React.PureComponent<ScenarioStepProps> {
                 onChange={this.handleTabChange}
                 >
                 <Tooltip content='Copy To Clipboard'>
-                  <Button icon={IconNames.DUPLICATE} minimal style={{marginLeft:5, marginRight:0, marginTop:10}}/>
+                  <Button 
+                    icon={IconNames.DUPLICATE} 
+                    minimal 
+                    style={{marginLeft:5, marginRight:0, marginTop:10}}
+                    onClick={this.handleCopyClick}
+                    />
                 </Tooltip>
               {this.props.data.map((data) => (
                <Tab

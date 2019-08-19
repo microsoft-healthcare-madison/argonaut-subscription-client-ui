@@ -52,8 +52,10 @@ export class ApiHelper {
     return fetch(url, {
       method: 'POST',
       headers: {
-        'Accept': 'application/fhir+json',
-        'Content-Type': 'application/fhir+json',
+        'Accept': 'application/fhir+json; charset=utf-8',
+        'Accept-Encoding': '',
+        'Content-Type': 'application/fhir+json; charset=utf-8',
+        'Prefer':'return=representation',
       },
       body: jsonData
       })

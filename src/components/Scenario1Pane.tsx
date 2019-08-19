@@ -59,6 +59,8 @@ interface ComponentState {
 	step02Gender: string,
 	step02BirthDate: Date,
 	step04Payload: string,
+	step06EncounterClass: string,
+	step06EncounterStatus: string,
 }
 
 /**
@@ -162,7 +164,9 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		step02PatientId: '',
 		step02Gender: '',
 		step02BirthDate: new Date(),
-		step04Payload: 'id-only'
+		step04Payload: 'id-only',
+		step06EncounterClass: 'VR',
+		step06EncounterStatus: 'in-progress',
 	};
 
 	private getRandomChar = () => {
@@ -454,6 +458,45 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				toaster={this.props.toaster} 
 				codePaneDark={this.props.codePaneDark}
 				>
+
+				<FormGroup
+					label='Encounter Class'
+					helperText='Class of encounter, per http://terminology.hl7.org/ValueSet/v3-ActEncounterCode'
+					labelFor='encounter-class'
+					>
+					<HTMLSelect
+						id='encounter-class'
+						onChange={this.handleStep06EncounterClassChange}
+						defaultValue={this.state.step06EncounterClass}
+						>
+						<option value='AMB'>Ambulatory</option>
+						<option value='EMER'>Emergency</option>
+						<option value='FLD'>Field</option>
+						<option value='HH'>Home Health</option>
+						<option value='IMP'>Inpatient Encounter</option>
+						<option value='ACUTE'>Inpatient Acute</option>
+						<option value='NONAC'>Inpatient Non-Acute</option>
+						<option value='OBSENC'>Observation Encounter</option>
+						<option value='PRENC'>Pre-Admission</option>
+						<option value='SS'>Short Stay</option>
+						<option value='VR'>Virtual</option>
+					</HTMLSelect>
+				</FormGroup>
+
+				<FormGroup
+					label='Encounter Status'
+					helperText='Status of encounter, per 	http://hl7.org/fhir/ValueSet/encounter-status'
+					labelFor='encounter-status'
+					>
+					<HTMLSelect
+						id='encounter-status'
+						onChange={this.handleStep06EncounterStatusChange}
+						defaultValue={this.state.step06EncounterStatus}
+						>
+						<option value='in-progress'>In Progress</option>
+					</HTMLSelect>
+				</FormGroup>
+				
 				<Button
 					disabled={!this.state.step06.available}
 					onClick={this.handleRequestTriggerEventClick}
@@ -488,6 +531,14 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			</ScenarioStep>,
 		]
     );
+	}
+
+	private handleStep06EncounterClassChange = (event: React.FormEvent<HTMLSelectElement>) => {
+		this.setState({step06EncounterClass: event.currentTarget.value})
+	}
+
+	private handleStep06EncounterStatusChange = (event: React.FormEvent<HTMLSelectElement>) => {
+		this.setState({step06EncounterStatus: event.currentTarget.value})
 	}
 
 	private handleStep04PayloadChange = (event: React.FormEvent<HTMLSelectElement>) => {
@@ -1045,6 +1096,71 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		this.setState({step06: busyStep});
 
+		// **** build the URL to post an encounter ****
+
+		let url: string = new URL('Encounter?_format=json', this.props.fhirServerInfo.url).toString();
+
+		// **** build our encounter ****
+
+		let encounter: fhir.Encounter = {
+			resourceType: "Encounter",
+			class: {
+				system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode',
+				code: this.state.step06EncounterClass,
+			},
+			status: this.state.step06EncounterStatus,
+			subject: {
+				reference: `Patient/${this.state.selectedPatientId}`,
+			}
+		}
+
+		// **** post our request to the server ****
+
+		ApiHelper.apiPostFhir<fhir.Encounter>(url, JSON.stringify(encounter))
+			.then((value: fhir.Encounter) => {
+				// **** update steps - note that next step starts busy since we are waiting ****
+
+				let current: ScenarioStepInfo = {...this.state.step06, 
+					showBusy: false,
+				};
+
+				let data: ScenarioStepData[] = [
+					{id:'requestUrl', title:'URL', data:url, iconName:IconNames.GLOBE},
+					{id:'request', title:'Request', data:JSON.stringify(encounter, null, 2), iconName:IconNames.FLAME},
+					{id:'response', title:'Response', data:JSON.stringify(value, null, 2), iconName:IconNames.FLAME},
+				];
+
+				let next: ScenarioStepInfo = {...this.state.step07,
+					available: true,
+					showBusy: true,
+				};
+	
+				// **** update our state ****
+
+				this.setState({
+					step06: current,
+					stepData06: data,
+					step07: next,
+				});
+			})
+			.catch((reason: any) => {
+				
+				let current: ScenarioStepInfo = {...this.state.step06, 
+					showBusy: false,
+					};
+
+				let data: ScenarioStepData[] = [
+					{id:'request', title:'Request', data:JSON.stringify(encounter, null, 2), iconName:IconNames.FLAME},
+					{id:'error', title:'Error', data:`Request to Post Encounter (${url}) failed:\n${reason}`, iconName:IconNames.ERROR},
+				];
+
+				// **** request failed ****
+
+				this.setState({step06: current, stepData06: data});
+			});
+
+			
+		/* Using Trigger in Client-Host
 		// **** build the url for our call ***
 
     let url: URL = new URL('Triggers/', this.props.clientHostInfo.url);
@@ -1107,6 +1223,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 				this.setState({step06: current, stepData06: data});
 			});
+		*/
 	}
 
 	/** Handle user clicks on the CleanUp button (delete Subscription from FHIR Server, Endpoint from ClientHost) */
