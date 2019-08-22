@@ -18,7 +18,7 @@ import { ScenarioStepInfo } from '../models/ScenarioStepInfo';
 import { ScenarioStep } from './ScenarioStep';
 import { EndpointRegistration, EndpointChannelType } from '../models/EndpointRegistration';
 import { ApiHelper } from '../util/ApiHelper';
-import { fhir } from '../models/fhir_r4_selected';
+import * as fhir from '../models/fhir_r4_selected';
 import { TriggerRequest } from '../models/TriggerRequest';
 import { TriggerInformation } from '../models/TriggerInformation';
 import { PatientSelectionInfo } from '../models/PatientSelectionInfo';
@@ -429,9 +429,9 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 					onChange={this.handleStep04PayloadChange}
 					defaultValue={this.state.step04Payload}
 					>
-					<option>empty</option>
-					<option>id-only</option>
-					<option>full-resource</option>
+					{ Object.values(fhir.SubscriptionChannelPayloadContentCodes).map((value) => (
+						<option key={value}>{value}</option> 
+							))}
 				</HTMLSelect>
 				<Button
 					disabled={!this.state.step04.available}
@@ -469,17 +469,9 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 						onChange={this.handleStep06EncounterClassChange}
 						defaultValue={this.state.step06EncounterClass}
 						>
-						<option value='AMB'>Ambulatory</option>
-						<option value='EMER'>Emergency</option>
-						<option value='FLD'>Field</option>
-						<option value='HH'>Home Health</option>
-						<option value='IMP'>Inpatient Encounter</option>
-						<option value='ACUTE'>Inpatient Acute</option>
-						<option value='NONAC'>Inpatient Non-Acute</option>
-						<option value='OBSENC'>Observation Encounter</option>
-						<option value='PRENC'>Pre-Admission</option>
-						<option value='SS'>Short Stay</option>
-						<option value='VR'>Virtual</option>
+						{ Object.values(fhir.v3_ActEncounterCode).map((value) => (
+							<option key={value.code} value={value.code}>{value.display}</option> 
+								))}
 					</HTMLSelect>
 				</FormGroup>
 
@@ -1125,7 +1117,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				};
 
 				let data: ScenarioStepData[] = [
-					{id:'requestUrl', title:'URL', data:url, iconName:IconNames.GLOBE},
+					{id:'requestUrl', title:'URL', data:url, iconName:IconNames.GLOBE_NETWORK},
 					{id:'request', title:'Request', data:JSON.stringify(encounter, null, 2), iconName:IconNames.FLAME},
 					{id:'response', title:'Response', data:JSON.stringify(value, null, 2), iconName:IconNames.FLAME},
 				];

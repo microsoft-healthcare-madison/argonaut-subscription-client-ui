@@ -53,7 +53,6 @@ export class ApiHelper {
       method: 'POST',
       headers: {
         'Accept': 'application/fhir+json; charset=utf-8',
-        'Accept-Encoding': '',
         'Content-Type': 'application/fhir+json; charset=utf-8',
         'Prefer':'return=representation',
       },
