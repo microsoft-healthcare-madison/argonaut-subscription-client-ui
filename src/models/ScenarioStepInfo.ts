@@ -1,5 +1,3 @@
-
-
 export interface ScenarioStepInfo {
   stepNumber: number;
   heading: string;

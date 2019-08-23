@@ -250,8 +250,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				key='step01'
 				step={this.state.step01} 
 				data={this.state.stepData01} 
-				toaster={this.props.toaster} 
-				codePaneDark={this.props.codePaneDark}
+				paneProps={this.props}
 				>
 				<Button
 					disabled={!this.state.step01.available}
@@ -266,8 +265,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				key='step02'
 				step={this.state.step02} 
 				data={this.state.stepData02} 
-				toaster={this.props.toaster} 
-				codePaneDark={this.props.codePaneDark}
+				paneProps={this.props}
 				>
 				<Tabs
 					animate={true}
@@ -413,8 +411,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				key='step03'
 				step={this.state.step03} 
 				data={this.state.stepData03} 
-				toaster={this.props.toaster} 
-				codePaneDark={this.props.codePaneDark} 
+				paneProps={this.props}
 				/>,
 
 			/* Request Subscription on FHIR Server */
@@ -422,8 +419,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				key='step04'
 				step={this.state.step04} 
 				data={this.state.stepData04} 
-				toaster={this.props.toaster} 
-				codePaneDark={this.props.codePaneDark}
+				paneProps={this.props}
 				>
 				<HTMLSelect
 					onChange={this.handleStep04PayloadChange}
@@ -446,8 +442,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				key='step05'
 				step={this.state.step05} 
 				data={this.state.stepData05} 
-				toaster={this.props.toaster} 
-				codePaneDark={this.props.codePaneDark} 
+				paneProps={this.props}
 				/>,
 
 			/* Ask Client Host to trigger event */
@@ -455,8 +450,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				key='step06'
 				step={this.state.step06} 
 				data={this.state.stepData06} 
-				toaster={this.props.toaster} 
-				codePaneDark={this.props.codePaneDark}
+				paneProps={this.props}
 				>
 
 				<FormGroup
@@ -502,8 +496,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				key='step07'
 				step={this.state.step07} 
 				data={this.state.stepData07} 
-				toaster={this.props.toaster} 
-				codePaneDark={this.props.codePaneDark} 
+				paneProps={this.props}
 				/>,
 
 			/* Clean up */
@@ -511,8 +504,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				key='step08'
 				step={this.state.step08} 
 				data={this.state.stepData08} 
-				toaster={this.props.toaster} 
-				codePaneDark={this.props.codePaneDark}
+				paneProps={this.props}
 				>
 				<Button
 					disabled={!this.state.step08.available}
@@ -1150,72 +1142,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 				this.setState({step06: current, stepData06: data});
 			});
-
-			
-		/* Using Trigger in Client-Host
-		// **** build the url for our call ***
-
-    let url: URL = new URL('Triggers/', this.props.clientHostInfo.url);
- 
-		// **** build our trigger ****
-
-		let triggerRequest: TriggerRequest = {
-			fhirServerUrl: this.props.fhirServerInfo.url,
-			resourceName: "Encounter",
-			filterName: "patient",
-			filterMatchType: "=",
-			filterValue: `Patient/${this.state.selectedPatientId}`,
-			repetitions: 1,
-			delayMilliseconds: 0,
-			ignoreErrors: false,
-		}
-
-		// **** post our request to the server ****
-
-		ApiHelper.apiPost<TriggerInformation>(url.toString(), JSON.stringify(triggerRequest))
-			.then((value: TriggerInformation) => {
-				// **** update steps - note that next step starts busy since we are waiting ****
-
-				let current: ScenarioStepInfo = {...this.state.step06, 
-					showBusy: false,
-				};
-
-				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:JSON.stringify(triggerRequest, null, 2), iconName:IconNames.INFO_SIGN},
-					{id:'response', title:'Response', data:JSON.stringify(value, null, 2), iconName:IconNames.INFO_SIGN},
-					{id:'info', title:'Info', data:`Trigger request accepted: ${value.uid}...`, iconName:IconNames.INFO_SIGN},
-				];
-
-				let next: ScenarioStepInfo = {...this.state.step07,
-					available: true,
-					showBusy: true,
-				};
-	
-				// **** update our state ****
-
-				this.setState({
-					step06: current,
-					stepData06: data,
-					step07: next,
-					triggerUid: value.uid,
-				});
-			})
-			.catch((reason: any) => {
-				
-				let current: ScenarioStepInfo = {...this.state.step06, 
-					showBusy: false,
-					};
-
-				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:JSON.stringify(triggerRequest, null, 2), iconName:IconNames.INFO_SIGN},
-					{id:'error', title:'Error', data:`Request to create trigger (${url}) failed:\n${reason}`, iconName:IconNames.ERROR},
-				];
-
-				// **** request failed ****
-
-				this.setState({step06: current, stepData06: data});
-			});
-		*/
 	}
 
 	/** Handle user clicks on the CleanUp button (delete Subscription from FHIR Server, Endpoint from ClientHost) */
@@ -1332,7 +1258,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			let step: ScenarioStepInfo = {...this.state.step07, available: false, completed: false};
 			this.setState({step07: step, stepData07: []});
 		}
-
 	}
 
 	/** Determine if the client is connected enough to proceed and update state accordingly */

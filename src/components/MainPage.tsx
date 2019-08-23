@@ -17,6 +17,7 @@ import { UiTabInformation } from '../models/UiTabInformation';
 import { MainNavigation } from './MainNavigation';
 import { ConnectionInformation } from '../models/ConnectionInformation';
 import { StorageHelper } from '../util/StorageHelper';
+import { PlaygroundPane } from './PlaygroundPane';
 // import { TriggerPane } from './TriggerPane';
 
 /** tab configuration - MUST be in 'id' order - first tab is shown at launch */
@@ -24,6 +25,7 @@ let _tabs: UiTabInformation[] = [
   {title: 'Config', tip: 'Configure Settings and Servers', id: '0', panel: React.createFactory(ConfigurationPane)},
   {title: 'Patient+REST', tip:'Single Patient to REST-Hook', id: '1', panel: React.createFactory(Scenario1Pane)},
   {title: 'Group+REST', tip:'Patient Group to REST-Hook', id: '2', panel: React.createFactory(Scenario2Pane)},
+  {title: 'Playground', tip:'Playground for testing Subscriptions', id: '3', panel: React.createFactory(PlaygroundPane)},
   // {title: 'Trigger', tip:'Manual trigger events', id: '3', panel: React.createFactory(TriggerPane)},
 ]
 
@@ -139,6 +141,7 @@ export class MainPage extends React.PureComponent<MainPageProps> {
             toggleUiColors: this.toggleUiColors,
             codePaneDark: this.state.codePaneDark,
             toggleCodePaneColors: this.toggleCodePaneColors,
+            copyToClipboard: this.copyToClipboard,
           }) }
         </div>
       </div>
@@ -317,5 +320,65 @@ export class MainPage extends React.PureComponent<MainPageProps> {
     // **** warn the user ****
 
     this.showToastMessage('Disconnected from Client Host', IconNames.INFO_SIGN, 3000);
+  }
+
+  
+  private copyToClipboard = (message: string, toast?: string) => {
+
+    // **** create a textarea so we can select our text ****
+
+    var textArea = document.createElement("textarea");
+
+    // **** set in top-left corner of screen regardless of scroll position ****
+
+    textArea.style.position = 'fixed';
+    textArea.style.top = '0';
+    textArea.style.left = '0';
+
+    // **** small as poosible - 1px / 1em gives a negative w/h on some browsers ****
+
+    textArea.style.width = '2em';
+    textArea.style.height = '2em';
+
+    // **** don't want padding or borders, reduce size in case it flash renders ****
+
+    textArea.style.padding = '0';
+    textArea.style.border = 'none';
+    textArea.style.outline = 'none';
+    textArea.style.boxShadow = 'none';
+
+    // **** avoid flash of white box if rendered for any reason ****
+
+    textArea.style.background = 'transparent';
+
+    // **** set our text to our data ****
+
+    textArea.value = message;
+
+    // **** add to the DOM ****
+
+    document.body.appendChild(textArea);
+
+    // **** select our element and text ****
+
+    textArea.focus();
+    textArea.select();
+
+    // **** copy, ignore errors ****
+
+    try {
+      document.execCommand('copy');
+    } catch (err) {
+    }
+    
+    // **** remove our textarea ****
+
+    document.body.removeChild(textArea);
+
+    // *** notify the user ****
+
+    if (toast) {
+      this.showToastMessage(toast, IconNames.CLIPBOARD);
+    }
   }
 }

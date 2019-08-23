@@ -12,4 +12,5 @@ export interface ContentPaneProps {
   toggleUiColors: ((useSetState: boolean) => void);
   codePaneDark: boolean;
   toggleCodePaneColors: ((useSetState: boolean) => void);
+  copyToClipboard: ((message: string, toast?: string) => void);
 }
