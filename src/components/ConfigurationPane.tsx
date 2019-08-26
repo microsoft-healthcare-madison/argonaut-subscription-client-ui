@@ -10,7 +10,7 @@ import {
   Switch,
   H5,
   Text,
-  UL,
+  HTMLTable,
 } from '@blueprintjs/core';
 
 import { ContentPaneProps } from '../models/ContentPaneProps';
@@ -166,44 +166,70 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
           <br/>
           <br/>
           Useful links:
-					<UL>
-            <li>FHIR Build branch of current changes (Subscription, Topic, etc.): <a
-                href='http://build.fhir.org/branches/argonaut-subscription/' 
-                target='_blank'
-                rel="noopener noreferrer"
-                >build.fhir.org</a>
-            </li>
-            <li>Argonaut Subscription Connectathon Scenarios: <a
-                href='https://github.com/microsoft-healthcare-madison/argo-subscription-docs/tree/master/connectathon-scenarios-201909' 
-                target='_blank'
-                rel="noopener noreferrer"
-                >github.com</a>
-            </li>
-            <li>September 2019 Subscription Connectathon Track: <a
-                href='https://confluence.hl7.org/display/FHIR/2019-09+Subscription' 
-                target='_blank'
-                rel="noopener noreferrer"
-                >confluence.hl7.org</a>
-            </li>
-            <li>Argonaut Subscription Reference Client UI (this software): <a
-                href='https://github.com/microsoft-healthcare-madison/argonaut-subscription-client-ui' 
-                target='_blank'
-                rel="noopener noreferrer"
-                >github.com</a>
-            </li>
-            <li>Argonaut Subscription Reference Client Host (manage REST endpoints): <a
-                href='https://github.com/microsoft-healthcare-madison/argonaut-subscription-client' 
-                target='_blank'
-                rel="noopener noreferrer"
-                >github.com</a>
-            </li>
-            <li>Argonaut Subscription Reference Server Proxy (intercept and process Subscription/Topic): <a
-                href='https://github.com/microsoft-healthcare-madison/argonaut-subscription-server-proxy' 
-                target='_blank'
-                rel="noopener noreferrer"
-                >github.com</a>
-            </li>
-          </UL>
+          <HTMLTable striped={true}>
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th>Link</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>FHIR Build branch of current changes (Subscription, Topic, etc.)</td>
+                <td><a
+                  href='http://build.fhir.org/branches/argonaut-subscription/' 
+                  target='_blank'
+                  rel="noopener noreferrer"
+                  >build.fhir.org</a>
+                </td>
+              </tr>
+              <tr>
+                <td>Argonaut Subscription Connectathon Scenarios</td>
+                <td><a
+                  href='https://github.com/microsoft-healthcare-madison/argo-subscription-docs/tree/master/connectathon-scenarios-201909' 
+                  target='_blank'
+                  rel="noopener noreferrer"
+                  >github.com</a>
+                </td>
+              </tr>
+              <tr>
+                <td>September 2019 Subscription Connectathon Track</td>
+                <td><a
+                  href='https://confluence.hl7.org/display/FHIR/2019-09+Subscription' 
+                  target='_blank'
+                  rel="noopener noreferrer"
+                  >confluence.hl7.org</a>
+                </td>
+              </tr>
+              <tr>
+                <td>Argonaut Subscription Reference Client UI (this software)</td>
+                <td><a
+                  href='https://github.com/microsoft-healthcare-madison/argonaut-subscription-client-ui' 
+                  target='_blank'
+                  rel="noopener noreferrer"
+                  >github.com</a>
+                </td>
+              </tr>
+              <tr>
+                <td>Argonaut Subscription Reference Client Host (manage REST endpoints)</td>
+                <td><a
+                  href='https://github.com/microsoft-healthcare-madison/argonaut-subscription-client' 
+                  target='_blank'
+                  rel="noopener noreferrer"
+                  >github.com</a>
+                </td>
+              </tr>
+              <tr>
+                <td>Argonaut Subscription Reference Server Proxy (intercept and process Subscription/Topic)</td>
+                <td><a
+                  href='https://github.com/microsoft-healthcare-madison/argonaut-subscription-server-proxy' 
+                  target='_blank'
+                  rel="noopener noreferrer"
+                  >github.com</a>
+                </td>
+              </tr>
+            </tbody>
+          </HTMLTable>
 				</Text>
       </Card>,
     ]);
