@@ -8,6 +8,9 @@ import {
   FormGroup,
   Elevation,
   Switch,
+  H5,
+  Text,
+  UL,
 } from '@blueprintjs/core';
 
 import { ContentPaneProps } from '../models/ContentPaneProps';
@@ -97,8 +100,8 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
 	}
 
   public render() {
-    return (
-      <Card elevation={Elevation.TWO}>
+    return ([
+      <Card elevation={Elevation.TWO} key='config_card'>
         <FormGroup
           label = {this.props.fhirServerInfo.name + ' URL'}
           helperText = {this.props.fhirServerInfo.hint}
@@ -111,7 +114,6 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
             disabled={this.state.clientHostConnected}
             />
         </FormGroup>
-
         <FormGroup
           label = {this.props.clientHostInfo.name + ' URL'}
           helperText = {this.props.clientHostInfo.hint}
@@ -124,7 +126,6 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
             disabled={this.state.clientHostConnected}
             />
         </FormGroup>
-
         <Button
           onClick={this.handleConnectClick}
           intent={this.state.clientHostConnected ? Intent.WARNING : Intent.PRIMARY}
@@ -132,33 +133,80 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
           >
           {this.state.clientHostConnected ? 'Disconnect' : 'Connect'}
         </Button>
-
         <Switch
           checked={this.props.clientHostInfo.showMessages}
           label='Display Client Host Messages'
           onChange={this.handleToggleShowClientHostMessages}
           />
-        
         <Switch
           checked={this.props.clientHostInfo.logMessages}
           label='Console Log Client Host Messages'
           onChange={this.handleToggleLogClientHostMessages}
           />
-        
         <Switch
           checked={this.props.uiDark}
           label='Use Dark Theme for UI'
           onChange={() => this.props.toggleUiColors(true)}
           />
-
         <Switch
           checked={this.props.codePaneDark}
           label='Use Dark Theme for Code Pane'
           onChange={() => this.props.toggleCodePaneColors(true)}
           />
-          
-      </Card>
-    );
+      </Card>,
+      <Card elevation={Elevation.TWO} key='info_card'>
+        <Text>
+					<H5>Argonaut Subscriptions Reference Implementation</H5>
+          This module is a front-end user interface to test the current 
+          iteration of changes to the FHIR Subscription resource.
+          <br/>
+          <br/>
+          Note that this software is under heavy development and will be
+          updated without notice.
+          <br/>
+          <br/>
+          Useful links:
+					<UL>
+            <li>FHIR Build branch of current changes (Subscription, Topic, etc.): <a
+                href='http://build.fhir.org/branches/argonaut-subscription/' 
+                target='_blank'
+                rel="noopener noreferrer"
+                >build.fhir.org</a>
+            </li>
+            <li>Argonaut Subscription Connectathon Scenarios: <a
+                href='https://github.com/microsoft-healthcare-madison/argo-subscription-docs/tree/master/connectathon-scenarios-201909' 
+                target='_blank'
+                rel="noopener noreferrer"
+                >github.com</a>
+            </li>
+            <li>September 2019 Subscription Connectathon Track: <a
+                href='https://confluence.hl7.org/display/FHIR/2019-09+Subscription' 
+                target='_blank'
+                rel="noopener noreferrer"
+                >confluence.hl7.org</a>
+            </li>
+            <li>Argonaut Subscription Reference Client UI (this software): <a
+                href='https://github.com/microsoft-healthcare-madison/argonaut-subscription-client-ui' 
+                target='_blank'
+                rel="noopener noreferrer"
+                >github.com</a>
+            </li>
+            <li>Argonaut Subscription Reference Client Host (manage REST endpoints): <a
+                href='https://github.com/microsoft-healthcare-madison/argonaut-subscription-client' 
+                target='_blank'
+                rel="noopener noreferrer"
+                >github.com</a>
+            </li>
+            <li>Argonaut Subscription Reference Server Proxy (intercept and process Subscription/Topic): <a
+                href='https://github.com/microsoft-healthcare-madison/argonaut-subscription-server-proxy' 
+                target='_blank'
+                rel="noopener noreferrer"
+                >github.com</a>
+            </li>
+          </UL>
+				</Text>
+      </Card>,
+    ]);
   }
 
   /** Event handler for toggling the Show Client Host Messages switch */

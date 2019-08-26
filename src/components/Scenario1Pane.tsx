@@ -16,11 +16,9 @@ import {IconNames} from "@blueprintjs/icons";
 import { ContentPaneProps } from '../models/ContentPaneProps';
 import { ScenarioStepInfo } from '../models/ScenarioStepInfo';
 import { ScenarioStep } from './ScenarioStep';
-import { EndpointRegistration, EndpointChannelType } from '../models/EndpointRegistration';
+import { EndpointRegistration } from '../models/EndpointRegistration';
 import { ApiHelper } from '../util/ApiHelper';
 import * as fhir from '../models/fhir_r4_selected';
-import { TriggerRequest } from '../models/TriggerRequest';
-import { TriggerInformation } from '../models/TriggerInformation';
 import { PatientSelectionInfo } from '../models/PatientSelectionInfo';
 import { ScenarioStepData } from '../models/ScenarioStepData';
 
