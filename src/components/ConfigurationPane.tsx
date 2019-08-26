@@ -166,7 +166,7 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
           <br/>
           <br/>
           Useful links:
-          <HTMLTable striped={true}>
+          <HTMLTable striped={true} interactive={true}>
             <thead>
               <tr>
                 <th>Description</th>
