@@ -94,14 +94,14 @@ export class MainNavigation extends React.PureComponent<MainNavigationProps> {
           <NavbarGroup align={Alignment.RIGHT}>
             <NavbarHeading>{this.iconForStatus(this.props.fhirServerInfo.status)} {this.props.fhirServerInfo.name}</NavbarHeading>
             <NavbarHeading>{this.iconForStatus(this.props.clientHostInfo.status)} {this.props.clientHostInfo.name}</NavbarHeading>
-            <NavbarDivider />
+            {/* <NavbarDivider />
             <AnchorButton
               href='http://github.com/microsoft-healthcare-madison/argonaut-subscription-client-ui'
               text='Github'
               target='_blank'
               minimal
               rightIcon='code'
-              />
+              /> */}
           </NavbarGroup>
           }
 
