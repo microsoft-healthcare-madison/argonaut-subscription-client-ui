@@ -14,12 +14,11 @@ import {ConfigurationPane} from './ConfigurationPane';
 import {Scenario1Pane} from './Scenario1Pane';
 import {Scenario2Pane} from './Scenario2Pane';
 import { UiTabInformation } from '../models/UiTabInformation';
-import { MainNavigation } from './MainNavigation';
+import MainNavigation from './MainNavigation';
 import { ConnectionInformation } from '../models/ConnectionInformation';
 import { StorageHelper } from '../util/StorageHelper';
 import { PlaygroundPane } from './PlaygroundPane';
 import { CopyHelper } from '../util/CopyHelper';
-// import { TriggerPane } from './TriggerPane';
 
 /** tab configuration - MUST be in 'id' order - first tab is shown at launch */
 let _tabs: UiTabInformation[] = [
@@ -30,24 +29,19 @@ let _tabs: UiTabInformation[] = [
   // {title: 'Trigger', tip:'Manual trigger events', id: '3', panel: React.createFactory(TriggerPane)},
 ]
 
-/** Type definition for the current object's state variable */
-interface ComponentState {
-  selectedNavbarTabId: string;
-  fhirServerInfo: ConnectionInformation;
-  clientHostInfo: ConnectionInformation;
-  uiDark: boolean;
-  codePaneDark: boolean;
-}
-
 // **** extend the Window to include our _env settings ****
 
 declare global {
   interface Window { _env?:any }
 }
 
+// **** export whatever our property type is ****
+
 export interface MainPageProps {}
 
-function MainPage() {
+// **** this component ****
+
+export default function MainPage() {
   // **** set up local state ****
 
   const [initialLoad, setInitialLoad] = useState<boolean>(true);
@@ -327,5 +321,3 @@ function MainPage() {
     </div>
   );
 }
-
-export default MainPage;
