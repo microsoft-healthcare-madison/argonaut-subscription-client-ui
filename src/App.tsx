@@ -8,7 +8,7 @@ import '@blueprintjs/datetime/lib/css/blueprint-datetime.css';
 import '@blueprintjs/select/lib/css/blueprint-select.css';
 import './App.css';
 
-import { MainPage } from './components/MainPage';
+import MainPage from './components/MainPage';
 
 
 const App: React.FC = () => {

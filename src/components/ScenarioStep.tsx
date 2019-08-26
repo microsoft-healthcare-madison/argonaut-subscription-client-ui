@@ -120,7 +120,7 @@ export class ScenarioStep extends React.PureComponent<ScenarioStepProps> {
       }
     })
 
-    this.props.paneProps.copyToClipboard(currentData, currentTitle);
+    this.props.paneProps.copyToClipboard(currentData, `'${currentTitle}' Copied to the ClipBoard`);
   }
 
 	private handleTabChange = (navbarTabId: TabId) => {

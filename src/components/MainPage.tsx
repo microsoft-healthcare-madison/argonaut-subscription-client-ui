@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, {useState, useEffect} from 'react';
 
 import { 
   IconName,
@@ -18,6 +18,7 @@ import { MainNavigation } from './MainNavigation';
 import { ConnectionInformation } from '../models/ConnectionInformation';
 import { StorageHelper } from '../util/StorageHelper';
 import { PlaygroundPane } from './PlaygroundPane';
+import { CopyHelper } from '../util/CopyHelper';
 // import { TriggerPane } from './TriggerPane';
 
 /** tab configuration - MUST be in 'id' order - first tab is shown at launch */
@@ -46,109 +47,93 @@ declare global {
 
 export interface MainPageProps {}
 
-export class MainPage extends React.PureComponent<MainPageProps> {
-  public state: ComponentState = {
-      selectedNavbarTabId: _tabs[0].id,
-      fhirServerInfo: {
-          name: 'FHIR Server', 
-          hint: 'URL for an R4 FHIR Server with Subscription and Topic support',
-          url: window._env.Server_Public_Url, 
-          status: '', 
-          showMessages: false,
-          logMessages: false,
-          registration: '',
-        },
-      clientHostInfo: {
-        name: 'Client Host', 
-        hint: 'URL for a running argonaut-client-host service - creates endpoints and forwards notifications to this UI',
-        url: window._env.Client_Public_Url, 
-        status: '', 
-        showMessages: false,
-        logMessages: false,
-        registration: '',
-      },
-      uiDark: false,
-      codePaneDark: false,
-  };
+function MainPage() {
+  // **** set up local state ****
+
+  const [initialLoad, setInitialLoad] = useState<boolean>(true);
+  const [selectedNavbarTabId, setSelectedNavbarTabId] = useState<string>(_tabs[0].id);
+  const [fhirServerInfo, setFhirServerInfo] = useState<ConnectionInformation>({
+      name: 'FHIR Server', 
+      hint: 'URL for an R4 FHIR Server with Subscription and Topic support',
+      url: window._env.Server_Public_Url, 
+      status: '', 
+      showMessages: false,
+      logMessages: false,
+      registration: '',
+    });
+  const [clientHostInfo, setClientHostInfo] = useState<ConnectionInformation>({
+      name: 'Client Host', 
+      hint: 'URL for a running argonaut-client-host service - creates endpoints and forwards notifications to this UI',
+      url: window._env.Client_Public_Url, 
+      status: '', 
+      showMessages: false,
+      logMessages: false,
+      registration: '',
+    });
+  const [uiDark, setUiDark] = useState<boolean>(false);
+  const [codePaneDark, setCodePaneDark] = useState<boolean>(false);
+
+  // **** set up private internal objects (not tracked) ****
 
   /** WebSocket object for communicating with the client host */
-  private _clientHostWebSocket: WebSocket | null = null;
+  let _clientHostWebSocket: WebSocket | null = null;
 
   /** Callback function in the active pane to handle WebSocket ClientHost notifications */
-  private _paneHostMessageHandler: ((message: string) => void) | null = null;
+  let _paneHostMessageHandler: ((message: string) => void) | null = null;
 
   /** Toaster display object */
-  private _toaster: IToaster|null = null;
+  let _toaster: IToaster|null = null;
 
-  constructor(props: MainPageProps) {
-    super(props);
+  // **** handle lifecycle changes ****
 
-    console.log('LocalStorageIsAvailable:', StorageHelper.isLocalStorageAvailable);
-    // **** check for local storage settings ****
+  useEffect(() => {
+    // **** check for initial load ****
 
-    if (StorageHelper.isLocalStorageAvailable) {
-      // **** update local settings ****
+    if (initialLoad) {
+        // **** check for local storage settings ****
+      
+      if (StorageHelper.isLocalStorageAvailable) {
+        // **** update local settings ****
 
-      if (localStorage.getItem('fhirServerUrl')) {
-        this.state.fhirServerInfo.url = localStorage.getItem('fhirServerUrl')!;
+        if (localStorage.getItem('fhirServerUrl')) {
+          setFhirServerInfo({...fhirServerInfo, url: localStorage.getItem('fhirServerUrl')!});
+        }
+
+        let clientInfo = {...clientHostInfo};
+
+        if (localStorage.getItem('clientHostUrl')) {
+          clientInfo.url = localStorage.getItem('clientHostUrl')!;
+        }
+
+        if (localStorage.getItem('showMessages') === 'true') {
+          clientInfo.showMessages = true;
+        }
+
+        if (localStorage.getItem('logMessages') === 'true') {
+          clientInfo.logMessages = true;
+        }
+
+        setClientHostInfo(clientInfo);
+
+        if (localStorage.getItem('uiDark') === 'true') {
+          toggleUiColors();
+        }
+
+        if (localStorage.getItem('codePaneDark') === 'true') {
+          toggleCodePaneColors();
+        }
       }
 
-      if (localStorage.getItem('clientHostUrl')) {
-        this.state.clientHostInfo.url = localStorage.getItem('clientHostUrl')!;
-      }
+      // **** no longer initial load ****
 
-      if (localStorage.getItem('showMessages') === 'true') {
-        this.state.clientHostInfo.showMessages = true;
-      }
-
-      if (localStorage.getItem('logMessages') === 'true') {
-        this.state.clientHostInfo.logMessages = true;
-      }
-
-      if (localStorage.getItem('uiDark') === 'true') {
-        this.toggleUiColors(false);
-      }
-
-      if (localStorage.getItem('codePaneDark') === 'true') {
-        this.toggleCodePaneColors(false);
-      }
+      setInitialLoad(false);
     }
-  }
+  }, 
+  // **** flag variables we want to call this when changed ****
+  [clientHostInfo, fhirServerInfo, toggleUiColors, toggleCodePaneColors]);
 
-  public render() {
-    return (
-      <div>
-        {/* Render the navigation bar */}
-        <MainNavigation 
-          selectedTabId={this.state.selectedNavbarTabId} 
-          tabs={_tabs} 
-          onSelectedTabChanged={this.onSelectedTabChanged}
-          fhirServerInfo={this.state.fhirServerInfo}
-          clientHostInfo={this.state.clientHostInfo}
-          />
-
-        <div id='mainContent'>
-          {/* Render the correct content pane, as selected in our tabs above */}
-          { _tabs[Number(this.state.selectedNavbarTabId)].panel({
-            fhirServerInfo: this.state.fhirServerInfo,
-            clientHostInfo: this.state.clientHostInfo,
-            updateFhirServerInfo: this.updateFhirServerInfo,
-            updateClientHostInfo: this.updateClientHostInfo,
-            connectClientHostWebSocket: this.connectToClientHostWebSocket,
-            registerHostMessageHandler: this.registerPaneClientHostMessageHandler,
-            toaster: this.showToastMessage,
-            uiDark: this.state.uiDark,
-            toggleUiColors: this.toggleUiColors,
-            codePaneDark: this.state.codePaneDark,
-            toggleCodePaneColors: this.toggleCodePaneColors,
-            copyToClipboard: this.copyToClipboard,
-          }) }
-        </div>
-      </div>
-    );
-  }
-
-  private toggleUiColors = (useSetState: boolean) => {
+  /** Function to toggle the UI colors (light/dark) */
+  function toggleUiColors() {
     // **** update DOM elements ****
 
     var rootElement: HTMLElement = document.getElementById("root")!;
@@ -157,38 +142,93 @@ export class MainPage extends React.PureComponent<MainPageProps> {
     document.body.className = document.body.className === 'body-dark' ? '' : 'body-dark';
 
     if (StorageHelper.isLocalStorageAvailable) {
-      localStorage.setItem('uiDark', (!this.state.uiDark).toString());
+      localStorage.setItem('uiDark', (!uiDark).toString());
     }
 
     // **** update state ****
-    
-    if (useSetState) {
-      this.setState({uiDark: !this.state.uiDark});
-    } else {
-      this.state.uiDark = !this.state.uiDark;
+
+    setUiDark(!uiDark);
+  };
+
+  /** Function to toggle the code pane colors (light/dark) */
+  function toggleCodePaneColors() {
+    if (StorageHelper.isLocalStorageAvailable) {
+      localStorage.setItem('codePaneDark', (!codePaneDark).toString());
     }
+
+    // **** update state ****
+
+    setCodePaneDark(!codePaneDark);
+  };
+  
+  /** Function to connect a ClientHost WebSocket to the specified host (max: 1) */
+  function connectToClientHostWebSocket(clientHostInfo: ConnectionInformation) {
+    // **** close any existing Client Host websocket connections  ****
+
+    if (_clientHostWebSocket) {
+      _clientHostWebSocket.onmessage = null;
+      _clientHostWebSocket.close();
+      _clientHostWebSocket = null;
+    }
+
+    // **** build the websocket URL ****
+
+    let wsUrl: string = new URL(
+      '/websockets?uid='+clientHostInfo.registration, 
+      clientHostInfo.url.replace('http', 'ws')).toString();
+
+    // **** connect to our server ****
+
+    _clientHostWebSocket = new WebSocket(wsUrl);
+
+    // **** setup our receive handler ****
+
+    _clientHostWebSocket.onmessage = clientHostMessageHandler;
+
+    // **** setup an error handler to disconnect ****
+
+    _clientHostWebSocket.onerror = handleClientHostWebSocketError;
+    _clientHostWebSocket.onclose = handleClientHostWebSocketClose;
+
+    // **** tell the user we are connected ****
+
+    showToastMessage('Connected to Client Host', IconNames.INFO_SIGN, 3000);
   }
 
-  private toggleCodePaneColors = (useSetState: boolean) => {
+  function handleClientHostWebSocketError(event: Event) {
+    // **** close our websocket ****
 
-    if (StorageHelper.isLocalStorageAvailable) {
-      localStorage.setItem('codePaneDark', (!this.state.codePaneDark).toString());
-    }
+    var updatedInfo: ConnectionInformation = {...clientHostInfo, 
+      status: ''
+    };
+    setClientHostInfo(updatedInfo);
 
-    if (useSetState) {
-      this.setState({codePaneDark: !this.state.codePaneDark});
-    } else {
-      this.state.codePaneDark = !this.state.codePaneDark;
-    }
+    // **** warn the user ****
+
+    showToastMessage('Communication Error with Client Host', IconNames.ERROR, 5000);
+  }
+
+  /** Handler to process web socket close events */
+  function handleClientHostWebSocketClose(event: Event) {
+    // **** close our websocket ****
+
+    var updatedInfo: ConnectionInformation = {...clientHostInfo, 
+      status: ''
+    };
+    setClientHostInfo(updatedInfo);
+
+    // **** warn the user ****
+
+    showToastMessage('Disconnected from Client Host', IconNames.INFO_SIGN, 3000);
   }
 
   /** Callback function to allow panes to register to receive client host notifications (max: 1) */
-  private registerPaneClientHostMessageHandler = (handler: ((message: string) => void)) => {
-    this._paneHostMessageHandler = handler;
+  function registerPaneClientHostMessageHandler(handler: ((message: string) => void)) {
+    _paneHostMessageHandler = handler;
   }
 
   /** Function to process client host messages received via the WebSocket */
-  private clientHostMessageHandler = (event: MessageEvent) => {
+  function clientHostMessageHandler(event: MessageEvent) {
     // **** check for keepalive message (discard) ****
 
     if ((event.data) && ((event.data as string).startsWith('keepalive'))) {
@@ -197,32 +237,32 @@ export class MainPage extends React.PureComponent<MainPageProps> {
     }
     // **** display to user (if desired) ****
 
-    if (this.state.clientHostInfo.showMessages) {
-      this.showToastMessage(event.data, IconNames.CLOUD_DOWNLOAD, 2000);
+    if (clientHostInfo.showMessages) {
+      showToastMessage(event.data, IconNames.CLOUD_DOWNLOAD, 2000);
     }
 
     // **** log to the console (if desired) ****
 
-    if (this.state.clientHostInfo.logMessages) {
+    if (clientHostInfo.logMessages) {
       console.log('ClientHost:', event.data);
     }
 
     // **** propagate (if necessary) ****
 
-    if (this._paneHostMessageHandler !== null) {
-      this._paneHostMessageHandler(event.data);
+    if (_paneHostMessageHandler !== null) {
+      _paneHostMessageHandler(event.data);
     }
   }
-  
+
   /** Function to display a short-lived message on the main UI */
-  private showToastMessage = (message: string, iconName?: IconName, timeout?: number) => {
-    let toaster: IToaster = this.getOrCreateToaster();
+  function showToastMessage(message: string, iconName?: IconName, timeout?: number) {
+    let toaster: IToaster = getOrCreateToaster();
     toaster.show({message: message, icon: iconName, timeout: timeout});
   }
 
   /** Function to either get the current Toast (short message) object, or create a new one */
-  private getOrCreateToaster = () => {
-    if (!this._toaster) {
+  function getOrCreateToaster() {
+    if (!_toaster) {
       // **** configure our toaster display ****
 
       var toasterProps: IToasterProps = {
@@ -232,153 +272,60 @@ export class MainPage extends React.PureComponent<MainPageProps> {
       }
 
       // **** static create the toaster on the DOM ****
-      this._toaster = Toaster.create(toasterProps, document.body);
+      _toaster = Toaster.create(toasterProps, document.body);
     }
 
-    return this._toaster;
+    return _toaster;
   }
 
-  /** Callback function to allow panes to update the FHIR Server info */
-  private updateFhirServerInfo = (updatedInfo: ConnectionInformation) => {
-    this.setState({fhirServerInfo: updatedInfo});
-  }
+  /** Function to perform copying generic text to the clipboard */
+  function copyToClipboard(message: string, toast?: string) {
 
-  /** Callback function to allow panes to update the Client Host info */
-  private updateClientHostInfo = (updatedInfo: ConnectionInformation) => {
+    // **** attempt the copy ****
 
-    // **** close any existing Client Host websocket connections  ****
+    const success = CopyHelper.copyToClipboard(message);
 
-    if ((updatedInfo.status !== 'ok') && (this._clientHostWebSocket)) {
-      this._clientHostWebSocket.onmessage = null;
-      this._clientHostWebSocket.close();
-      this._clientHostWebSocket = null;
+    // **** notify the user ****
+
+    if ((success) && (toast)) {
+      showToastMessage(toast, IconNames.CLIPBOARD);
     }
 
-    // **** update our state ****
-
-    this.setState({clientHostInfo: updatedInfo});
-  }
-
-  /** Callback handler for when MainNavigation changes the active tab */
-  private onSelectedTabChanged = (id: string) => {
-    this.setState({selectedNavbarTabId: id});
-  }
-
-  /** Function to connect a ClientHost WebSocket to the specified host (max: 1) */
-  private connectToClientHostWebSocket = (clientHostInfo: ConnectionInformation) => {
-    // **** close any existing Client Host websocket connections  ****
-
-    if (this._clientHostWebSocket) {
-      this._clientHostWebSocket.onmessage = null;
-      this._clientHostWebSocket.close();
-      this._clientHostWebSocket = null;
-    }
-
-    // **** build the websocket URL ****
-
-    let wsUrl: URL = new URL('/websockets?uid='+clientHostInfo.registration, clientHostInfo.url.replace('http', 'ws'));
-
-    // **** connect to our server ****
-
-    this._clientHostWebSocket = new WebSocket(wsUrl.toString());
-
-    // **** setup our receive handler ****
-
-    this._clientHostWebSocket.onmessage = this.clientHostMessageHandler;
-
-    // **** setup an error handler to disconnect ****
-
-    this._clientHostWebSocket.onerror = this.handleClientHostWebSocketError;
-    this._clientHostWebSocket.onclose = this.handleClientHostWebSocketClose;
-
-    // **** tell the user we are connected ****
-
-    this.showToastMessage('Connected to Client Host', IconNames.INFO_SIGN, 3000);
-  }
-
-  private handleClientHostWebSocketError = (event: Event) => {
-    // **** close our websocket ****
-
-    var updatedInfo: ConnectionInformation = {...this.state.clientHostInfo, 
-      status: ''
-    };
-    this.updateClientHostInfo(updatedInfo);
-
-    // **** warn the user ****
-
-    this.showToastMessage('Communication Error with Client Host', IconNames.ERROR, 5000);
-  }
-
-  private handleClientHostWebSocketClose = (event: Event) => {
-    // **** close our websocket ****
-
-    var updatedInfo: ConnectionInformation = {...this.state.clientHostInfo, 
-      status: ''
-    };
-    this.updateClientHostInfo(updatedInfo);
-
-    // **** warn the user ****
-
-    this.showToastMessage('Disconnected from Client Host', IconNames.INFO_SIGN, 3000);
-  }
-
-  
-  private copyToClipboard = (message: string, toast?: string) => {
-
-    // **** create a textarea so we can select our text ****
-
-    var textArea = document.createElement("textarea");
-
-    // **** set in top-left corner of screen regardless of scroll position ****
-
-    textArea.style.position = 'fixed';
-    textArea.style.top = '0';
-    textArea.style.left = '0';
-
-    // **** small as poosible - 1px / 1em gives a negative w/h on some browsers ****
-
-    textArea.style.width = '2em';
-    textArea.style.height = '2em';
-
-    // **** don't want padding or borders, reduce size in case it flash renders ****
-
-    textArea.style.padding = '0';
-    textArea.style.border = 'none';
-    textArea.style.outline = 'none';
-    textArea.style.boxShadow = 'none';
-
-    // **** avoid flash of white box if rendered for any reason ****
-
-    textArea.style.background = 'transparent';
-
-    // **** set our text to our data ****
-
-    textArea.value = message;
-
-    // **** add to the DOM ****
-
-    document.body.appendChild(textArea);
-
-    // **** select our element and text ****
-
-    textArea.focus();
-    textArea.select();
-
-    // **** copy, ignore errors ****
-
-    try {
-      document.execCommand('copy');
-    } catch (err) {
-    }
-    
-    // **** remove our textarea ****
-
-    document.body.removeChild(textArea);
-
-    // *** notify the user ****
-
-    if (toast) {
-      this.showToastMessage(toast, IconNames.CLIPBOARD);
+    if ((!success) && (toast)) {
+      showToastMessage('Failed to copy!', IconNames.WARNING_SIGN);
     }
   }
+
+  /** Render function */
+  return (
+    <div>
+      {/* Render the navigation bar */}
+      <MainNavigation 
+        selectedTabId={selectedNavbarTabId} 
+        tabs={_tabs} 
+        onSelectedTabChanged={setSelectedNavbarTabId}
+        fhirServerInfo={fhirServerInfo}
+        clientHostInfo={clientHostInfo}
+        />
+      <div id='mainContent'>
+        {/* Render the correct content pane, as selected in our tabs above */}
+        { _tabs[Number(selectedNavbarTabId)].panel({
+          fhirServerInfo: fhirServerInfo,
+          clientHostInfo: clientHostInfo,
+          updateFhirServerInfo: setFhirServerInfo,
+          updateClientHostInfo: setClientHostInfo,
+          connectClientHostWebSocket: connectToClientHostWebSocket,
+          registerHostMessageHandler: registerPaneClientHostMessageHandler,
+          toaster: showToastMessage,
+          uiDark: uiDark,
+          toggleUiColors: toggleUiColors,
+          codePaneDark: codePaneDark,
+          toggleCodePaneColors:toggleCodePaneColors,
+          copyToClipboard: copyToClipboard,
+        }) }
+      </div>
+    </div>
+  );
 }
+
+export default MainPage;

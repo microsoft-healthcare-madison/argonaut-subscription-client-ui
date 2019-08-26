@@ -121,6 +121,7 @@ export class MainNavigation extends React.PureComponent<MainNavigationProps> {
               usePortal={true}
               onClose={this.handleNavDrawerClose}
               size={Drawer.SIZE_LARGE}
+              className={Classes.DARK}
               >
               <Tabs
                 animate={true}
@@ -142,10 +143,7 @@ export class MainNavigation extends React.PureComponent<MainNavigationProps> {
             </Drawer>
           </NavbarGroup>
           }
-
         </Navbar>
-
-
       </ResizeSensor>
     );
   }
