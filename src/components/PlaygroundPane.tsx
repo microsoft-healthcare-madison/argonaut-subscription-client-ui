@@ -14,7 +14,7 @@ import {DateInput} from '@blueprintjs/datetime';
 
 import {IconNames} from "@blueprintjs/icons";
 import { ContentPaneProps } from '../models/ContentPaneProps';
-import { ScenarioStepInfo } from '../models/ScenarioStepInfo';
+import { DataCardInfo } from '../models/DataCardInfo';
 import { ScenarioStep } from './ScenarioStep';
 import { EndpointRegistration, EndpointChannelType } from '../models/EndpointRegistration';
 import { ApiHelper } from '../util/ApiHelper';

@@ -143,7 +143,7 @@ export class NotificationsTile extends React.PureComponent<NotificationTileProps
 
     // **** figure out which data the user has selected ****
 
-    const dataRowIndex:number = (this.state.selectedDataRowIndex == -1)
+    const dataRowIndex:number = (this.state.selectedDataRowIndex === -1)
     ? this.props.data.length - 1
     : this.state.selectedDataRowIndex;
 

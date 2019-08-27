@@ -3,42 +3,37 @@ import * as React from 'react';
 import {
   Card,
 	Button,
-  InputGroup,
   FormGroup,
   Elevation,
   Text,
-  H3, Spinner, NonIdealState, Tabs, Tab, ControlGroup, HTMLSelect, TabId, H6, RadioGroup, Radio
+  H3, NonIdealState, HTMLSelect, TabId,
 } from '@blueprintjs/core';
-
-import {DateInput} from '@blueprintjs/datetime';
 
 import {IconNames} from "@blueprintjs/icons";
 import { ContentPaneProps } from '../models/ContentPaneProps';
-import { ScenarioStepInfo } from '../models/ScenarioStepInfo';
+import { DataCardInfo } from '../models/DataCardInfo';
 import { ScenarioStep } from './ScenarioStep';
 import { EndpointRegistration } from '../models/EndpointRegistration';
 import { ApiHelper } from '../util/ApiHelper';
 import * as fhir from '../models/fhir_r4_selected';
 import { PatientSelectionInfo } from '../models/PatientSelectionInfo';
 import { ScenarioStepData } from '../models/ScenarioStepData';
+import S1_Topic from './S1_Topic';
+import S1_Patient from './S1_Patient';
 
 /** Type definition for the current object's state variable */
 interface ComponentState {
-	step01: ScenarioStepInfo,
-	stepData01: ScenarioStepData[],
-	step02: ScenarioStepInfo,
-	stepData02: ScenarioStepData[],
-	step03: ScenarioStepInfo, 
+	step03: DataCardInfo, 
 	stepData03: ScenarioStepData[],
-	step04: ScenarioStepInfo,
+	step04: DataCardInfo,
 	stepData04: ScenarioStepData[],
-	step05: ScenarioStepInfo,
+	step05: DataCardInfo,
 	stepData05: ScenarioStepData[],
-	step06: ScenarioStepInfo,
+	step06: DataCardInfo,
 	stepData06: ScenarioStepData[],
-	step07: ScenarioStepInfo,
+	step07: DataCardInfo,
 	stepData07: ScenarioStepData[],
-	step08: ScenarioStepInfo,
+	step08: DataCardInfo,
 	stepData08: ScenarioStepData[],
 	connected: boolean,
 	endpoint: EndpointRegistration | null,
@@ -66,84 +61,70 @@ interface ComponentState {
  */
 export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
   public state: ComponentState = {
-    step01: {
-			stepNumber: 1,
-			heading: 'Get Topic list from FHIR Server',
-			description: '',
-			optional: true,
-			available: true,
-			completed: false,
-			showBusy: false,
-		},
-		stepData01: [],
-		step02: {
-			stepNumber: 2,
-			heading: 'Select or Create Patient',
-			description: '',
-			optional: false,
-			available: true,
-			completed: false,
-			showBusy: false,
-		},
-		stepData02: [],
 		step03: {
+			id: 'S1_Endpoint',
 			stepNumber: 3,
 			heading: 'Ask Client Host to create Endpoint',
 			description: '',
 			optional: false,
 			available: false,
 			completed: false,
-			showBusy: false,
+			busy: false,
 		},
 		stepData03: [],
 		step04: {
+			id: 'S1_Subscription',
 			stepNumber: 4,
 			heading: 'Request Subscription on FHIR Server',
 			description: '',
 			optional: false,
 			available: false,
 			completed: false,
-			showBusy: false,
+			busy: false,
 		},
 		stepData04: [],
 		step05: {
+			id: 'S1_Handshake',
 			stepNumber: 5,
 			heading: 'Wait on Endpoint handshake',
 			description: '',
 			optional: false,
 			available: false,
 			completed: false,
-			showBusy: false,
+			busy: false,
 		},
 		stepData05: [],
 		step06: {
+			id: 'S1_RequestTrigger',
 			stepNumber: 6,
 			heading: 'Ask Client Host to trigger event',
 			description: '',
 			optional: false,
 			available: false,
 			completed: false,
-			showBusy: false,
+			busy: false,
 		},
 		stepData06: [],
 		step07: {
+			id: 'S1_Notification',
 			stepNumber: 7,
 			heading: 'Wait on Subscription Notification',
 			description: '',
 			optional: false,
 			available: false,
 			completed: false,
-			showBusy: false,
+			busy: false,
 		},
 		stepData07: [],
 		step08: {
+			id: 'S1_cleanUp',
 			stepNumber: 8,
 			heading: 'Clean up',
 			description: 'Delete Subscription, Destroy Endpoint, etc.',
 			optional: true,
 			available: true,
 			completed: false,
-			showBusy: false,
+			busy: false,
 		},
 		stepData08: [],
 		connected: true,
@@ -167,19 +148,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		step06EncounterStatus: 'in-progress',
 	};
 
-	private getRandomChar = () => {
-		return(String.fromCharCode(65 + Math.floor((Math.random() * 26))));
-	}
-
-	private getRandomChars = (count: number) => {
-		var value = '';
-		while (count > 0)
-		{
-			value += this.getRandomChar();
-			count--;
-		}
-		return (value);
-	}
 
 	constructor(props: ContentPaneProps) {
 		super(props);
@@ -192,16 +160,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		props.registerHostMessageHandler(this.handleHostMessage);
 
-		let msPerYear: number = 365.25 * 24 * 60 * 60 * 1000;
-		let birthDate: Date = new Date((new Date()).valueOf() - Math.floor((Math.random() * 110) * msPerYear));
-
-		// **** generate some info in case a new patient is created ****
-
-		this.state.step02PatientGivenName = `Argonaut-${Math.floor((Math.random() * 10000) + 1)}`;
-		this.state.step02PatientFamilyName = `Project-${Math.floor((Math.random() * 10000) + 1)}`
-		this.state.step02PatientId = `${this.getRandomChars(3)}${Math.floor((Math.random() * 10000) + 1)}`
-		this.state.step02Gender = (Math.random() < 0.51) ? 'female' : 'male';
-		this.state.step02BirthDate = birthDate;
 	}
 
 	componentDidMount() {
@@ -232,7 +190,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		// **** if we are connected, render scenario content ****
     return ( [
-				<Card key='title' elevation={Elevation.TWO} style={{margin: 5}}>
+			<Card key='title' elevation={Elevation.TWO} style={{margin: 5}}>
 				<Text>
 					<H3>Scenario 1 - (<a 
 						href='http://bit.ly/argo-sub-connectathon-2019-09#scenario-1' 
@@ -244,165 +202,18 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			</Card>,
 
 			/* Get Topic list from FHIR Server */
-			<ScenarioStep 
-				key='step01'
-				step={this.state.step01} 
-				data={this.state.stepData01} 
+			<S1_Topic
+				key='s1_topic'
 				paneProps={this.props}
-				>
-				<Button
-					disabled={!this.state.step01.available}
-					onClick={this.handleGetTopicListClick}
-					>
-					Go
-				</Button>
-			</ScenarioStep>,
+				/>,
 
+				
 			/* Select or Create Patient */
-			<ScenarioStep 
-				key='step02'
-				step={this.state.step02} 
-				data={this.state.stepData02} 
+			<S1_Patient
+				key='s1_patient'
 				paneProps={this.props}
-				>
-				<Tabs
-					animate={true}
-					id='tabsStep2'
-					vertical={false}
-					selectedTabId={this.state.step02TabId}
-					onChange={this.handleStep02TabChange}
-					>
-					<Tab id='s2_search' title='Search' />
-					<Tab id='s2_create' title='Create' />
-				</Tabs>
-				{ (this.state.step02TabId === 's2_search') &&
-					<Card style={{margin:0}}>
-						<H6>Search and Select Existing Patient</H6>
-						<ControlGroup>
-							<HTMLSelect
-								onChange={this.handleStep02MatchTypeChange}
-								defaultValue={this.state.step02MatchType}
-								>
-								<option>family</option>
-								<option>given</option>
-								<option>_id</option>
-								<option>name</option>
-							</HTMLSelect>
-							<InputGroup
-								id='step02_searchFilter'
-								value={this.state.step02SearchFilter}
-								onChange={this.handleSearchFilterChange}
-								/>
-							<Button
-								onClick={this.handleStep02SearchClick}
-								>
-								Search
-							</Button>
-						</ControlGroup>
-						<br />
-						{ (this.state.step02SubBusy) &&
-							<Spinner />
-						}
-						{ (!this.state.step02SubBusy) &&
-							<RadioGroup
-								label={`Select a patient, ${this.state.step02Patients.length} found`}
-								onChange={this.handleStep02RadioChange}
-								selectedValue={this.state.step02SelectedValue}
-								>
-									{ this.state.step02Patients.map((patientInfo) => (
-										<Radio 
-											key={`s02_p_${patientInfo.key}`} 
-											label={patientInfo.value} 
-											value={patientInfo.key} 
-											checked={patientInfo.key === this.state.step02SelectedValue}
-											/>
-									))}
-							</RadioGroup>
-						}
-						{ (!this.state.step02SubBusy) &&
-							<Button
-								disabled={(this.state.step02SelectedValue === '')}
-								onClick={this.handleStep02SetPatientSearchedClick}
-								style={{margin: 5}}
-								>
-								Use Selected Patient
-							</Button>
-						}
-					</Card>
-				}
-				{ (this.state.step02TabId === 's2_create') &&
-					<Card>
-						<H6>Create and PUT a new Patient</H6>
-						<FormGroup
-							label = 'Patient Given Name'
-							helperText = 'Given Name for the new Patient'
-							labelFor='patient-given-name'
-							>
-							<InputGroup
-								id='patient-given-name'
-								value={this.state.step02PatientGivenName}
-								onChange={this.handlePatientGivenNameChange}
-								/>
-						</FormGroup>
-						<FormGroup
-							label = 'Patient Family Name'
-							helperText = 'Family Name for the new Patient'
-							labelFor='patient-family-name'
-							>
-							<InputGroup
-								id='patient-family-name'
-								value={this.state.step02PatientFamilyName}
-								onChange={this.handlePatientFamilyNameChange}
-								/>
-						</FormGroup>
-						<FormGroup
-							label='Patient ID'
-							helperText='ID for the new Patient (must contain at least one letter)'
-							labelFor='patient-id'
-							>
-							<InputGroup
-								id='patient-id'
-								value={this.state.step02PatientId}
-								onChange={this.handlePatientIdChange}
-								/>
-						</FormGroup>
-						<HTMLSelect
-							onChange={this.handleStep02GenderChange}
-							defaultValue={this.state.step02Gender}
-							>
-							<option>female</option>
-							<option>male</option>
-						</HTMLSelect>
-						<FormGroup
-							label='Patient Birth Date'
-							helperText='Birth date of this patient'
-							labelFor='patient-birthdate'
-							>
-							<DateInput
-								onChange={this.handlePatientBirthDateChange}
-								formatDate={date => date.toLocaleDateString()}
-								parseDate={str => new Date(str)}
-								value={this.state.step02BirthDate}
-								minDate={new Date(1900, 1, 1)}
-								maxDate={new Date()}
-								/>
-						</FormGroup>
-						{ (!this.state.step02SubBusy) &&
-							<Button
-								disabled={(this.state.step02PatientId === '')}
-								onClick={this.handleStep02SetPatientCreatedClick}
-								style={{margin: 5}}
-								>
-								Create Patient
-							</Button>
-						}
-						{ (this.state.step02SubBusy) &&
-							<Spinner />
-						}
-
-					</Card>
-				}
-			</ScenarioStep>,
+				registerSelectedPatientId={this.registerSelectedPatientId}
+				/>,
 
 			/* Ask Client Host to create Endpoint */
 			<ScenarioStep 
@@ -515,6 +326,18 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
     );
 	}
 
+	private registerSelectedPatientId = (id: string) => {
+		this.disableSteps(3);
+
+		let updated: DataCardInfo = {...this.state.step03, available: true};
+
+		this.setState({selectedPatientId: id});
+
+		// **** request an endpoint ****
+
+		this.step03CreateEndpoint();
+	}
+
 	private handleStep06EncounterClassChange = (event: React.FormEvent<HTMLSelectElement>) => {
 		this.setState({step06EncounterClass: event.currentTarget.value})
 	}
@@ -525,85 +348,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 	private handleStep04PayloadChange = (event: React.FormEvent<HTMLSelectElement>) => {
 		this.setState({step04Payload: event.currentTarget.value})
-	}
-
-	private handleStep02GenderChange = (event: React.FormEvent<HTMLSelectElement>) => {
-		this.setState({step02BirthDate: event.currentTarget.value})
-	}
-
-	private handleStep02MatchTypeChange = (event: React.FormEvent<HTMLSelectElement>) => {
-		this.setState({step02MatchType: event.currentTarget.value})
-	}
-
-	private handleStep02SearchClick = () => {
-		// **** flag we are searching ****
-
-		this.setState({step02SubBusy: true});
-
-    // **** construct the search url ****
-
-		var url: string = new URL('Patient/', this.props.fhirServerInfo.url).toString();
-		
-		if (this.state.step02SearchFilter) {
-				url += `?${encodeURIComponent(this.state.step02MatchType)}=${encodeURIComponent(this.state.step02SearchFilter)}`;
-		}
-
-    // **** attempt to get the list of Patients ****
-
-    ApiHelper.apiGet<fhir.Bundle>(url)
-      .then((value: fhir.Bundle) => {
-
-				// **** check for no values ****
-
-				if ((!value) || (!value.entry) || (!value.entry)) {
-						this.setState({step02SubBusy: false, step02Patients: []});
-				}
-
-				var patients: PatientSelectionInfo[] = [];
-
-				// **** loop over patients ****
-
-				value.entry!.forEach(entry => {
-					if (!entry.resource) return;
-
-					let patient: fhir.Patient = entry.resource as fhir.Patient;
-
-					if ((patient.id) && (patient.name)) {
-						patients.push({
-							key: patient.id!, 
-							value: `${patient.name![0].family}, ${patient.name![0].given} (${patient.id!})`});
-					}
-				});
-
-				// **** update our state ****
-
-				this.setState({step02Patients: patients, step02SubBusy: false});
-      })
-      .catch((reason: any) => {
-				// **** update step ****
-
-				let current: ScenarioStepInfo = {...this.state.step02, 
-					completed: false, 
-					showBusy: false,
-				};
-				let data: ScenarioStepData[] = [
-					{id: 'request', title: 'Request', data: url, iconName:IconNames.GLOBE_NETWORK},
-					{id: 'error', title: 'Error', data: `Failed to get topic list from: ${url}:\n${reason}`, iconName:IconNames.ERROR},
-				];
-
-				// **** update our state ****
-
-				this.setState({step02: current, stepData02: data, step02SubBusy: false});      
-			})
-      ;
-	}
-
-	private handleStep02RadioChange = (event: React.FormEvent<HTMLInputElement>) => {
-		this.setState({step02SelectedValue: event.currentTarget.value});
-	}
-
-	private handleStep02TabChange = (navbarTabId: TabId) => {
-		this.setState({step02TabId: navbarTabId.toString()})
 	}
 
 	/** Callback function to process ClientHost messages */
@@ -646,15 +390,15 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		if (eventCount === 0) {
 			// **** update steps ****
 
-			let current: ScenarioStepInfo = {...this.state.step05,
+			let current: DataCardInfo = {...this.state.step05,
 				completed: true, 
-				showBusy: false,
+				busy: false,
 			};
 			let data: ScenarioStepData[] = [
 				{id: 'handshake', title: 'Handshake', data: JSON.stringify(bundle, null, 2), iconName:IconNames.FLAME}
 			];
 
-			let next: ScenarioStepInfo = {...this.state.step06, available: true};
+			let next: DataCardInfo = {...this.state.step06, available: true};
 
 			// **** update our state ****
 
@@ -666,9 +410,9 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		} else {
 			// **** update step ****
 
-			let current: ScenarioStepInfo = {...this.state.step07,
+			let current: DataCardInfo = {...this.state.step07,
 				completed: true, 
-				showBusy: false,
+				busy: false,
 			};
 
 			let rec:ScenarioStepData = {
@@ -687,60 +431,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		}
 	}
 
-	/** Handle user clicks on the GetTopicList button */
-	private handleGetTopicListClick = () => {
-		// **** update step ****
-
-		var busyStep: ScenarioStepInfo = {...this.state.step01, showBusy: true };
-
-		// **** flag we are asking for Topics (busy) ****
-
-		this.setState({step01: busyStep});
-
-    // **** construct the registration REST url ****
-
-    let url: string = new URL('Topic/', this.props.fhirServerInfo.url).toString();
-
-    // **** attempt to get the list of Topics ****
-
-    ApiHelper.apiGet<fhir.Topic[]>(url)
-      .then((value: fhir.Topic[]) => {
-
-				// **** update step ****
-
-				let current: ScenarioStepInfo = {...this.state.step01, 
-					completed: true, 
-					showBusy: false,
-				};
-
-				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:url, iconName:IconNames.GLOBE_NETWORK},
-					{id:'topics', title:'Topics', data:JSON.stringify(value, null, 2), iconName:IconNames.FLAME}
-				];
-
-				// **** update our state ****
-
-				this.setState({ step01: current, stepData01: data });
-      })
-      .catch((reason: any) => {
-				// **** update step ****
-
-				let current: ScenarioStepInfo = {...this.state.step01, 
-					completed: false, 
-					showBusy: false,
-				};
-
-				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:url, iconName:IconNames.GLOBE_NETWORK},
-					{id:'error', title:'Error', data:`Failed to get topic list from: ${url}:\n${reason}`, iconName:IconNames.ERROR}
-				];
-				// **** update our state ****
-
-				this.setState({	step01: current, stepData01: data });      
-			})
-      ;
-	}
-
 	private checkForMatchingTitle = (data: ScenarioStepData[], rec: ScenarioStepData) => {
 		for (var i:number = 0; i < data.length; i++) {
 			if (data[i].title === rec.title) {
@@ -751,143 +441,11 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		return -1;
 	}
 
-	/** Handle user clicks on the SetPatient button from Search (validate and enable next step) */
-	private handleStep02SetPatientSearchedClick = () => {
-		// **** disable subsequent steps if they aren't ****
-
-		this.disableSteps(3);
-		
-		let selectedPatientId: string = this.state.step02SelectedValue;
-
-		// **** update steps ****
-
-		let current: ScenarioStepInfo = {...this.state.step02, 
-			completed: true, 
-		};
-
-		let rec:ScenarioStepData = {
-			id:'info', 
-			title:'Info', 
-			data:`Using Existing Patient (id): ${selectedPatientId}`,
-			iconName: IconNames.INFO_SIGN
-		}
-
-		// **** check for mathcing data ****
-
-		let pos: number = this.checkForMatchingTitle(this.state.stepData02, rec);
-
-		var data: ScenarioStepData[] = this.state.stepData02.slice();
-		
-		// **** remove matching record ***
-
-		if (pos !== -1) {
-			data.splice(pos, 1);
-		}
-
-		// **** add this info ****
-
-		data.push(rec);
-
-		// **** ****
-
-		let next: ScenarioStepInfo = {...this.state.step03, available: true};
-
-		// **** update our state ****
-
-		this.setState({
-			step02: current, 
-			stepData02: data,
-			step03: next, 
-			selectedPatientId: selectedPatientId,
-		});
-
-		// **** request an endpoint ****
-
-		this.step03CreateEndpoint();
-	}
-
-	/** Handle user clicks on the SetPatient button from Create (validate and enable next step) */
-	private handleStep02SetPatientCreatedClick = () => {
-		// **** disable subsequent steps if they aren't ****
-
-		this.disableSteps(3);
-
-		// **** flag we are creating ****
-
-		this.setState({step02SubBusy: true});
-		
-		// **** create a new patient ****
-
-		var patient: fhir.Patient = {
-			resourceType: 'Patient',
-			id: this.state.step02PatientId,
-			name: [{
-				family: this.state.step02PatientFamilyName,
-				given: [this.state.step02PatientGivenName],
-				use: 'official'
-			}],
-			gender: this.state.step02Gender,
-			birthDate: this.getFhirDateFromDate(this.state.step02BirthDate),
-		}
-
-		// **** PUT this on the server ****
-
-		let url: string = new URL(`Patient/${patient.id!}?_format=json`, this.props.fhirServerInfo.url).toString();
-
-		ApiHelper.apiPutFhir<fhir.Patient>(url.toString(), JSON.stringify(patient))
-			.then((value: fhir.Patient) => {
-				// **** update steps ****
-
-				let current: ScenarioStepInfo = {...this.state.step02, 
-					completed: true,
-				};
-
-				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:JSON.stringify(patient, null, 2), iconName:IconNames.GLOBE_NETWORK},
-					{id:'response', title:'Response', data:JSON.stringify(value, null, 2), iconName:IconNames.FLAME},
-					{id:'info', title:'Info', data:`Using New Patient (id): ${value.id!}`, iconName:IconNames.INFO_SIGN},
-				];
-
-				let next: ScenarioStepInfo = {...this.state.step03, available: true};
-
-				// **** update our state, generate a default name for the endpoint ****
-
-				this.setState({
-					step02: current, 
-					stepData02: data,
-					step03: next, 
-					selectedPatientId: value.id!,
-					step02SubBusy: false,
-				});
-
-				// **** request an endpoint ****
-
-				this.step03CreateEndpoint();
-			})
-			.catch((reason: any) => {
-				// **** update step ****
-
-				let failed: ScenarioStepInfo = {...this.state.step02,
-					completed: false,
-				}; 
-
-				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:JSON.stringify(patient, null, 2), iconName:IconNames.GLOBE_NETWORK},
-					{id:'error', title:'Error', data:`Request to create patient (${url}) failed:\n${reason}`, iconName:IconNames.ERROR},
-				];
-
-				// **** update our state ****
-
-				this.setState({step02: failed, step02SubBusy: false});
-			})
-			;
-	}
-
 	/** Create an endpoint: send request to client host, on success enable next step */
 	private step03CreateEndpoint = () => {
 		// **** update step ****
 
-		let busyStep: ScenarioStepInfo = {...this.state.step03, showBusy: true };
+		let busyStep: DataCardInfo = {...this.state.step03, busy: true };
 
 		// **** changing the endpoint invalidates the subscription ****
 
@@ -914,8 +472,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			.then((value: EndpointRegistration) => {
 				// **** make the next step available ****
 
-				let current: ScenarioStepInfo = {...this.state.step03, completed: true, showBusy: false};
-				let next: ScenarioStepInfo = {...this.state.step04, available: true};
+				let current: DataCardInfo = {...this.state.step03, completed: true, busy: false};
+				let next: DataCardInfo = {...this.state.step04, available: true};
 
 				// **** show the client endpoint information ****
 
@@ -940,8 +498,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			})
 			.catch((reason: any) => {
 				
-				let current: ScenarioStepInfo = {...this.state.step03,
-					showBusy: false,
+				let current: DataCardInfo = {...this.state.step03,
+					busy: false,
 					};
 				
 				let data: ScenarioStepData[] = [
@@ -976,7 +534,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 	private handleRequestSubscriptionClick = () => {
 		// **** update step ****
 
-		let busyStep: ScenarioStepInfo = {...this.state.step04, showBusy: true};
+		let busyStep: DataCardInfo = {...this.state.step04, busy: true};
 
 		// **** delete any existing subscriptions, but don't update state (doing that here) ****
 
@@ -1030,9 +588,9 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			.then((value: fhir.Subscription) => {
 				// **** update steps - note that next step starts busy since we are waiting ****
 
-				let current: ScenarioStepInfo = {...this.state.step04, 
+				let current: DataCardInfo = {...this.state.step04, 
 					completed: true, 
-					showBusy: false,
+					busy: false,
 				};
 
 				let data: ScenarioStepData[] = [
@@ -1040,7 +598,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 					{id:'response', title:'Response', data:JSON.stringify(value, null, 2), iconName:IconNames.FLAME},
 				];
 
-				let next: ScenarioStepInfo = {...this.state.step05, available: true, showBusy: true};
+				let next: DataCardInfo = {...this.state.step05, available: true, busy: true};
 	
 				// **** update our state ****
 
@@ -1053,8 +611,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			})
 			.catch((reason: any) => {
 				
-				let current: ScenarioStepInfo = {...this.state.step04, 
-					showBusy: false,
+				let current: DataCardInfo = {...this.state.step04, 
+					busy: false,
 					};
 
 				let data: ScenarioStepData[] = [
@@ -1072,7 +630,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 	private handleRequestTriggerEventClick = () => {
 		// **** update step ****
 
-		let busyStep: ScenarioStepInfo = {...this.state.step06, showBusy: true};
+		let busyStep: DataCardInfo = {...this.state.step06, busy: true};
 
 		// **** flag we are asking to trigger an event (busy) ****
 
@@ -1102,8 +660,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			.then((value: fhir.Encounter) => {
 				// **** update steps - note that next step starts busy since we are waiting ****
 
-				let current: ScenarioStepInfo = {...this.state.step06, 
-					showBusy: false,
+				let current: DataCardInfo = {...this.state.step06, 
+					busy: false,
 				};
 
 				let data: ScenarioStepData[] = [
@@ -1112,9 +670,9 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 					{id:'response', title:'Response', data:JSON.stringify(value, null, 2), iconName:IconNames.FLAME},
 				];
 
-				let next: ScenarioStepInfo = {...this.state.step07,
+				let next: DataCardInfo = {...this.state.step07,
 					available: true,
-					showBusy: true,
+					busy: true,
 				};
 	
 				// **** update our state ****
@@ -1127,8 +685,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			})
 			.catch((reason: any) => {
 				
-				let current: ScenarioStepInfo = {...this.state.step06, 
-					showBusy: false,
+				let current: DataCardInfo = {...this.state.step06, 
+					busy: false,
 					};
 
 				let data: ScenarioStepData[] = [
@@ -1147,27 +705,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		// **** reset to step 2 (removes endpoints and subscriptions) ****
 
 		this.disableSteps(2);
-	}
-
-	/** Process HTML events for the patient filter text box (update state for managed) */
-  private handleSearchFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({searchFilter: event.target.value});
-	}
-
-	private handlePatientGivenNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		this.setState({step02PatientGivenName: event.target.value});
-	}
-
-	private handlePatientFamilyNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		this.setState({step02PatientFamilyName: event.target.value});
-	}
-
-	private handlePatientIdChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		this.setState({step02PatientId: event.target.value});
-	}
-
-	private handlePatientBirthDateChange = (selectedDate: Date, isUserChange: boolean) => {
-		this.setState({step02BirthDate: selectedDate});
 	}
 
 	private deleteSubscription = (updateState: boolean) => {
@@ -1225,35 +762,35 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			return;
 		}
 
-		if (startingAt <= 2) {
-			let step: ScenarioStepInfo = {...this.state.step02, available: true, completed: false};
-			this.setState({step02: step, stepData02: [], step02Patients: []});
-		}
+		// if (startingAt <= 2) {
+		// 	let step: DataCardInfo = {...this.state.step02, available: true, completed: false};
+		// 	this.setState({step02: step, stepData02: [], step02Patients: []});
+		// }
 
 		if (startingAt <= 3) {
-			let step: ScenarioStepInfo = {...this.state.step03, available: false, completed: false};
+			let step: DataCardInfo = {...this.state.step03, available: false, completed: false};
 			this.deleteEndpoint(false);
 			this.setState({step03: step, stepData03: [], endpoint: null});
 		}
 
 		if (startingAt <= 4) {
-			let step: ScenarioStepInfo = {...this.state.step04, available: false, completed: false};
+			let step: DataCardInfo = {...this.state.step04, available: false, completed: false};
 			this.deleteSubscription(false);
 			this.setState({step04: step, stepData04: [], subscription: null});
 		}
 
 		if (startingAt <= 5) {
-			let step: ScenarioStepInfo = {...this.state.step05, available: false, completed: false};
+			let step: DataCardInfo = {...this.state.step05, available: false, completed: false};
 			this.setState({step05: step, stepData05: []});
 		}
 
 		if (startingAt <= 6) {
-			let step: ScenarioStepInfo = {...this.state.step06, available: false, completed: false};
+			let step: DataCardInfo = {...this.state.step06, available: false, completed: false};
 			this.setState({step06: step, stepData06: []});
 		}
 
 		if (startingAt <= 7) {
-			let step: ScenarioStepInfo = {...this.state.step07, available: false, completed: false};
+			let step: DataCardInfo = {...this.state.step07, available: false, completed: false};
 			this.setState({step07: step, stepData07: []});
 		}
 	}

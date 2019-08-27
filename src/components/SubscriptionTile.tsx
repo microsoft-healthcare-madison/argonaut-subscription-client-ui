@@ -14,16 +14,16 @@ import {
 } from '@blueprintjs/core';
 
 import {IconNames} from '@blueprintjs/icons';
-import { TileData, TileDataTypes } from '../models/TileData';
-import { TileInfo } from '../models/TileInfo';
 import { TileDataPanel } from './TileDataPanel';
 
 import * as fhir from '../models/fhir_r4_selected';
 import { ContentPaneProps } from '../models/ContentPaneProps';
+import { DataCardInfo } from '../models/DataCardInfo';
+import { SingleRequestData } from '../models/RequestData';
 
 export interface SubscriptionTileData {
   subscription: fhir.Subscription,
-  tileData: TileData,
+  tileData: SingleRequestData,
 }
 
 export interface SubscriptionTileProps {
@@ -34,7 +34,7 @@ export interface SubscriptionTileProps {
 
 /** Type definition for the current object's state variable */
 interface ComponentState {
-  info: TileInfo,
+  info: DataCardInfo,
   showData: boolean,
   showTile: boolean,
   selectedTabId: string,
@@ -45,9 +45,10 @@ interface ComponentState {
 export class SubscriptionTile extends React.PureComponent<SubscriptionTileProps> {
   public state: ComponentState = {
     info: {
-      id: 'subscriptionsTile',
-      name: 'Subscriptions',
+      id:'subscriptions',
+      heading: 'Subscriptions',
       description: 'Area to create/delete Subscription resources',
+      busy: false,
     },
     showData: true,
     showTile: true,
@@ -64,7 +65,7 @@ export class SubscriptionTile extends React.PureComponent<SubscriptionTileProps>
     const showCreateNewArea:boolean = (this.state.selectedDataRowIndex === -2);
     return (
       <Card>
-        <Button
+        {/* <Button
           onClick={this.handleToggleTileClick}
           minimal={true}
           style={{float: 'right'}}
@@ -94,11 +95,11 @@ export class SubscriptionTile extends React.PureComponent<SubscriptionTileProps>
             <H6>{this.state.info.description}</H6>
             {this.props.children}
             <br />
-            {/* Show the new record info (if necessary) */}
+            { // Show the new record info (if necessary) }
             { (showCreateNewArea) &&
               <div>New record form goes here</div>
             }
-            {/* Show the tab selector based on the selected row (if necessary) */}
+            { // Show the tab selector based on the selected row (if necessary) }
             { ((!showCreateNewArea) && (haveData)) &&
               <Tabs
                 animate={true}
@@ -157,7 +158,7 @@ export class SubscriptionTile extends React.PureComponent<SubscriptionTileProps>
               </Tabs>
             }
           </div>
-        }
+        } */}
       </Card>
     );
   }
@@ -179,17 +180,6 @@ export class SubscriptionTile extends React.PureComponent<SubscriptionTileProps>
 		this.setState({selectedDataRowIndex: selectedRow})
 	}
 
-  private iconNameForType = (dataType: TileDataTypes) => {
-    switch (dataType)
-    {
-      case TileDataTypes.None: return IconNames.MINUS; break;
-      case TileDataTypes.FHIR: return IconNames.FLAME; break;
-      case TileDataTypes.JSON: return IconNames.ALIGN_JUSTIFY; break;
-      case TileDataTypes.Error: return IconNames.ERROR; break;
-      default: return IconNames.LABEL; break;
-    }
-  }
-
   private handleDeleteClick = () => {
    
     // *** notify the user ****
@@ -197,31 +187,6 @@ export class SubscriptionTile extends React.PureComponent<SubscriptionTileProps>
     this.props.paneProps.toaster(`Deleted '???'.`, IconNames.DELETE); 
   }
   
-  private handleCopyClick = () => {
-
-    var currentData: string = '';
-    var currentTitle: string = '';
-
-    // **** figure out which data the user has selected ****
-
-    const dataRowIndex:number = (this.state.selectedDataRowIndex == -1)
-      ? this.props.data.length - 1
-      : this.state.selectedDataRowIndex;
-
-    if (this.state.selectedTabId === 'request_url') {
-      currentData = this.props.data[dataRowIndex].tileData.requestUrl;
-      currentTitle = 'Subscription: Request URL';
-    } else if (this.state.selectedTabId === 'request_data') {
-      currentData = this.props.data[dataRowIndex].tileData.requestData;
-      currentTitle = 'Subscription: Request Data';
-    } else {
-      currentData = this.props.data[dataRowIndex].tileData.responseData;
-      currentTitle = 'Subscription: Response Data';
-    }
-    
-    this.props.paneProps.copyToClipboard(currentData, currentTitle);
-  }
-
 	private handleTabChange = (navbarTabId: TabId) => {
 		this.setState({selectedTabId: navbarTabId.toString()})
   }

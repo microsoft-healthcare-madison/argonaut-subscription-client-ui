@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 
 import { 
   Icon,
@@ -18,24 +18,19 @@ import {
   Drawer,
   Position,
   H5,
-  // Tooltip,
 } from '@blueprintjs/core';
 
 import {IconNames} from '@blueprintjs/icons';
 import { UiTabInformation } from '../models/UiTabInformation';
 import { ConnectionInformation } from '../models/ConnectionInformation';
 
+/** Interface for the MainNavigation component properties */
 export interface MainNavigationProps {
   tabs: UiTabInformation[];
   selectedTabId: string;
   onSelectedTabChanged: ((id: string) => void);
   fhirServerInfo: ConnectionInformation;
   clientHostInfo: ConnectionInformation;
-}
-
-interface ComponentState {
-  renderSmall: boolean,
-  showNavDrawer: boolean,
 }
 
 /** Minimum width to render the full menu */
@@ -47,23 +42,22 @@ export default function MainNavigation(props: MainNavigationProps) {
   const [renderSmall, setRenderSmall] = useState<boolean>(false);
   const [showNavDrawer, setShowNavDrawer] = useState<boolean>(false);
 
-  
+  /** Function to handle requests to close the nav drawer */
   function handleNavDrawerClose() {
     setShowNavDrawer(false);
   }
 
+  /** Function to handle requests to open the nav drawer */
   function handleShowNavDrawer() {
     setShowNavDrawer(true);
   }
 
+  /** Function to handle resize events on the nav bar */
   function handleResize(entries: IResizeEntry[]) {
     if ((renderSmall) && (entries[0].contentRect.width > _minWidthToRenderFull)) {
       // **** change to full render ****
  
       setRenderSmall(false);
-
-      // **** done ***
-
       return;
     }
 
@@ -71,13 +65,11 @@ export default function MainNavigation(props: MainNavigationProps) {
       // **** change to small render ****
 
       setRenderSmall(true);
-
-      // **** done ****
-
       return;
     }
   }
 
+  /** Function to get the appropriate icon for server connection states */
   function iconForStatus(status: string) {
     switch (status) {
       case 'connecting':
@@ -93,11 +85,9 @@ export default function MainNavigation(props: MainNavigationProps) {
     }
   };
 
+  /** Function to handle nav bar tab changes (notify main page and close nav drawer) */
   function handleNavbarTabChange(navbarTabId: TabId) {
     props.onSelectedTabChanged(navbarTabId.toString());
-
-    // **** close drawer if necessary ****
-
     if (showNavDrawer) {
       handleNavDrawerClose();
     }
@@ -124,13 +114,10 @@ export default function MainNavigation(props: MainNavigationProps) {
               { // **** add our tabs ****
                 props.tabs.map((tab) => (
                   <Tab key={tab.id} id={tab.id}>
-                    {/* <Tooltip content={tab.tip}> */}
                       {tab.title}
-                    {/* </Tooltip> */}
                   </Tab>
                 ))
               }
-              {/* <Tabs.Expander /> */}
             </Tabs>
         </NavbarGroup>
         }

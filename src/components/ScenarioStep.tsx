@@ -14,13 +14,13 @@ import {
 } from '@blueprintjs/core';
 
 import {IconNames} from '@blueprintjs/icons';
-import { ScenarioStepInfo } from '../models/ScenarioStepInfo';
+import { DataCardInfo } from '../models/DataCardInfo';
 import { ScenarioStepData } from '../models/ScenarioStepData';
 import { ScenarioDataPanel } from './ScenarioDataPanel';
 import { ContentPaneProps } from '../models/ContentPaneProps';
 
 export interface ScenarioStepProps {
-  step: ScenarioStepInfo,
+  step: DataCardInfo,
   data: ScenarioStepData[],
   paneProps: ContentPaneProps,
 }
@@ -61,10 +61,10 @@ export class ScenarioStep extends React.PureComponent<ScenarioStepProps> {
         {this.state.showStep &&
           <div>
             <H6>{this.props.step.description}</H6>
-            {this.props.step.showBusy && 
+            {this.props.step.busy && 
               <Spinner />
             }
-            {(!this.props.step.showBusy) &&
+            {(!this.props.step.busy) &&
               this.props.children
             }
             <br />
