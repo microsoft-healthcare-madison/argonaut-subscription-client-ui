@@ -6,5 +6,5 @@ export interface DataCardInfo {
   description: string;
   available?: boolean;
   completed?: boolean;
-  busy: boolean;
+  busy?: boolean;
 }

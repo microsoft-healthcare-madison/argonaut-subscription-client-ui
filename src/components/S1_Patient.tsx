@@ -9,28 +9,29 @@ import { SingleRequestData } from '../models/RequestData';
 import DataCard from './DataCard';
 import PatientSearchCard from './PatientSearchCard';
 import PatientCreateCard from './PatientCreateCard';
+import { DataCardStatus } from '../models/DataCardStatus';
 
 export interface S1_PatientProps {
   paneProps: ContentPaneProps,
   registerSelectedPatientId: ((patientId: string) => void),
+  status: DataCardStatus,
+  updateStatus: ((step: number, status: DataCardStatus) => void),
+  data: SingleRequestData[],
+  setData: ((data: SingleRequestData[]) => void),
 }
 
 /** Component representing the Scenario 1 Patient Card */
 export default function S1_Patient(props: S1_PatientProps) {
 
-  const [info, setInfo] = useState<DataCardInfo>({
+  const info: DataCardInfo = {
     id: 's1_patient',
     stepNumber: 1,
     heading: 'Select or Create a Patient',
     description: '',
     optional: false,
-    available: true,
-    completed: false,
-    busy: false,
-  });
+  };
 
   const [selectedTabId, setSelectedTabId] = useState<string>('s2_search');
-  const [data, setData] = useState<SingleRequestData[]>([]);
 
   /** Function to handle tab selection changes */
   function handleTabChange(navbarTabId: TabId) {
@@ -40,21 +41,17 @@ export default function S1_Patient(props: S1_PatientProps) {
   /** Update data to show selected patient and notify parent */
   function handleSelectPatient(patientId: string) {
 
-    // **** flag we are complete ****
-
-    setInfo({...info, completed: true});
-
     // **** add to our data ****
-    if ((data) && (data.length > 0)) {
-      let updated: SingleRequestData = {...data[0], info: `Using patient id: ${patientId}`};
-      setData([updated]);
+    if ((props.data) && (props.data.length > 0)) {
+      let updated: SingleRequestData = {...props.data[0], info: `Using patient id: ${patientId}`};
+      props.setData([updated]);
     } else {
       let updated: SingleRequestData = {
         name: 'Patient',
         id: 'patient',
         info: `Using patient id: ${patientId}`,
       }
-      setData([updated]);
+      props.setData([updated]);
     }
 
     // **** register with parent ****
@@ -66,8 +63,9 @@ export default function S1_Patient(props: S1_PatientProps) {
   return(
     <DataCard
       info={info}
-      data={data}
+      data={props.data}
       paneProps={props.paneProps}
+      status={props.status}
       >
       <Tabs
 					animate={true}
@@ -82,7 +80,7 @@ export default function S1_Patient(props: S1_PatientProps) {
             panel={
               <PatientSearchCard
                 paneProps={props.paneProps}
-                setData={setData}
+                setData={props.setData}
                 registerSelectedPatient={handleSelectPatient}
                 />
             }
@@ -93,7 +91,7 @@ export default function S1_Patient(props: S1_PatientProps) {
             panel={
               <PatientCreateCard
                 paneProps={props.paneProps}
-                setData={setData}
+                setData={props.setData}
                 registerSelectedPatient={props.registerSelectedPatientId}
                 />
             }

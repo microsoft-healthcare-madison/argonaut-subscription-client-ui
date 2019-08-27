@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 
 import {
   Button,
@@ -9,32 +9,32 @@ import { ApiHelper } from '../util/ApiHelper';
 import * as fhir from '../models/fhir_r4_selected';
 import { SingleRequestData, RenderDataAsTypes } from '../models/RequestData';
 import DataCard from './DataCard';
+import { DataCardStatus } from '../models/DataCardStatus';
 
 export interface S1_TopicProps {
   paneProps: ContentPaneProps,
+  status: DataCardStatus,
+  updateStatus: ((step: number, status: DataCardStatus) => void),
+  data: SingleRequestData[],
+  setData: ((data: SingleRequestData[]) => void),
 }
 
 /** Component representing the Scenario 1 Topic Card */
 export default function S1_Topic(props: S1_TopicProps) {
 
-  const [info, setStepInfo] = useState<DataCardInfo>({
+  const info: DataCardInfo = {
     id: 's1_topic',
     stepNumber: 1,
     heading: 'Get Topic list from FHIR Server',
     description: '',
     optional: true,
-    available: true,
-    completed: false,
-    busy: false,
-  });
-
-  const [data, setStepData] = useState<SingleRequestData[]>([]);
+  };
 
   /** Handle user requests to get a topic list */
   function handleGetTopicListClick() {
     // **** update our state to show we are busy ****
 
-    setStepInfo({...info, busy: true});
+    props.updateStatus(info.stepNumber!, {...props.status, busy: true});
 
     // **** construct the registration REST url ****
 
@@ -58,11 +58,11 @@ export default function S1_Topic(props: S1_TopicProps) {
 
         // **** update data ****
 
-        setStepData(data);
+        props.setData(data);
 
         // **** update our step (completed) ****
 
-        setStepInfo({...info, busy: false, completed: true});
+        props.updateStatus(info.stepNumber!, {available: true, complete: true, busy: false});
       })
       .catch((reason: any) => {
         // **** build data for display ****
@@ -79,11 +79,11 @@ export default function S1_Topic(props: S1_TopicProps) {
 
         // **** update data ****
 
-        setStepData(data);
+        props.setData(data);
 
-        // **** update our step (completed) ****
+        // **** update our step (failed) ****
 
-        setStepInfo({...info, busy: false, completed: false});
+        props.updateStatus(info.stepNumber!, {available: true, complete: false, busy: false});
 			})
       ;
   }
@@ -92,11 +92,12 @@ export default function S1_Topic(props: S1_TopicProps) {
   return(
     <DataCard
       info={info}
-      data={data}
+      status={props.status}
+      data={props.data}
       paneProps={props.paneProps}
       >
       <Button
-        disabled={!info.available}
+        disabled={!props.status.available}
         onClick={handleGetTopicListClick}
         >
         Go

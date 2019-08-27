@@ -20,9 +20,15 @@ import { PatientSelectionInfo } from '../models/PatientSelectionInfo';
 import { ScenarioStepData } from '../models/ScenarioStepData';
 import S1_Topic from './S1_Topic';
 import S1_Patient from './S1_Patient';
+import { SingleRequestData } from '../models/RequestData';
+import { DataCardStatus } from '../models/DataCardStatus';
 
 /** Type definition for the current object's state variable */
 interface ComponentState {
+	topicData: SingleRequestData[],
+	topicStatus: DataCardStatus,
+	patientData: SingleRequestData[],
+	patientStatus: DataCardStatus,
 	step03: DataCardInfo, 
 	stepData03: ScenarioStepData[],
 	step04: DataCardInfo,
@@ -61,6 +67,10 @@ interface ComponentState {
  */
 export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
   public state: ComponentState = {
+		topicData: [],
+		topicStatus: {available: true, complete: false, busy: false},
+		patientData: [],
+		patientStatus: {available: true, complete: false, busy: false},
 		step03: {
 			id: 'S1_Endpoint',
 			stepNumber: 3,
@@ -205,6 +215,10 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			<S1_Topic
 				key='s1_topic'
 				paneProps={this.props}
+				status={this.state.topicStatus}
+				updateStatus={this.updateStatus}
+				data={this.state.topicData}
+				setData={this.setTopicData}
 				/>,
 
 				
@@ -213,6 +227,10 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				key='s1_patient'
 				paneProps={this.props}
 				registerSelectedPatientId={this.registerSelectedPatientId}
+				status={this.state.patientStatus}
+				updateStatus={this.updateStatus}
+				data={this.state.patientData}
+				setData={this.setPatientData}
 				/>,
 
 			/* Ask Client Host to create Endpoint */
@@ -324,6 +342,26 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			</ScenarioStep>,
 		]
     );
+	}
+
+	private updateStatus = (step: number, status: DataCardStatus) => {
+		switch (step)
+		{
+			case 1:
+				this.setState({topicStatus: status});
+				break;
+			case 2:
+				this.setState({patientStatus: status});
+				break;
+		}
+	}
+
+	private setTopicData = (data: SingleRequestData[]) => {
+		this.setState({topicData: data});
+	}
+
+	private setPatientData = (data: SingleRequestData[]) => {
+		this.setState({patientData: data});
 	}
 
 	private registerSelectedPatientId = (id: string) => {
@@ -762,10 +800,11 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			return;
 		}
 
-		// if (startingAt <= 2) {
-		// 	let step: DataCardInfo = {...this.state.step02, available: true, completed: false};
-		// 	this.setState({step02: step, stepData02: [], step02Patients: []});
-		// }
+		if (startingAt <= 2) {
+			// let step: DataCardInfo = {...this.state.step02, available: true, completed: false};
+			// this.setState({step02: step, stepData02: [], step02Patients: []});
+			this.setState({selectedPatientId: ''});
+		}
 
 		if (startingAt <= 3) {
 			let step: DataCardInfo = {...this.state.step03, available: false, completed: false};

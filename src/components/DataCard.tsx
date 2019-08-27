@@ -14,9 +14,11 @@ import { DataCardInfo } from '../models/DataCardInfo';
 import { ContentPaneProps } from '../models/ContentPaneProps';
 import { SingleRequestData, RenderDataAsTypes } from '../models/RequestData';
 import RequestDataPanel from './RequestDataPanel';
+import { DataCardStatus } from '../models/DataCardStatus';
 
 export interface DataCardProps {
   info: DataCardInfo,
+  status: DataCardStatus
   data: SingleRequestData[],
   paneProps: ContentPaneProps,
   children?: React.ReactNode
@@ -33,16 +35,16 @@ export default function DataCard(props: DataCardProps) {
 
   /** Function to get an appropriate icon for this card */
   function iconForCard() {
-    if (props.info.busy) {
+    if (props.status.busy) {
       return(<Spinner size={Spinner.SIZE_SMALL} />);
     }
     if (!props.info.stepNumber) {
       return(<Icon icon={IconNames.MINUS} iconSize={Icon.SIZE_LARGE} />);
     }
-    if (props.info.completed) {
+    if (props.status.complete) {
       return(<Icon icon={IconNames.TICK} intent={Intent.SUCCESS} iconSize={Icon.SIZE_LARGE} />);
     }
-    if (props.info.available) {
+    if (props.status.available) {
       return(<Icon icon={IconNames.ARROW_RIGHT} intent={Intent.PRIMARY} iconSize={Icon.SIZE_LARGE} />);
     }
     return(<Icon icon={IconNames.DISABLE} intent={Intent.WARNING} iconSize={Icon.SIZE_STANDARD} />);
