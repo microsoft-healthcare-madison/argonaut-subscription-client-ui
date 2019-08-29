@@ -3,13 +3,13 @@ import React from 'react';
 import {
   Button,
 } from '@blueprintjs/core';
-import { ContentPaneProps } from '../models/ContentPaneProps';
-import { DataCardInfo } from '../models/DataCardInfo';
-import { ApiHelper } from '../util/ApiHelper';
-import * as fhir from '../models/fhir_r4_selected';
-import { SingleRequestData, RenderDataAsTypes } from '../models/RequestData';
-import DataCard from './DataCard';
-import { DataCardStatus } from '../models/DataCardStatus';
+import { ContentPaneProps } from '../../models/ContentPaneProps';
+import { DataCardInfo } from '../../models/DataCardInfo';
+import { ApiHelper } from '../../util/ApiHelper';
+import * as fhir from '../../models/fhir_r4_selected';
+import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
+import DataCard from '../basic/DataCard';
+import { DataCardStatus } from '../../models/DataCardStatus';
 
 export interface S1_TopicProps {
   paneProps: ContentPaneProps,

@@ -1,12 +1,12 @@
 import React, {useState, useEffect} from 'react';
 
-import { ContentPaneProps } from '../models/ContentPaneProps';
-import { DataCardInfo } from '../models/DataCardInfo';
-import { SingleRequestData, RenderDataAsTypes } from '../models/RequestData';
-import DataCard from './DataCard';
-import { DataCardStatus } from '../models/DataCardStatus';
-import { EndpointRegistration } from '../models/EndpointRegistration';
-import { ApiHelper } from '../util/ApiHelper';
+import { ContentPaneProps } from '../../models/ContentPaneProps';
+import { DataCardInfo } from '../../models/DataCardInfo';
+import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
+import DataCard from '../basic/DataCard';
+import { DataCardStatus } from '../../models/DataCardStatus';
+import { EndpointRegistration } from '../../models/EndpointRegistration';
+import { ApiHelper } from '../../util/ApiHelper';
 
 export interface S1_EndpointProps {
   paneProps: ContentPaneProps,

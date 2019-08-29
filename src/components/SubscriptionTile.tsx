@@ -14,7 +14,7 @@ import {
 } from '@blueprintjs/core';
 
 import {IconNames} from '@blueprintjs/icons';
-import { TileDataPanel } from './TileDataPanel';
+import { TileDataPanel } from './basic/TileDataPanel';
 
 import * as fhir from '../models/fhir_r4_selected';
 import { ContentPaneProps } from '../models/ContentPaneProps';

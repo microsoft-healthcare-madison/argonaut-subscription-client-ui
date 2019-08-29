@@ -1,10 +1,10 @@
 import React from 'react';
 
-import { ContentPaneProps } from '../models/ContentPaneProps';
-import { DataCardInfo } from '../models/DataCardInfo';
-import { SingleRequestData } from '../models/RequestData';
-import DataCard from './DataCard';
-import { DataCardStatus } from '../models/DataCardStatus';
+import { ContentPaneProps } from '../../models/ContentPaneProps';
+import { DataCardInfo } from '../../models/DataCardInfo';
+import { SingleRequestData } from '../../models/RequestData';
+import DataCard from '../basic/DataCard';
+import { DataCardStatus } from '../../models/DataCardStatus';
 
 export interface S1_HandshakeProps {
   paneProps: ContentPaneProps,

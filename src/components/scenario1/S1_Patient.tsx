@@ -3,13 +3,13 @@ import React, {useState} from 'react';
 import {
   Tabs, Tab, TabId,
 } from '@blueprintjs/core';
-import { ContentPaneProps } from '../models/ContentPaneProps';
-import { DataCardInfo } from '../models/DataCardInfo';
-import { SingleRequestData } from '../models/RequestData';
-import DataCard from './DataCard';
-import PatientSearchCard from './PatientSearchCard';
-import PatientCreateCard from './PatientCreateCard';
-import { DataCardStatus } from '../models/DataCardStatus';
+import { ContentPaneProps } from '../../models/ContentPaneProps';
+import { DataCardInfo } from '../../models/DataCardInfo';
+import { SingleRequestData } from '../../models/RequestData';
+import DataCard from '../basic/DataCard';
+import PatientSearchCard from '../common/PatientSearchCard';
+import PatientCreateCard from '../common/PatientCreateCard';
+import { DataCardStatus } from '../../models/DataCardStatus';
 
 export interface S1_PatientProps {
   paneProps: ContentPaneProps,

@@ -10,18 +10,18 @@ import {
 } from '@blueprintjs/core';
 
 import {IconNames} from "@blueprintjs/icons";
-import { ContentPaneProps } from '../models/ContentPaneProps';
-import { DataCardInfo } from '../models/DataCardInfo';
-import { ScenarioStep } from './ScenarioStep';
-import { EndpointRegistration } from '../models/EndpointRegistration';
-import { ApiHelper } from '../util/ApiHelper';
-import * as fhir from '../models/fhir_r4_selected';
-import { PatientSelectionInfo } from '../models/PatientSelectionInfo';
-import { ScenarioStepData } from '../models/ScenarioStepData';
+import { ContentPaneProps } from '../../models/ContentPaneProps';
+import { DataCardInfo } from '../../models/DataCardInfo';
+import { ScenarioStep } from '../ScenarioStep';
+import { EndpointRegistration } from '../../models/EndpointRegistration';
+import { ApiHelper } from '../../util/ApiHelper';
+import * as fhir from '../../models/fhir_r4_selected';
+import { PatientSelectionInfo } from '../../models/PatientSelectionInfo';
+import { ScenarioStepData } from '../../models/ScenarioStepData';
 import S1_Topic from './S1_Topic';
 import S1_Patient from './S1_Patient';
-import { SingleRequestData, RenderDataAsTypes } from '../models/RequestData';
-import { DataCardStatus } from '../models/DataCardStatus';
+import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
+import { DataCardStatus } from '../../models/DataCardStatus';
 import S1_Endpoint from './S1_Endpoint';
 import S1_Subscription from './S1_Subscription';
 import S1_Handshake from './S1_Handshake';
@@ -330,6 +330,9 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			case 4:
 				this.setState({subscriptionStatus: status});
 				break;
+			case 5:
+				this.setState({handshakeStatus: status});
+				break;
 		}
 	}
 
@@ -347,6 +350,9 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				break;
 			case 4:
 				this.setState({subscriptionData: data});
+				break;
+			case 5:
+				this.setState({handshakeData: data});
 				break;
 		}
 	}
@@ -429,10 +435,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		this.setState({step06EncounterStatus: event.currentTarget.value})
 	}
 
-	private handleStep04PayloadChange = (event: React.FormEvent<HTMLSelectElement>) => {
-		this.setState({step04Payload: event.currentTarget.value})
-	}
-
 	/** Callback function to process ClientHost messages */
 	private handleHostMessage = (message: string) => {
 		// **** vars we want ****
@@ -447,14 +449,12 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		// **** resolve this message into a bundle ****
 
-		try{
+		try {
 			bundle = JSON.parse(message);
-		}
-		catch(error)
-		{
+		} catch(error) {
+			// **** assume non-bundle message got through ****
 			return;
 		}
-		
 
 		// **** check for the extensions we need ****
 
@@ -490,7 +490,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				name: 'Handshake',
 				id: 'handshake',
 				responseData: JSON.stringify(bundle, null, 2),
-				requestDataType: RenderDataAsTypes.FHIR
+				responseDataType: RenderDataAsTypes.FHIR
 			}
 
 			let next: DataCardInfo = {...this.state.step06, available: true};

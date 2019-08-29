@@ -10,11 +10,11 @@ import {
 } from '@blueprintjs/core';
 
 import {IconNames} from '@blueprintjs/icons';
-import { DataCardInfo } from '../models/DataCardInfo';
-import { ContentPaneProps } from '../models/ContentPaneProps';
-import { SingleRequestData } from '../models/RequestData';
+import { DataCardInfo } from '../../models/DataCardInfo';
+import { ContentPaneProps } from '../../models/ContentPaneProps';
+import { SingleRequestData } from '../../models/RequestData';
 import RequestDataPanel from './RequestDataPanel';
-import { DataCardStatus } from '../models/DataCardStatus';
+import { DataCardStatus } from '../../models/DataCardStatus';
 
 export interface DataCardProps {
   info: DataCardInfo,

@@ -3,9 +3,9 @@ import React, {useState, useEffect} from 'react';
 import {
   Button, Tabs, Tab, Tooltip, TabId, Icon, 
 } from '@blueprintjs/core';
-import { ContentPaneProps } from '../models/ContentPaneProps';
+import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { IconNames } from '@blueprintjs/icons';
-import { SingleRequestData, RenderDataAsTypes } from '../models/RequestData';
+import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { atomOneDark, atomOneLight } from 'react-syntax-highlighter/dist/esm/styles/hljs'

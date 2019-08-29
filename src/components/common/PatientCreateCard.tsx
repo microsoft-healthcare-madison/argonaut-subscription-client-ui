@@ -3,13 +3,13 @@ import React, {useState, useEffect} from 'react';
 import {
   Button, Card, H6, ControlGroup, HTMLSelect, InputGroup, Spinner, RadioGroup, Radio, FormGroup,
 } from '@blueprintjs/core';
-import { ContentPaneProps } from '../models/ContentPaneProps';
-import { ApiHelper } from '../util/ApiHelper';
-import * as fhir from '../models/fhir_r4_selected';
-import { SingleRequestData, RenderDataAsTypes } from '../models/RequestData';
-import { PatientSelectionInfo } from '../models/PatientSelectionInfo';
+import { ContentPaneProps } from '../../models/ContentPaneProps';
+import { ApiHelper } from '../../util/ApiHelper';
+import * as fhir from '../../models/fhir_r4_selected';
+import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
+import { PatientSelectionInfo } from '../../models/PatientSelectionInfo';
 import { DateInput } from '@blueprintjs/datetime';
-import { DataCardInfo } from '../models/DataCardInfo';
+import { DataCardInfo } from '../../models/DataCardInfo';
 
 export interface PatientCreateProps {
   paneProps: ContentPaneProps,

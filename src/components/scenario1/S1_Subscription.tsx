@@ -3,14 +3,14 @@ import React, {useState} from 'react';
 import {
   HTMLSelect, Button, FormGroup, InputGroup, Spinner,
 } from '@blueprintjs/core';
-import { ContentPaneProps } from '../models/ContentPaneProps';
-import { DataCardInfo } from '../models/DataCardInfo';
-import { SingleRequestData, RenderDataAsTypes } from '../models/RequestData';
-import DataCard from './DataCard';
-import { DataCardStatus } from '../models/DataCardStatus';
-import { EndpointRegistration } from '../models/EndpointRegistration';
-import { ApiHelper } from '../util/ApiHelper';
-import * as fhir from '../models/fhir_r4_selected';
+import { ContentPaneProps } from '../../models/ContentPaneProps';
+import { DataCardInfo } from '../../models/DataCardInfo';
+import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
+import DataCard from '../basic/DataCard';
+import { DataCardStatus } from '../../models/DataCardStatus';
+import { EndpointRegistration } from '../../models/EndpointRegistration';
+import { ApiHelper } from '../../util/ApiHelper';
+import * as fhir from '../../models/fhir_r4_selected';
 
 export interface S1_SubscriptionProps {
   paneProps: ContentPaneProps,

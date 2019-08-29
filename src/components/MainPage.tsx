@@ -11,7 +11,7 @@ import {
 import {IconNames} from '@blueprintjs/icons';
 
 import {ConfigurationPane} from './ConfigurationPane';
-import {Scenario1Pane} from './Scenario1Pane';
+import {Scenario1Pane} from './scenario1/Scenario1Pane';
 import {Scenario2Pane} from './Scenario2Pane';
 import { UiTabInformation } from '../models/UiTabInformation';
 import MainNavigation from './MainNavigation';
@@ -67,9 +67,6 @@ export default function MainPage() {
     });
   const [uiDark, setUiDark] = useState<boolean>(false);
   const [codePaneDark, setCodePaneDark] = useState<boolean>(false);
-
-  // **** set up private internal objects (not tracked) ****
-
 
   // **** handle lifecycle changes ****
 
