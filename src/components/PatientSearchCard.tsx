@@ -8,10 +8,12 @@ import { ApiHelper } from '../util/ApiHelper';
 import * as fhir from '../models/fhir_r4_selected';
 import { SingleRequestData, RenderDataAsTypes } from '../models/RequestData';
 import { PatientSelectionInfo } from '../models/PatientSelectionInfo';
+import { DataCardInfo } from '../models/DataCardInfo';
 
 export interface PatientSearchProps {
   paneProps: ContentPaneProps,
-  setData: ((data: SingleRequestData[]) => void),
+  info: DataCardInfo,
+  setData: ((step: number, data: SingleRequestData[]) => void),
   registerSelectedPatient: ((patientId: string) => void),
 }
 
@@ -103,7 +105,7 @@ export default function PatientSearchCard(props: PatientSearchProps) {
 
         setBusy(false);
         setPatients(bundlePatients);
-        props.setData(data);
+        props.setData(props.info.stepNumber!, data);
       })
       .catch((reason: any) => {
         // **** build data for display ****
@@ -122,7 +124,7 @@ export default function PatientSearchCard(props: PatientSearchProps) {
 
         setBusy(false);
         setPatients([]);
-        props.setData(data);
+        props.setData(props.info.stepNumber!, data);
 			})
       ;
 	}

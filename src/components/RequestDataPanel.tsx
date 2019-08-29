@@ -130,6 +130,7 @@ export default function RequestDataPanel(props: RequestPanelProps) {
           id='request_url'
           panel={
             <SyntaxHighlighter
+              className='codeTab'
               language='json'
               style={props.paneProps.codePaneDark ? atomOneDark : atomOneLight}
               >
@@ -146,6 +147,7 @@ export default function RequestDataPanel(props: RequestPanelProps) {
           id='request_data'
           panel={
             <SyntaxHighlighter
+              className='codeTab'
               language='json'
               style={props.paneProps.codePaneDark ? atomOneDark : atomOneLight}
               >
@@ -162,6 +164,7 @@ export default function RequestDataPanel(props: RequestPanelProps) {
           id='response_data'
           panel={
             <SyntaxHighlighter
+              className='codeTab'
               language='json'
               style={props.paneProps.codePaneDark ? atomOneDark : atomOneLight}
               >
@@ -178,6 +181,7 @@ export default function RequestDataPanel(props: RequestPanelProps) {
           id='info'
           panel={
             <SyntaxHighlighter
+              className='codeTab'
               language='json'
               style={props.paneProps.codePaneDark ? atomOneDark : atomOneLight}
               >

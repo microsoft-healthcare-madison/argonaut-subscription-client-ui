@@ -16,7 +16,7 @@ export interface S1_TopicProps {
   status: DataCardStatus,
   updateStatus: ((step: number, status: DataCardStatus) => void),
   data: SingleRequestData[],
-  setData: ((data: SingleRequestData[]) => void),
+  setData: ((step: number, data: SingleRequestData[]) => void),
 }
 
 /** Component representing the Scenario 1 Topic Card */
@@ -58,7 +58,7 @@ export default function S1_Topic(props: S1_TopicProps) {
 
         // **** update data ****
 
-        props.setData(data);
+        props.setData(info.stepNumber!, data);
 
         // **** update our step (completed) ****
 
@@ -79,7 +79,7 @@ export default function S1_Topic(props: S1_TopicProps) {
 
         // **** update data ****
 
-        props.setData(data);
+        props.setData(info.stepNumber!, data);
 
         // **** update our step (failed) ****
 

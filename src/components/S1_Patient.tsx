@@ -17,7 +17,7 @@ export interface S1_PatientProps {
   status: DataCardStatus,
   updateStatus: ((step: number, status: DataCardStatus) => void),
   data: SingleRequestData[],
-  setData: ((data: SingleRequestData[]) => void),
+  setData: ((step: number, data: SingleRequestData[]) => void),
 }
 
 /** Component representing the Scenario 1 Patient Card */
@@ -25,7 +25,7 @@ export default function S1_Patient(props: S1_PatientProps) {
 
   const info: DataCardInfo = {
     id: 's1_patient',
-    stepNumber: 1,
+    stepNumber: 2,
     heading: 'Select or Create a Patient',
     description: '',
     optional: false,
@@ -44,19 +44,23 @@ export default function S1_Patient(props: S1_PatientProps) {
     // **** add to our data ****
     if ((props.data) && (props.data.length > 0)) {
       let updated: SingleRequestData = {...props.data[0], info: `Using patient id: ${patientId}`};
-      props.setData([updated]);
+      props.setData(info.stepNumber!, [updated]);
     } else {
       let updated: SingleRequestData = {
         name: 'Patient',
         id: 'patient',
         info: `Using patient id: ${patientId}`,
       }
-      props.setData([updated]);
+      props.setData(info.stepNumber!, [updated]);
     }
 
     // **** register with parent ****
 
     props.registerSelectedPatientId(patientId);
+  }
+
+  function createEndpoint() {
+    
   }
   
   /** Return this component */
@@ -80,6 +84,7 @@ export default function S1_Patient(props: S1_PatientProps) {
             panel={
               <PatientSearchCard
                 paneProps={props.paneProps}
+                info={info}
                 setData={props.setData}
                 registerSelectedPatient={handleSelectPatient}
                 />
@@ -91,6 +96,7 @@ export default function S1_Patient(props: S1_PatientProps) {
             panel={
               <PatientCreateCard
                 paneProps={props.paneProps}
+                info={info}
                 setData={props.setData}
                 registerSelectedPatient={props.registerSelectedPatientId}
                 />

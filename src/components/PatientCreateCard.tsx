@@ -9,10 +9,12 @@ import * as fhir from '../models/fhir_r4_selected';
 import { SingleRequestData, RenderDataAsTypes } from '../models/RequestData';
 import { PatientSelectionInfo } from '../models/PatientSelectionInfo';
 import { DateInput } from '@blueprintjs/datetime';
+import { DataCardInfo } from '../models/DataCardInfo';
 
 export interface PatientCreateProps {
   paneProps: ContentPaneProps,
-  setData: ((data: SingleRequestData[]) => void),
+  info: DataCardInfo,
+  setData: ((step: number, data: SingleRequestData[]) => void),
   registerSelectedPatient: ((patientId: string) => void),
 }
 
@@ -141,7 +143,7 @@ export default function PatientCreateCard(props: PatientCreateProps) {
 				// **** update our state ****
 
         setBusy(false);
-        props.setData(data);
+        props.setData(props.info.stepNumber!, data);
 			})
 			.catch((reason: any) => {
         // **** build data for display ****
@@ -159,7 +161,7 @@ export default function PatientCreateCard(props: PatientCreateProps) {
         // **** update our state ****
 
         setBusy(false);
-        props.setData(data);
+        props.setData(props.info.stepNumber!, data);
 			})
 			;
   }

@@ -22,6 +22,7 @@ import S1_Topic from './S1_Topic';
 import S1_Patient from './S1_Patient';
 import { SingleRequestData } from '../models/RequestData';
 import { DataCardStatus } from '../models/DataCardStatus';
+import S1_Endpoint from './S1_Endpoint';
 
 /** Type definition for the current object's state variable */
 interface ComponentState {
@@ -29,8 +30,8 @@ interface ComponentState {
 	topicStatus: DataCardStatus,
 	patientData: SingleRequestData[],
 	patientStatus: DataCardStatus,
-	step03: DataCardInfo, 
-	stepData03: ScenarioStepData[],
+	endpointData: SingleRequestData[],
+	endpointStatus: DataCardStatus,
 	step04: DataCardInfo,
 	stepData04: ScenarioStepData[],
 	step05: DataCardInfo,
@@ -71,17 +72,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		topicStatus: {available: true, complete: false, busy: false},
 		patientData: [],
 		patientStatus: {available: true, complete: false, busy: false},
-		step03: {
-			id: 'S1_Endpoint',
-			stepNumber: 3,
-			heading: 'Ask Client Host to create Endpoint',
-			description: '',
-			optional: false,
-			available: false,
-			completed: false,
-			busy: false,
-		},
-		stepData03: [],
+		endpointData: [],
+		endpointStatus: {available: false, complete: false, busy: false},
 		step04: {
 			id: 'S1_Subscription',
 			stepNumber: 4,
@@ -218,7 +210,7 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				status={this.state.topicStatus}
 				updateStatus={this.updateStatus}
 				data={this.state.topicData}
-				setData={this.setTopicData}
+				setData={this.setData}
 				/>,
 
 				
@@ -230,16 +222,19 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				status={this.state.patientStatus}
 				updateStatus={this.updateStatus}
 				data={this.state.patientData}
-				setData={this.setPatientData}
+				setData={this.setData}
 				/>,
 
 			/* Ask Client Host to create Endpoint */
-			<ScenarioStep 
-				key='step03'
-				step={this.state.step03} 
-				data={this.state.stepData03} 
-				paneProps={this.props}
-				/>,
+			<S1_Endpoint
+					key='s1_endpoint'
+					paneProps={this.props}
+					registerEndpoint={this.registerEndpoint}
+					status={this.state.endpointStatus}
+					updateStatus={this.updateStatus}
+					data={this.state.endpointData}
+					setData={this.setData}
+					/>,
 
 			/* Request Subscription on FHIR Server */
 			<ScenarioStep 
@@ -353,27 +348,69 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			case 2:
 				this.setState({patientStatus: status});
 				break;
+			case 3:
+				this.setState({endpointStatus: status});
+				break;
 		}
 	}
 
-	private setTopicData = (data: SingleRequestData[]) => {
-		this.setState({topicData: data});
+	private setData = (step: number, data: SingleRequestData[]) => {
+		switch (step)
+		{
+			case 1:
+				this.setState({topicData: data});
+				break;
+			case 2:
+				this.setState({patientData: data});
+				break;
+			case 3:
+				this.setState({endpointData: data});
+				break;
+		}
 	}
 
-	private setPatientData = (data: SingleRequestData[]) => {
-		this.setState({patientData: data});
+	private registerEndpoint = (endpoint: EndpointRegistration) => {
+		// **** disable subsequent steps ****
+
+		this.disableSteps(4);
+
+		// **** check for an old endpoint ****
+
+		if (this.state.endpoint) {
+			ApiHelper.deleteEndpoint(
+				this.props.clientHostInfo.registration,
+				this.state.endpoint.uid!,
+				this.props.clientHostInfo.url
+				);
+		}
+
+		// **** build updated state ****
+
+		let current: DataCardStatus = {...this.state.endpointStatus, available: true, complete: true};
+		let next: DataCardInfo = {...this.state.step04, available: true, completed: false};
+
+		this.setState({
+			endpoint: endpoint, 
+			endpointStatus: current,
+			step04: next,
+		});
 	}
 
 	private registerSelectedPatientId = (id: string) => {
+		// **** disable subsequent steps ****
+
 		this.disableSteps(3);
 
-		let updated: DataCardInfo = {...this.state.step03, available: true};
+		// **** build our updated state ****
 
-		this.setState({selectedPatientId: id});
+		let current: DataCardStatus = {...this.state.patientStatus, available: true, complete: true};
+		let next: DataCardStatus = {...this.state.endpointStatus, available: true, complete: false};
 
-		// **** request an endpoint ****
-
-		this.step03CreateEndpoint();
+		this.setState({
+			selectedPatientId: id, 
+			patientStatus: current,
+			endpointStatus: next,
+		});
 	}
 
 	private handleStep06EncounterClassChange = (event: React.FormEvent<HTMLSelectElement>) => {
@@ -479,78 +516,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		return -1;
 	}
 
-	/** Create an endpoint: send request to client host, on success enable next step */
-	private step03CreateEndpoint = () => {
-		// **** update step ****
-
-		let busyStep: DataCardInfo = {...this.state.step03, busy: true };
-
-		// **** changing the endpoint invalidates the subscription ****
-
-		this.deleteSubscription(false);
-
-		// **** delete any existing endpoints (do not update state, since we are right away here) ****
-
-		this.deleteEndpoint(false);
-
-		// **** flag we are asking to create the endpoint (busy) ****
-
-		this.setState({step03: busyStep, endpoint: null, subscription: null});
-
-		// **** build the url for our call ***
-
-		let url: string = new URL(
-			`api/Clients/${this.props.clientHostInfo.registration}/Endpoints/REST/`, 
-			this.props.clientHostInfo.url
-			).toString();
-
-		// **** ask for this endpoint to be created ****
-
-		ApiHelper.apiPost<EndpointRegistration>(url, '')
-			.then((value: EndpointRegistration) => {
-				// **** make the next step available ****
-
-				let current: DataCardInfo = {...this.state.step03, completed: true, busy: false};
-				let next: DataCardInfo = {...this.state.step04, available: true};
-
-				// **** show the client endpoint information ****
-
-				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:url, iconName:IconNames.GLOBE_NETWORK},
-					{id:'response', title:'Response', data:JSON.stringify(value, null, 2), iconName:IconNames.INFO_SIGN},
-					{id:'info', title:'Info', iconName:IconNames.INFO_SIGN, 
-						data:'Endpoint Created:\n' +
-						`\tUID: ${value.uid}\n` +
-						`\tURL: ${this.props.clientHostInfo.url}Endpoints/${value.uid}/\n` +
-						''},
-				];
-
-				// **** update our state ****
-
-				this.setState({
-					step03: current,
-					stepData03: data, 
-					step04: next, 
-					endpoint: value,
-				});
-			})
-			.catch((reason: any) => {
-				
-				let current: DataCardInfo = {...this.state.step03,
-					busy: false,
-					};
-				
-				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:url, iconName:IconNames.INFO_SIGN},
-					{id:'error', title:'Error', data:`Request to for endpoint (${url}) failed:\n${reason}`, iconName:IconNames.ERROR},
-				];
-
-				// **** request failed ****
-
-				this.setState({step03: current, stepData03: data});
-			});
-	}
-
 	/** Get a FHIR Instant value from a JavaScript Date */
 	private getInstantFromDate = (date: Date) => {
 		return (JSON.stringify(date).replace(/['"]+/g, ''));
@@ -574,9 +539,14 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		let busyStep: DataCardInfo = {...this.state.step04, busy: true};
 
-		// **** delete any existing subscriptions, but don't update state (doing that here) ****
+		// **** delete any old subscriptions ****
 
-		this.deleteSubscription(false);
+		if (this.state.subscription) {
+			ApiHelper.deleteSubscription(
+				this.state.subscription.id!,
+				this.props.fhirServerInfo.url
+				);
+		}
 
 		// **** flag we are asking to create the subscription (busy) ****
 
@@ -745,76 +715,42 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		this.disableSteps(2);
 	}
 
-	private deleteSubscription = (updateState: boolean) => {
-		// **** check for no subscription ****
-
-		if (!this.state.subscription) {
-			return;
-		}
-
-		// **** build url to remove subscription ****
-
-		let url:string = new URL(
-			`Subscription/${this.state.subscription.id!}`, 
-			this.props.fhirServerInfo.url
-			).toString();
-
-		// **** regardless of what happens, stop using this subscription ****
-
-		if (updateState) {
-			this.setState({subscription: null});
-		}
-
-		// **** ask for this subscription to be deleted ****
-
-		ApiHelper.apiDelete(url);
-	}
-
-	private deleteEndpoint = (updateState: boolean) => {
-		// **** check for no endpoint ****
-
-		if (!this.state.endpoint) {
-			return;
-		}
-
-		// **** build the URL to delete teh endpoint ****
-
-		let url: string = new URL(
-			`api/Clients/${this.props.clientHostInfo.registration}/Endpoints/${this.state.endpoint.uid!}/`, 
-			this.props.clientHostInfo.url
-			).toString();
-			
-		// **** regardless of what happens, stop using this endpoint ****
-
-		if (updateState) {
-			this.setState({endpoint: null});
-		}
-
-		// **** ask for this endpoint to be deleted ****
-
-		ApiHelper.apiDelete(url);
-	}
-
 	private disableSteps = (startingAt: number) => {
 		if (startingAt > 7) {
 			return;
 		}
 
 		if (startingAt <= 2) {
-			// let step: DataCardInfo = {...this.state.step02, available: true, completed: false};
-			// this.setState({step02: step, stepData02: [], step02Patients: []});
-			this.setState({selectedPatientId: ''});
+			this.setState({
+				selectedPatientId: '', 
+				patientData: [],
+				patientStatus: {available: true, complete: false, busy: false},
+				});
 		}
 
 		if (startingAt <= 3) {
-			let step: DataCardInfo = {...this.state.step03, available: false, completed: false};
-			this.deleteEndpoint(false);
-			this.setState({step03: step, stepData03: [], endpoint: null});
+			if (this.state.endpoint) {
+				ApiHelper.deleteEndpoint(
+					this.props.clientHostInfo.registration, 
+					this.state.endpoint.uid!,
+					this.props.clientHostInfo.url
+					);
+			}
+			this.setState({
+				endpoint: null,
+				endpointData: [],
+				endpointStatus: {available: false, complete: false, busy: false},
+				});
 		}
 
 		if (startingAt <= 4) {
+			if (this.state.subscription) {
+				ApiHelper.deleteSubscription(
+					this.state.subscription.id!,
+					this.props.fhirServerInfo.url
+					);
+			}
 			let step: DataCardInfo = {...this.state.step04, available: false, completed: false};
-			this.deleteSubscription(false);
 			this.setState({step04: step, stepData04: [], subscription: null});
 		}
 

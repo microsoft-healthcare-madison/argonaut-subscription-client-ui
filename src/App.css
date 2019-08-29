@@ -9,6 +9,7 @@
 
 .bp3-card {
   margin: 10px;
+  /* width: 100%; */
 }
 
 .bp3-switch {
@@ -20,4 +21,18 @@
   flex-direction: column;
   flex-wrap: nowrap;
   align-items: stretch;
+  width: 100vw;
 }
+
+.codeTab {
+  overflow: auto !important;
+  max-height: 500px;
+  max-width: calc(100vw - 250px);
+}
+/* 
+body {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  width: 100vw;
+} */

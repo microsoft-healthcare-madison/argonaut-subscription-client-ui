@@ -100,9 +100,6 @@ export class ApiHelper {
       })
   }
 
-
-
-
   static apiDelete(url: string): Promise<boolean> {
     return fetch(url, {
       method: 'DELETE',
@@ -120,5 +117,35 @@ export class ApiHelper {
       .catch(reason => {
         return false;
       })
+  }
+
+  static deleteSubscription(id: string, serverUrl: string) {
+    if (!(id) || (id === '')) { return; }
+    if (!(serverUrl) || (serverUrl === '')) { return; }
+
+		// **** build url to remove the subscription ****
+
+		let url:string = new URL(`Subscription/${encodeURIComponent(id)}`, serverUrl).toString();
+
+		// **** ask for this subscription to be deleted ****
+
+		ApiHelper.apiDelete(url);
+  }
+
+  static deleteEndpoint(clientRegistration: string, id: string, clientHostUrl: string) {
+    if (!(clientRegistration) || (clientRegistration === '')) { return; }
+    if (!(id) || (id === '')) { return; }
+    if (!(clientHostUrl) || (clientHostUrl === '')) { return; }
+
+		// **** build the URL to delete the endpoint ****
+
+		let url: string = new URL(
+			`api/Clients/${encodeURIComponent(clientRegistration)}/Endpoints/${encodeURIComponent(id)}/`, 
+			clientHostUrl
+      ).toString();
+      
+    // **** ask for this endpoint to be deleted ****
+
+		ApiHelper.apiDelete(url);
   }
 }
