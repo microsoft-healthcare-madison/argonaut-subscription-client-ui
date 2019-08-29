@@ -20,9 +20,11 @@ import { PatientSelectionInfo } from '../models/PatientSelectionInfo';
 import { ScenarioStepData } from '../models/ScenarioStepData';
 import S1_Topic from './S1_Topic';
 import S1_Patient from './S1_Patient';
-import { SingleRequestData } from '../models/RequestData';
+import { SingleRequestData, RenderDataAsTypes } from '../models/RequestData';
 import { DataCardStatus } from '../models/DataCardStatus';
 import S1_Endpoint from './S1_Endpoint';
+import S1_Subscription from './S1_Subscription';
+import S1_Handshake from './S1_Handshake';
 
 /** Type definition for the current object's state variable */
 interface ComponentState {
@@ -30,12 +32,16 @@ interface ComponentState {
 	topicStatus: DataCardStatus,
 	patientData: SingleRequestData[],
 	patientStatus: DataCardStatus,
+	selectedPatientId: string,
 	endpointData: SingleRequestData[],
 	endpointStatus: DataCardStatus,
-	step04: DataCardInfo,
-	stepData04: ScenarioStepData[],
-	step05: DataCardInfo,
-	stepData05: ScenarioStepData[],
+	endpoint: EndpointRegistration | null,
+	subscriptionData: SingleRequestData[],
+	subscriptionStatus: DataCardStatus,
+	subscription: fhir.Subscription | null,
+	handshakeData: SingleRequestData[],
+	handshakeStatus: DataCardStatus,
+
 	step06: DataCardInfo,
 	stepData06: ScenarioStepData[],
 	step07: DataCardInfo,
@@ -43,15 +49,12 @@ interface ComponentState {
 	step08: DataCardInfo,
 	stepData08: ScenarioStepData[],
 	connected: boolean,
-	endpoint: EndpointRegistration | null,
-	subscription: fhir.Subscription | null,
 	triggerUid: string,
 	step02TabId: string,
 	step02MatchType: string,
 	step02SubBusy: boolean,
 	step02SelectedValue: string,
 	step02Patients: PatientSelectionInfo[],
-	selectedPatientId: string,
 	step02SearchFilter: string,
 	step02PatientGivenName: string,
 	step02PatientFamilyName: string,
@@ -72,30 +75,16 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		topicStatus: {available: true, complete: false, busy: false},
 		patientData: [],
 		patientStatus: {available: true, complete: false, busy: false},
+		selectedPatientId: '',
 		endpointData: [],
 		endpointStatus: {available: false, complete: false, busy: false},
-		step04: {
-			id: 'S1_Subscription',
-			stepNumber: 4,
-			heading: 'Request Subscription on FHIR Server',
-			description: '',
-			optional: false,
-			available: false,
-			completed: false,
-			busy: false,
-		},
-		stepData04: [],
-		step05: {
-			id: 'S1_Handshake',
-			stepNumber: 5,
-			heading: 'Wait on Endpoint handshake',
-			description: '',
-			optional: false,
-			available: false,
-			completed: false,
-			busy: false,
-		},
-		stepData05: [],
+		endpoint: null,
+		subscriptionData: [],
+		subscriptionStatus: {available: false, complete: false, busy: false},
+		subscription: null,
+		handshakeData: [],
+		handshakeStatus: {available: false, complete: false, busy: false},
+
 		step06: {
 			id: 'S1_RequestTrigger',
 			stepNumber: 6,
@@ -130,15 +119,12 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		},
 		stepData08: [],
 		connected: true,
-		endpoint: null,
-		subscription: null,
 		triggerUid: '',
 		step02TabId: 's2_search',
 		step02MatchType: 'name',
 		step02SubBusy: false,
 		step02SelectedValue: '',
 		step02Patients: [],
-		selectedPatientId: '',
 		step02SearchFilter: '',
 		step02PatientFamilyName: '',
 		step02PatientGivenName: '',
@@ -227,44 +213,34 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 			/* Ask Client Host to create Endpoint */
 			<S1_Endpoint
-					key='s1_endpoint'
-					paneProps={this.props}
-					registerEndpoint={this.registerEndpoint}
-					status={this.state.endpointStatus}
-					updateStatus={this.updateStatus}
-					data={this.state.endpointData}
-					setData={this.setData}
-					/>,
+				key='s1_endpoint'
+				paneProps={this.props}
+				registerEndpoint={this.registerEndpoint}
+				status={this.state.endpointStatus}
+				updateStatus={this.updateStatus}
+				data={this.state.endpointData}
+				setData={this.setData}
+				/>,
 
 			/* Request Subscription on FHIR Server */
-			<ScenarioStep 
-				key='step04'
-				step={this.state.step04} 
-				data={this.state.stepData04} 
+			<S1_Subscription
+				key='s1_subscription'
 				paneProps={this.props}
-				>
-				<HTMLSelect
-					onChange={this.handleStep04PayloadChange}
-					defaultValue={this.state.step04Payload}
-					>
-					{ Object.values(fhir.SubscriptionChannelPayloadContentCodes).map((value) => (
-						<option key={value}>{value}</option> 
-							))}
-				</HTMLSelect>
-				<Button
-					disabled={!this.state.step04.available}
-					onClick={this.handleRequestSubscriptionClick}
-					>
-					Go
-				</Button>
-			</ScenarioStep>,
-
+				registerSubscription={this.registerSubscription}
+				status={this.state.subscriptionStatus}
+				updateStatus={this.updateStatus}
+				data={this.state.subscriptionData}
+				setData={this.setData}
+				selectedPatientId={this.state.selectedPatientId!}
+				endpoint={this.state.endpoint!}
+				/>,
+			
 			/* Wait on Endpoint handshake */
-			<ScenarioStep 
-				key='step05'
-				step={this.state.step05} 
-				data={this.state.stepData05} 
+			<S1_Handshake
+				key='s1_handshake'
 				paneProps={this.props}
+				status={this.state.handshakeStatus}
+				data={this.state.handshakeData}
 				/>,
 
 			/* Ask Client Host to trigger event */
@@ -351,6 +327,9 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			case 3:
 				this.setState({endpointStatus: status});
 				break;
+			case 4:
+				this.setState({subscriptionStatus: status});
+				break;
 		}
 	}
 
@@ -366,7 +345,36 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			case 3:
 				this.setState({endpointData: data});
 				break;
+			case 4:
+				this.setState({subscriptionData: data});
+				break;
 		}
+	}
+
+	private registerSubscription = (subscription: fhir.Subscription) => {
+		// **** disable subsequent steps ****
+
+		this.disableSteps(5);
+
+		// **** check for an old subscription ****
+
+		if (this.state.subscription) {
+			ApiHelper.deleteSubscription(
+				this.state.subscription.id!,
+				this.props.fhirServerInfo.url
+			);
+		}
+
+		// **** build updated state ****
+
+		let current: DataCardStatus = {...this.state.subscriptionStatus, available: true, complete: true, busy: false};
+		let next: DataCardStatus = {...this.state.handshakeStatus, available: true, complete: false, busy: true};
+
+		this.setState({
+			subscription: subscription, 
+			subscriptionStatus: current,
+			handshakeStatus: next,
+		});
 	}
 
 	private registerEndpoint = (endpoint: EndpointRegistration) => {
@@ -386,13 +394,13 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		// **** build updated state ****
 
-		let current: DataCardStatus = {...this.state.endpointStatus, available: true, complete: true};
-		let next: DataCardInfo = {...this.state.step04, available: true, completed: false};
+		let current: DataCardStatus = {...this.state.endpointStatus, available: true, complete: true, busy: false};
+		let next: DataCardStatus = {...this.state.subscriptionStatus, available: true, complete: false, busy: false};
 
 		this.setState({
 			endpoint: endpoint, 
 			endpointStatus: current,
-			step04: next,
+			subscriptionStatus: next,
 		});
 	}
 
@@ -403,8 +411,8 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 		// **** build our updated state ****
 
-		let current: DataCardStatus = {...this.state.patientStatus, available: true, complete: true};
-		let next: DataCardStatus = {...this.state.endpointStatus, available: true, complete: false};
+		let current: DataCardStatus = {...this.state.patientStatus, available: true, complete: true, busy: false};
+		let next: DataCardStatus = {...this.state.endpointStatus, available: true, complete: false, busy: false};
 
 		this.setState({
 			selectedPatientId: id, 
@@ -435,9 +443,18 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		let topicUrl: string;
 		let subscriptionUrl: string;
 
+		let bundle: fhir.Bundle;
+
 		// **** resolve this message into a bundle ****
 
-		let bundle: fhir.Bundle = JSON.parse(message);
+		try{
+			bundle = JSON.parse(message);
+		}
+		catch(error)
+		{
+			return;
+		}
+		
 
 		// **** check for the extensions we need ****
 
@@ -465,21 +482,24 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		if (eventCount === 0) {
 			// **** update steps ****
 
-			let current: DataCardInfo = {...this.state.step05,
-				completed: true, 
+			let current: DataCardStatus = {...this.state.handshakeStatus,
+				complete: true, 
 				busy: false,
 			};
-			let data: ScenarioStepData[] = [
-				{id: 'handshake', title: 'Handshake', data: JSON.stringify(bundle, null, 2), iconName:IconNames.FLAME}
-			];
+			let data: SingleRequestData = {
+				name: 'Handshake',
+				id: 'handshake',
+				responseData: JSON.stringify(bundle, null, 2),
+				requestDataType: RenderDataAsTypes.FHIR
+			}
 
 			let next: DataCardInfo = {...this.state.step06, available: true};
 
 			// **** update our state ****
 
 			this.setState({
-				step05: current, 
-				stepData05: data,
+				handshakeStatus: current, 
+				handshakeData: [data],
 				step06: next, 
 			});
 		} else {
@@ -504,134 +524,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 
 			this.setState({step07: current, stepData07: data});
 		}
-	}
-
-	private checkForMatchingTitle = (data: ScenarioStepData[], rec: ScenarioStepData) => {
-		for (var i:number = 0; i < data.length; i++) {
-			if (data[i].title === rec.title) {
-				return i;
-			}
-		}
-
-		return -1;
-	}
-
-	/** Get a FHIR Instant value from a JavaScript Date */
-	private getInstantFromDate = (date: Date) => {
-		return (JSON.stringify(date).replace(/['"]+/g, ''));
-	}
-	
-	/** Get a FHIR Date String from a JavaScript Date */
-	private getFhirDateFromDate = (date: Date) => {
-		return (
-			date.getFullYear() +
-			'-' +
-			((date.getMonth() < 9) ? '0' : '') + (date.getMonth()+1) +
-			'-' +
-			((date.getDate() < 10) ? '0' : '') + date.getDate() 
-			)
-			;
-	}
-
-	/** Handle user clicks on the CreateSubscription button (send request to FHIR server, on success enable next step) */
-	private handleRequestSubscriptionClick = () => {
-		// **** update step ****
-
-		let busyStep: DataCardInfo = {...this.state.step04, busy: true};
-
-		// **** delete any old subscriptions ****
-
-		if (this.state.subscription) {
-			ApiHelper.deleteSubscription(
-				this.state.subscription.id!,
-				this.props.fhirServerInfo.url
-				);
-		}
-
-		// **** flag we are asking to create the subscription (busy) ****
-
-		this.setState({step04: busyStep, subscription: null});
-
-		// **** build the url for our call ***
-
-		let url: URL = new URL('Subscription/', this.props.fhirServerInfo.url);
-		let endpointUrl: string = new URL(`Endpoints/${this.state.endpoint!.uid!}`, this.props.clientHostInfo.url).toString();
- 
-		// **** build our subscription channel information ****
-
-		let channel: fhir.SubscriptionChannel = {
-			endpoint: endpointUrl,
-			header: ['Authorization: Bearer secret-token-abc-123'],
-			heartbeatPeriod: 60,
-			payload: {content: this.state.step04Payload, contentType: 'application/fhir+json'},
-			type: { text: 'rest-hook'},
-		}
-
-		// **** build our filter information ****
-
-		let filter: fhir.SubscriptionFilterBy = {
-			matchType: '=',
-			name: 'patient',
-			value: `Patient/${this.state.selectedPatientId}`	//`Patient/${this.state.patientFilter},Patient/K123`
-		}
-
-		var expirationTime:Date = new Date();
-		expirationTime.setHours(expirationTime.getHours() + 1);
-
-		// **** build the subscription object ****
-
-		let subscription: fhir.Subscription = {
-			resourceType: 'Subscription',
-			channel: channel,
-			filterBy: [filter],
-			end: this.getInstantFromDate(expirationTime),
-			topic: {reference:  new URL('Topic/admission', this.props.fhirServerInfo.url).toString()},
-			reason: 'Client Testing',
-			status: 'requested',
-		}
-
-		// **** post our request to the server ****
-
-		ApiHelper.apiPost<fhir.Subscription>(url.toString(), JSON.stringify(subscription))
-			.then((value: fhir.Subscription) => {
-				// **** update steps - note that next step starts busy since we are waiting ****
-
-				let current: DataCardInfo = {...this.state.step04, 
-					completed: true, 
-					busy: false,
-				};
-
-				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:JSON.stringify(subscription, null, 2), iconName:IconNames.FLAME},
-					{id:'response', title:'Response', data:JSON.stringify(value, null, 2), iconName:IconNames.FLAME},
-				];
-
-				let next: DataCardInfo = {...this.state.step05, available: true, busy: true};
-	
-				// **** update our state ****
-
-				this.setState({
-					step04: current, 
-					stepData04: data,
-					step05: next, 
-					subscription: value,
-				});
-			})
-			.catch((reason: any) => {
-				
-				let current: DataCardInfo = {...this.state.step04, 
-					busy: false,
-					};
-
-				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:JSON.stringify(subscription, null, 2), iconName:IconNames.FLAME},
-					{id:'error', title:'Error', data:`Request for Subscription (${url}) failed:\n${reason}`, iconName:IconNames.ERROR},
-				];
-
-				// **** request failed ****
-
-				this.setState({step04: current, stepData04: data});
-			});
 	}
 
 	/** Handle user clicks on the TriggerEvent button (send request to client host) */
@@ -750,13 +642,18 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 					this.props.fhirServerInfo.url
 					);
 			}
-			let step: DataCardInfo = {...this.state.step04, available: false, completed: false};
-			this.setState({step04: step, stepData04: [], subscription: null});
+			this.setState({
+				subscription: null,
+				subscriptionData: [],
+				subscriptionStatus: {available: false, complete: false, busy: false},
+			});
 		}
 
 		if (startingAt <= 5) {
-			let step: DataCardInfo = {...this.state.step05, available: false, completed: false};
-			this.setState({step05: step, stepData05: []});
+			this.setState({
+				handshakeData: [],
+				handshakeStatus: {available: false, complete: false, busy: false},
+			});
 		}
 
 		if (startingAt <= 6) {

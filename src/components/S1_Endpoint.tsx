@@ -1,8 +1,5 @@
 import React, {useState, useEffect} from 'react';
 
-import {
-  Tabs, Tab, TabId,
-} from '@blueprintjs/core';
 import { ContentPaneProps } from '../models/ContentPaneProps';
 import { DataCardInfo } from '../models/DataCardInfo';
 import { SingleRequestData, RenderDataAsTypes } from '../models/RequestData';
@@ -47,6 +44,8 @@ export default function S1_Endpoint(props: S1_EndpointProps) {
   }, [endpointNeeded, props.status.available]);
 
   function createEndpoint() {
+    props.updateStatus(info.stepNumber!, {...props.status, busy: true});
+
 		// **** build the url for our call ***
 
 		let url: string = new URL(
@@ -74,7 +73,7 @@ export default function S1_Endpoint(props: S1_EndpointProps) {
 
         props.setData(info.stepNumber!, [updated]);
 
-        // **** register this endpoint ****
+        // **** register this endpoint (updates status) ****
 
         props.registerEndpoint(value);
 
@@ -87,11 +86,12 @@ export default function S1_Endpoint(props: S1_EndpointProps) {
           name: 'Create Endpoint',
           id: 'create_endpoint',
           requestUrl: url, 
-          responseData: `Request to for endpoint (${url}) failed:\n${reason}`,
+          responseData: `Request for endpoint (${url}) failed:\n${reason}`,
           responseDataType: RenderDataAsTypes.Error
           };
 
         props.setData(info.stepNumber!, [updated]);
+        props.updateStatus(info.stepNumber!, {...props.status, busy: false});
 			});
   }
   

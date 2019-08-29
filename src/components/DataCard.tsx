@@ -12,7 +12,7 @@ import {
 import {IconNames} from '@blueprintjs/icons';
 import { DataCardInfo } from '../models/DataCardInfo';
 import { ContentPaneProps } from '../models/ContentPaneProps';
-import { SingleRequestData, RenderDataAsTypes } from '../models/RequestData';
+import { SingleRequestData } from '../models/RequestData';
 import RequestDataPanel from './RequestDataPanel';
 import { DataCardStatus } from '../models/DataCardStatus';
 

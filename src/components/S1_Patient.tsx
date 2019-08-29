@@ -59,10 +59,6 @@ export default function S1_Patient(props: S1_PatientProps) {
     props.registerSelectedPatientId(patientId);
   }
 
-  function createEndpoint() {
-    
-  }
-  
   /** Return this component */
   return(
     <DataCard

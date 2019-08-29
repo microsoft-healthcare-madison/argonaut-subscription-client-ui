@@ -19,6 +19,7 @@ import { ConnectionInformation } from '../models/ConnectionInformation';
 import { StorageHelper } from '../util/StorageHelper';
 import { PlaygroundPane } from './PlaygroundPane';
 import { CopyHelper } from '../util/CopyHelper';
+import { BasicObjectStore } from '../util/BasicObjectStore';
 
 /** tab configuration - MUST be in 'id' order - first tab is shown at launch */
 let _tabs: UiTabInformation[] = [
@@ -69,14 +70,6 @@ export default function MainPage() {
 
   // **** set up private internal objects (not tracked) ****
 
-  /** WebSocket object for communicating with the client host */
-  let _clientHostWebSocket: WebSocket | null = null;
-
-  /** Callback function in the active pane to handle WebSocket ClientHost notifications */
-  let _paneHostMessageHandler: ((message: string) => void) | null = null;
-
-  /** Toaster display object */
-  let _toaster: IToaster|null = null;
 
   // **** handle lifecycle changes ****
 
@@ -123,8 +116,7 @@ export default function MainPage() {
       setInitialLoad(false);
     }
   }, 
-  // **** flag variables we want to call this when changed ****
-  [clientHostInfo, fhirServerInfo, toggleUiColors, toggleCodePaneColors]);
+  [clientHostInfo, fhirServerInfo, toggleUiColors, toggleCodePaneColors, initialLoad]);
 
   /** Function to toggle the UI colors (light/dark) */
   function toggleUiColors() {
@@ -159,10 +151,10 @@ export default function MainPage() {
   function connectToClientHostWebSocket(clientHostInfo: ConnectionInformation) {
     // **** close any existing Client Host websocket connections  ****
 
-    if (_clientHostWebSocket) {
-      _clientHostWebSocket.onmessage = null;
-      _clientHostWebSocket.close();
-      _clientHostWebSocket = null;
+    if (BasicObjectStore._clientHostWebSocket) {
+      BasicObjectStore._clientHostWebSocket.onmessage = null;
+      BasicObjectStore._clientHostWebSocket.close();
+      BasicObjectStore._clientHostWebSocket = null;
     }
 
     // **** build the websocket URL ****
@@ -173,16 +165,16 @@ export default function MainPage() {
 
     // **** connect to our server ****
 
-    _clientHostWebSocket = new WebSocket(wsUrl);
+    BasicObjectStore._clientHostWebSocket = new WebSocket(wsUrl);
 
     // **** setup our receive handler ****
 
-    _clientHostWebSocket.onmessage = clientHostMessageHandler;
+    BasicObjectStore._clientHostWebSocket.onmessage = clientHostMessageHandler;
 
     // **** setup an error handler to disconnect ****
 
-    _clientHostWebSocket.onerror = handleClientHostWebSocketError;
-    _clientHostWebSocket.onclose = handleClientHostWebSocketClose;
+    BasicObjectStore._clientHostWebSocket.onerror = handleClientHostWebSocketError;
+    BasicObjectStore._clientHostWebSocket.onclose = handleClientHostWebSocketClose;
 
     // **** tell the user we are connected ****
 
@@ -218,7 +210,7 @@ export default function MainPage() {
 
   /** Callback function to allow panes to register to receive client host notifications (max: 1) */
   function registerPaneClientHostMessageHandler(handler: ((message: string) => void)) {
-    _paneHostMessageHandler = handler;
+    BasicObjectStore._paneHostMessageHandler = handler;
   }
 
   /** Function to process client host messages received via the WebSocket */
@@ -243,8 +235,8 @@ export default function MainPage() {
 
     // **** propagate (if necessary) ****
 
-    if (_paneHostMessageHandler !== null) {
-      _paneHostMessageHandler(event.data);
+    if (BasicObjectStore._paneHostMessageHandler !== null) {
+      BasicObjectStore._paneHostMessageHandler!(event.data);
     }
   }
 
@@ -256,7 +248,7 @@ export default function MainPage() {
 
   /** Function to either get the current Toast (short message) object, or create a new one */
   function getOrCreateToaster() {
-    if (!_toaster) {
+    if (!BasicObjectStore._toaster) {
       // **** configure our toaster display ****
 
       var toasterProps: IToasterProps = {
@@ -266,10 +258,10 @@ export default function MainPage() {
       }
 
       // **** static create the toaster on the DOM ****
-      _toaster = Toaster.create(toasterProps, document.body);
+      BasicObjectStore._toaster = Toaster.create(toasterProps, document.body);
     }
 
-    return _toaster;
+    return BasicObjectStore._toaster;
   }
 
   /** Function to perform copying generic text to the clipboard */
@@ -309,7 +301,7 @@ export default function MainPage() {
           updateFhirServerInfo: setFhirServerInfo,
           updateClientHostInfo: setClientHostInfo,
           connectClientHostWebSocket: connectToClientHostWebSocket,
-          registerHostMessageHandler: registerPaneClientHostMessageHandler,
+          registerHostMessageHandler: registerPaneClientHostMessageHandler, //setPaneHostMessageHandler,
           toaster: showToastMessage,
           uiDark: uiDark,
           toggleUiColors: toggleUiColors,

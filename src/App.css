@@ -29,10 +29,3 @@
   max-height: 500px;
   max-width: calc(100vw - 250px);
 }
-/* 
-body {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  width: 100vw;
-} */
