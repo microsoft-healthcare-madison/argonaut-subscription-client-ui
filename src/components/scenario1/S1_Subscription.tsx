@@ -97,6 +97,8 @@ export default function S1_Subscription(props: S1_SubscriptionProps) {
           name: 'Create Subscription',
           id: 'create_subscription',
           requestUrl: url, 
+          requestData: JSON.stringify(subscription, null, 2),
+          requestDataType: RenderDataAsTypes.FHIR,
           responseData: JSON.stringify(value, null, 2),
           responseDataType: RenderDataAsTypes.FHIR,
           };
@@ -167,18 +169,13 @@ export default function S1_Subscription(props: S1_SubscriptionProps) {
           onChange={handleHeadersChange}
           />
       </FormGroup>
-      { (!props.status.busy) &&
-        <Button
-          disabled={!props.status.available}
-          onClick={createSubscription}
-          style={{margin: 5}}
-          >
-          Create Subscription
-        </Button>
-      }
-      { (props.status.busy) &&
-        <Spinner />
-      }
+      <Button
+        disabled={(!props.status.available) || (props.status.busy)}
+        onClick={createSubscription}
+        style={{margin: 5}}
+        >
+        Create Subscription
+      </Button>
     </DataCard>
   );
 }

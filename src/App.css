@@ -28,4 +28,5 @@
   overflow: auto !important;
   max-height: 500px;
   max-width: calc(100vw - 250px);
+  min-width: 50vw;
 }

@@ -6,7 +6,7 @@ import {
   FormGroup,
   Elevation,
   Text,
-  H3, NonIdealState, HTMLSelect, TabId,
+  H3, NonIdealState, HTMLSelect,
 } from '@blueprintjs/core';
 
 import {IconNames} from "@blueprintjs/icons";
@@ -16,7 +16,6 @@ import { ScenarioStep } from '../ScenarioStep';
 import { EndpointRegistration } from '../../models/EndpointRegistration';
 import { ApiHelper } from '../../util/ApiHelper';
 import * as fhir from '../../models/fhir_r4_selected';
-import { PatientSelectionInfo } from '../../models/PatientSelectionInfo';
 import { ScenarioStepData } from '../../models/ScenarioStepData';
 import S1_Topic from './S1_Topic';
 import S1_Patient from './S1_Patient';
@@ -25,6 +24,8 @@ import { DataCardStatus } from '../../models/DataCardStatus';
 import S1_Endpoint from './S1_Endpoint';
 import S1_Subscription from './S1_Subscription';
 import S1_Handshake from './S1_Handshake';
+import S1_Trigger from './S1_Trigger';
+import S1_Notification from './S1_Notification';
 
 /** Type definition for the current object's state variable */
 interface ComponentState {
@@ -41,27 +42,16 @@ interface ComponentState {
 	subscription: fhir.Subscription | null,
 	handshakeData: SingleRequestData[],
 	handshakeStatus: DataCardStatus,
+	triggerData: SingleRequestData[],
+	triggerStatus: DataCardStatus,
+	triggerCount: number,
+	notificationData: SingleRequestData[],
+	notificationStatus: DataCardStatus,
 
-	step06: DataCardInfo,
-	stepData06: ScenarioStepData[],
-	step07: DataCardInfo,
-	stepData07: ScenarioStepData[],
 	step08: DataCardInfo,
 	stepData08: ScenarioStepData[],
 	connected: boolean,
-	triggerUid: string,
-	step02TabId: string,
-	step02MatchType: string,
-	step02SubBusy: boolean,
-	step02SelectedValue: string,
-	step02Patients: PatientSelectionInfo[],
-	step02SearchFilter: string,
-	step02PatientGivenName: string,
-	step02PatientFamilyName: string,
-	step02PatientId: string,
-	step02Gender: string,
-	step02BirthDate: Date,
-	step04Payload: string,
+
 	step06EncounterClass: string,
 	step06EncounterStatus: string,
 }
@@ -84,29 +74,12 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		subscription: null,
 		handshakeData: [],
 		handshakeStatus: {available: false, complete: false, busy: false},
+		triggerData: [],
+		triggerStatus: {available: false, complete: false, busy: false},
+		triggerCount: 0,
+		notificationData: [],
+		notificationStatus: {available: false, complete: false, busy: false},
 
-		step06: {
-			id: 'S1_RequestTrigger',
-			stepNumber: 6,
-			heading: 'Ask Client Host to trigger event',
-			description: '',
-			optional: false,
-			available: false,
-			completed: false,
-			busy: false,
-		},
-		stepData06: [],
-		step07: {
-			id: 'S1_Notification',
-			stepNumber: 7,
-			heading: 'Wait on Subscription Notification',
-			description: '',
-			optional: false,
-			available: false,
-			completed: false,
-			busy: false,
-		},
-		stepData07: [],
 		step08: {
 			id: 'S1_cleanUp',
 			stepNumber: 8,
@@ -119,19 +92,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		},
 		stepData08: [],
 		connected: true,
-		triggerUid: '',
-		step02TabId: 's2_search',
-		step02MatchType: 'name',
-		step02SubBusy: false,
-		step02SelectedValue: '',
-		step02Patients: [],
-		step02SearchFilter: '',
-		step02PatientFamilyName: '',
-		step02PatientGivenName: '',
-		step02PatientId: '',
-		step02Gender: '',
-		step02BirthDate: new Date(),
-		step04Payload: 'id-only',
 		step06EncounterClass: 'VR',
 		step06EncounterStatus: 'in-progress',
 	};
@@ -243,58 +203,24 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				data={this.state.handshakeData}
 				/>,
 
-			/* Ask Client Host to trigger event */
-			<ScenarioStep 
-				key='step06'
-				step={this.state.step06} 
-				data={this.state.stepData06} 
+			/* Send an Encounter to trigger an event */
+			<S1_Trigger
+				key='s1_trigger'
 				paneProps={this.props}
-				>
-
-				<FormGroup
-					label='Encounter Class'
-					helperText='Class of encounter, per http://terminology.hl7.org/ValueSet/v3-ActEncounterCode'
-					labelFor='encounter-class'
-					>
-					<HTMLSelect
-						id='encounter-class'
-						onChange={this.handleStep06EncounterClassChange}
-						defaultValue={this.state.step06EncounterClass}
-						>
-						{ Object.values(fhir.v3_ActEncounterCode).map((value) => (
-							<option key={value.code} value={value.code}>{value.display}</option> 
-								))}
-					</HTMLSelect>
-				</FormGroup>
-
-				<FormGroup
-					label='Encounter Status'
-					helperText='Status of encounter, per 	http://hl7.org/fhir/ValueSet/encounter-status'
-					labelFor='encounter-status'
-					>
-					<HTMLSelect
-						id='encounter-status'
-						onChange={this.handleStep06EncounterStatusChange}
-						defaultValue={this.state.step06EncounterStatus}
-						>
-						<option value='in-progress'>In Progress</option>
-					</HTMLSelect>
-				</FormGroup>
-				
-				<Button
-					disabled={!this.state.step06.available}
-					onClick={this.handleRequestTriggerEventClick}
-					>
-					Go
-				</Button>
-			</ScenarioStep>,
+				registerEncounterSent={this.registerEncounterSent}
+				status={this.state.triggerStatus}
+				updateStatus={this.updateStatus}
+				data={this.state.triggerData}
+				setData={this.setData}
+				selectedPatientId={this.state.selectedPatientId!}
+				/>,
 
 			/* Wait on Subscription Notification */
-			<ScenarioStep 
-				key='step07'
-				step={this.state.step07} 
-				data={this.state.stepData07} 
+			<S1_Notification
+				key='s1_notification'
 				paneProps={this.props}
+				status={this.state.notificationStatus}
+				data={this.state.notificationData}
 				/>,
 
 			/* Clean up */
@@ -333,6 +259,12 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			case 5:
 				this.setState({handshakeStatus: status});
 				break;
+			case 6:
+				this.setState({triggerStatus: status});
+				break;
+			case 7:
+				this.setState({notificationStatus: status});
+				break;
 		}
 	}
 
@@ -354,7 +286,28 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			case 5:
 				this.setState({handshakeData: data});
 				break;
+			case 6:
+				this.setState({triggerData: data});
+				break;
+			case 7:
+				this.setState({notificationData: data});
+				break;
 		}
+	}
+
+	private registerEncounterSent = () => {
+		let updated: number = this.state.triggerCount + 1;
+		
+		// **** build updated state ****
+
+		let current: DataCardStatus = {...this.state.triggerStatus, available: true, complete: true, busy: false};
+		let next: DataCardStatus = {...this.state.notificationStatus, available: true, complete: false, busy: true};
+
+		this.setState({
+			triggerCount: updated,
+			triggerStatus: current,
+			notificationStatus: next,
+		});
 	}
 
 	private registerSubscription = (subscription: fhir.Subscription) => {
@@ -427,14 +380,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		});
 	}
 
-	private handleStep06EncounterClassChange = (event: React.FormEvent<HTMLSelectElement>) => {
-		this.setState({step06EncounterClass: event.currentTarget.value})
-	}
-
-	private handleStep06EncounterStatusChange = (event: React.FormEvent<HTMLSelectElement>) => {
-		this.setState({step06EncounterStatus: event.currentTarget.value})
-	}
-
 	/** Callback function to process ClientHost messages */
 	private handleHostMessage = (message: string) => {
 		// **** vars we want ****
@@ -493,111 +438,44 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				responseDataType: RenderDataAsTypes.FHIR
 			}
 
-			let next: DataCardInfo = {...this.state.step06, available: true};
+			let next: DataCardStatus = {...this.state.triggerStatus, available: true};
 
 			// **** update our state ****
 
 			this.setState({
 				handshakeStatus: current, 
 				handshakeData: [data],
-				step06: next, 
+				triggerStatus: next, 
 			});
 		} else {
+			let pendingNotifications = this.state.triggerCount - 1;
+			console.log('Received notification, remaining pending:', pendingNotifications);
+
 			// **** update step ****
 
-			let current: DataCardInfo = {...this.state.step07,
-				completed: true, 
-				busy: false,
+			let current: DataCardStatus = {...this.state.notificationStatus,
+				complete: true, 
+				busy: (pendingNotifications > 0),
 			};
 
-			let rec:ScenarioStepData = {
-				id:`event_${this.state.stepData07.length}`, 
-				title: `Notification`, 								// title: `# ${this.state.stepData07.length}`
-				data: JSON.stringify(bundle, null, 2),
-				iconName:IconNames.FLAME
+			let rec:SingleRequestData = {
+				id:`event_${this.state.notificationData.length}`, 
+				name: `Notification #${this.state.notificationData.length}`, 	// title: `# ${this.state.stepData07.length}`
+				responseData: JSON.stringify(bundle, null, 2),
+				responseDataType: RenderDataAsTypes.FHIR
 			}
 
-			let data: ScenarioStepData[] = this.state.stepData07.slice();
+			let data: SingleRequestData[] = this.state.notificationData.slice();
 			data.push(rec);
 
 			// **** update our state ****
 
-			this.setState({step07: current, stepData07: data});
-		}
-	}
-
-	/** Handle user clicks on the TriggerEvent button (send request to client host) */
-	private handleRequestTriggerEventClick = () => {
-		// **** update step ****
-
-		let busyStep: DataCardInfo = {...this.state.step06, busy: true};
-
-		// **** flag we are asking to trigger an event (busy) ****
-
-		this.setState({step06: busyStep});
-
-		// **** build the URL to post an encounter ****
-
-		let url: string = new URL('Encounter?_format=json', this.props.fhirServerInfo.url).toString();
-
-		// **** build our encounter ****
-
-		let encounter: fhir.Encounter = {
-			resourceType: "Encounter",
-			class: {
-				system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode',
-				code: this.state.step06EncounterClass,
-			},
-			status: this.state.step06EncounterStatus,
-			subject: {
-				reference: `Patient/${this.state.selectedPatientId}`,
-			}
-		}
-
-		// **** post our request to the server ****
-
-		ApiHelper.apiPostFhir<fhir.Encounter>(url, JSON.stringify(encounter))
-			.then((value: fhir.Encounter) => {
-				// **** update steps - note that next step starts busy since we are waiting ****
-
-				let current: DataCardInfo = {...this.state.step06, 
-					busy: false,
-				};
-
-				let data: ScenarioStepData[] = [
-					{id:'requestUrl', title:'URL', data:url, iconName:IconNames.GLOBE_NETWORK},
-					{id:'request', title:'Request', data:JSON.stringify(encounter, null, 2), iconName:IconNames.FLAME},
-					{id:'response', title:'Response', data:JSON.stringify(value, null, 2), iconName:IconNames.FLAME},
-				];
-
-				let next: DataCardInfo = {...this.state.step07,
-					available: true,
-					busy: true,
-				};
-	
-				// **** update our state ****
-
-				this.setState({
-					step06: current,
-					stepData06: data,
-					step07: next,
-				});
-			})
-			.catch((reason: any) => {
-				
-				let current: DataCardInfo = {...this.state.step06, 
-					busy: false,
-					};
-
-				let data: ScenarioStepData[] = [
-					{id:'request', title:'Request', data:JSON.stringify(encounter, null, 2), iconName:IconNames.FLAME},
-					{id:'error', title:'Error', data:`Request to Post Encounter (${url}) failed:\n${reason}`, iconName:IconNames.ERROR},
-				];
-
-				// **** request failed ****
-
-				this.setState({step06: current, stepData06: data});
+			this.setState({
+				notificationStatus: current, 
+				notificationData: data, 
+				triggerCount: pendingNotifications
 			});
+		}
 	}
 
 	/** Handle user clicks on the CleanUp button (delete Subscription from FHIR Server, Endpoint from ClientHost) */
@@ -657,13 +535,18 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		}
 
 		if (startingAt <= 6) {
-			let step: DataCardInfo = {...this.state.step06, available: false, completed: false};
-			this.setState({step06: step, stepData06: []});
+			this.setState({
+				triggerData: [],
+				triggerStatus: {available: false, complete: false, busy: false},
+				triggerCount: 0,
+			});
 		}
 
 		if (startingAt <= 7) {
-			let step: DataCardInfo = {...this.state.step07, available: false, completed: false};
-			this.setState({step07: step, stepData07: []});
+			this.setState({
+				notificationData: [],
+				notificationStatus: {available: false, complete: false, busy: false},
+			});
 		}
 	}
 
