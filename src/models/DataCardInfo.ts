@@ -4,7 +4,4 @@ export interface DataCardInfo {
   heading: string;
   optional?: boolean;
   description: string;
-  available?: boolean;
-  completed?: boolean;
-  busy?: boolean;
 }
