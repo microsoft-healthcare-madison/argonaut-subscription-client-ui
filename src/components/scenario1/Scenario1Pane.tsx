@@ -26,9 +26,11 @@ import S1_Subscription from './S1_Subscription';
 import S1_Handshake from './S1_Handshake';
 import S1_Trigger from './S1_Trigger';
 import S1_Notification from './S1_Notification';
+import S1_CleanUp from './S1_CleanUp';
 
 /** Type definition for the current object's state variable */
 interface ComponentState {
+	connected: boolean,
 	topicData: SingleRequestData[],
 	topicStatus: DataCardStatus,
 	patientData: SingleRequestData[],
@@ -47,13 +49,8 @@ interface ComponentState {
 	triggerCount: number,
 	notificationData: SingleRequestData[],
 	notificationStatus: DataCardStatus,
-
-	step08: DataCardInfo,
-	stepData08: ScenarioStepData[],
-	connected: boolean,
-
-	step06EncounterClass: string,
-	step06EncounterStatus: string,
+	cleanUpData: SingleRequestData[],
+	cleanUpStatus: DataCardStatus,
 }
 
 /**
@@ -61,6 +58,7 @@ interface ComponentState {
  */
 export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
   public state: ComponentState = {
+		connected: true,
 		topicData: [],
 		topicStatus: {available: true, complete: false, busy: false},
 		patientData: [],
@@ -79,23 +77,9 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		triggerCount: 0,
 		notificationData: [],
 		notificationStatus: {available: false, complete: false, busy: false},
-
-		step08: {
-			id: 'S1_cleanUp',
-			stepNumber: 8,
-			heading: 'Clean up',
-			description: 'Delete Subscription, Destroy Endpoint, etc.',
-			optional: true,
-			available: true,
-			completed: false,
-			busy: false,
-		},
-		stepData08: [],
-		connected: true,
-		step06EncounterClass: 'VR',
-		step06EncounterStatus: 'in-progress',
+		cleanUpData: [],
+		cleanUpStatus: {available: true, complete: false, busy: false},
 	};
-
 
 	constructor(props: ContentPaneProps) {
 		super(props);
@@ -224,19 +208,13 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				/>,
 
 			/* Clean up */
-			<ScenarioStep 
-				key='step08'
-				step={this.state.step08} 
-				data={this.state.stepData08} 
+			<S1_CleanUp
+				key='s1_cleanup'
 				paneProps={this.props}
-				>
-				<Button
-					disabled={!this.state.step08.available}
-					onClick={this.handleCleanUpClick}
-					>
-					Go
-				</Button>
-			</ScenarioStep>,
+				cleanUp={this.cleanUp}
+				status={this.state.cleanUpStatus}
+				data={this.state.cleanUpData}
+				/>,
 		]
     );
 	}
@@ -265,6 +243,9 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			case 7:
 				this.setState({notificationStatus: status});
 				break;
+			case 8:
+				this.setState({cleanUpStatus: status});
+				break;
 		}
 	}
 
@@ -292,7 +273,48 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 			case 7:
 				this.setState({notificationData: data});
 				break;
+			case 8:
+				this.setState({cleanUpData: data});
+				break;
 		}
+	}
+
+	private cleanUp = () => {
+		// **** flag busy ****
+
+		this.setState({cleanUpStatus: {available: true, complete: false, busy: true}});
+
+		let info: string = 'Cleaning up...\n';
+
+		// **** build our string ****
+
+		if (this.state.subscription) {
+			info += `\tRemoved subscription: ${this.state.subscription.id!}\n`;
+		}
+
+		if (this.state.endpoint) {
+			info += `\tRemoved endpoint: ${this.state.endpoint.uid!}\n`;
+		}
+
+		info += '\tCleaned internal steps.\n'
+		info += `Cleaned at: ${Date()}`;
+
+		// **** reset to step 2 (removes endpoints and subscriptions) ****
+
+		this.disableSteps(2);
+
+		// **** done ****
+
+		let data: SingleRequestData = {
+			id: 'cleanup',
+			name: 'Clean Up',
+			info: info,
+		}
+
+		this.setState({
+			cleanUpStatus: {available: true, complete: true, busy: false},
+			cleanUpData: [data],
+		})
 	}
 
 	private registerEncounterSent = () => {
@@ -373,10 +395,14 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 		let current: DataCardStatus = {...this.state.patientStatus, available: true, complete: true, busy: false};
 		let next: DataCardStatus = {...this.state.endpointStatus, available: true, complete: false, busy: false};
 
+		// **** update state, also update CleanUp step to show it isn't complete ****
+
 		this.setState({
 			selectedPatientId: id, 
 			patientStatus: current,
 			endpointStatus: next,
+			cleanUpStatus: {available: true, complete: false, busy: false},
+			cleanUpData: [],
 		});
 	}
 
@@ -476,13 +502,6 @@ export class Scenario1Pane extends React.PureComponent<ContentPaneProps> {
 				triggerCount: pendingNotifications
 			});
 		}
-	}
-
-	/** Handle user clicks on the CleanUp button (delete Subscription from FHIR Server, Endpoint from ClientHost) */
-	private handleCleanUpClick = () => {
-		// **** reset to step 2 (removes endpoints and subscriptions) ****
-
-		this.disableSteps(2);
 	}
 
 	private disableSteps = (startingAt: number) => {

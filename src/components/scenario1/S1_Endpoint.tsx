@@ -28,20 +28,13 @@ export default function S1_Endpoint(props: S1_EndpointProps) {
     optional: false,
   };
 
-  let [endpointNeeded, setEndpointNeeded] = useState<boolean>(true);
-
   useEffect(() => {
     // **** check for available and endpoint is needed ****
 
-    if ((props.status.available) && (endpointNeeded)) {
-      setEndpointNeeded(false);
+    if ((props.status.available) && (!props.status.busy) && (!props.status.complete)) {
       createEndpoint();
     }
-
-    if ((!props.status.available) && (!endpointNeeded)) {
-      setEndpointNeeded(true);
-    }
-  }, [endpointNeeded, props.status.available]);
+  }, [props.status.available, props.status.busy, props.status.complete]);
 
   function createEndpoint() {
     props.updateStatus(info.stepNumber!, {...props.status, busy: true});

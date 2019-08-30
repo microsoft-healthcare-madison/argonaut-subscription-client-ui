@@ -33,7 +33,7 @@ export default function S1_Trigger(props: S1_TriggerProps) {
     optional: false,
   };
   
-  const [encounterClass, setPayloadType] = useState<string>('virtual');
+  const [encounterClass, setPayloadType] = useState<string>('VR');
   const encounterStatus: string = 'in-progress';
   
   function sendEncounter() {

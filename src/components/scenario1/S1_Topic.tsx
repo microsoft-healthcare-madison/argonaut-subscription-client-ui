@@ -97,7 +97,7 @@ export default function S1_Topic(props: S1_TopicProps) {
       paneProps={props.paneProps}
       >
       <Button
-        disabled={!props.status.available}
+        disabled={(!props.status.available) || (props.status.busy)}
         onClick={handleGetTopicListClick}
         >
         Go

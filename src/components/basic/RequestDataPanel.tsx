@@ -20,26 +20,35 @@ export interface RequestPanelProps {
 export default function RequestDataPanel(props: RequestPanelProps) {
 
   const [selectedTabId, setSelectedTabId] = useState<string>('');
+  const [displayedTabId, setDisplayedTabId] = useState<string>('');
 
-  const dataRowIndex:number = (props.selectedDataRowIndex === undefined)
+  const dataRowIndex:number = ((props.selectedDataRowIndex === undefined) || (props.selectedDataRowIndex === -1))
     ? (props.data ? props.data.length - 1 : -1 )
     : props.selectedDataRowIndex!;
 
   useEffect(() => {
-    if ((!props.data) || (props.data.length === 0)) {
-      setSelectedTabId('');
+    if ((selectedTabId === displayedTabId) && (selectedTabId !== '')) {
       return;
+    }
+
+    if ((!props.data) || (props.data.length === 0)) {
+      setDisplayedTabId('');
+      return;
+    }
+
+    if (selectedTabId !== '') {
+      setDisplayedTabId(selectedTabId);
     }
       
     if (selectedTabId === '') {
       if (props.data[dataRowIndex].info) {
-        setSelectedTabId('info');
+        setDisplayedTabId('info');
       } else if (props.data[dataRowIndex].responseData) {
-        setSelectedTabId('response_data');
+        setDisplayedTabId('response_data');
       } else if (props.data[dataRowIndex].requestData) {
-        setSelectedTabId('request_data');
+        setDisplayedTabId('request_data');
       } else if (props.data[dataRowIndex].requestUrl) {
-        setSelectedTabId('request_url');
+        setDisplayedTabId('request_url');
       }
     }
   }, [props.data, selectedTabId, dataRowIndex]);
@@ -101,7 +110,7 @@ export default function RequestDataPanel(props: RequestPanelProps) {
     <Tabs
       animate={true}
       vertical={true}
-      selectedTabId={selectedTabId}
+      selectedTabId={displayedTabId}
       onChange={handleTabChange}
       >
       <div>

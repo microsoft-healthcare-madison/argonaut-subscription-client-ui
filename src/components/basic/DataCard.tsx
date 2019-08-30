@@ -7,6 +7,7 @@ import {
   Intent,
   Spinner,
   Button,
+  HTMLSelect,
 } from '@blueprintjs/core';
 
 import {IconNames} from '@blueprintjs/icons';
@@ -26,11 +27,12 @@ export interface DataCardProps {
 
 export default function DataCard(props: DataCardProps) {
 
-  const [showContent, toggleShowContent] = React.useState<boolean>(true);
+  const [showContent, setShowContent] = React.useState<boolean>(true);
+  const [selectedDataIndex, setSelectedDataIndex] = React.useState<number>(-1);
 
   /** Function to toggle show/hide of this card's content */
   function handleToggleCardContentClick() {
-    toggleShowContent(!showContent);
+    setShowContent(!showContent);
   }
 
   /** Function to get an appropriate icon for this card */
@@ -50,6 +52,11 @@ export default function DataCard(props: DataCardProps) {
     return(<Icon icon={IconNames.DISABLE} intent={Intent.WARNING} iconSize={Icon.SIZE_STANDARD} />);
   }
 
+  /** Process HTML events for the data index select box */
+	function handleDataIndexChange(event: React.FormEvent<HTMLSelectElement>) {
+		setSelectedDataIndex(parseInt(event.currentTarget.value));
+  }
+
   // **** return our component ****
 
   return (
@@ -63,7 +70,21 @@ export default function DataCard(props: DataCardProps) {
       <div style={{float:'left', width: '20px', marginLeft: '5px', marginRight: '10px'}}>
         {iconForCard()}
       </div>
-      <H5>{props.info.optional ? '(Optional) ':''}{props.info.heading}</H5>
+      <H5>{props.info.optional ? '(Optional) ':''}{props.info.heading}
+        { ((showContent) && (props.data.length > 1)) &&
+        <HTMLSelect
+          id='index-selector'
+          value={selectedDataIndex}
+          onChange={handleDataIndexChange}
+          style={{margin: 5}}
+          >
+          <option value={-1}>Latest</option>
+          { props.data.map((value, index) => (
+            <option key={index} value={index}>{value.name}</option> 
+            ))}
+        </HTMLSelect>
+        }
+      </H5>
       { showContent &&
         <div>
           <H6>{props.info.description}</H6>
@@ -72,6 +93,7 @@ export default function DataCard(props: DataCardProps) {
           <RequestDataPanel
             paneProps={props.paneProps}
             data={props.data}
+            selectedDataRowIndex={selectedDataIndex}
             />
         </div>
       }
