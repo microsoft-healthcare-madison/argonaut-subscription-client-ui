@@ -51,7 +51,7 @@ export default function RequestDataPanel(props: RequestPanelProps) {
         setDisplayedTabId('request_url');
       }
     }
-  }, [props.data, selectedTabId, dataRowIndex]);
+  }, [props.data, selectedTabId, displayedTabId, dataRowIndex]);
 
   // **** check for no data ****
 

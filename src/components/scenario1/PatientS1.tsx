@@ -11,17 +11,17 @@ import PatientSearchCard from '../common/PatientSearchCard';
 import PatientCreateCard from '../common/PatientCreateCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 
-export interface S1_PatientProps {
+export interface PatientS1Props {
   paneProps: ContentPaneProps,
   registerSelectedPatientId: ((patientId: string) => void),
   status: DataCardStatus,
-  updateStatus: ((step: number, status: DataCardStatus) => void),
+  updateStatus: ((status: DataCardStatus) => void),
   data: SingleRequestData[],
-  setData: ((step: number, data: SingleRequestData[]) => void),
+  setData: ((data: SingleRequestData[]) => void),
 }
 
 /** Component representing the Scenario 1 Patient Card */
-export default function S1_Patient(props: S1_PatientProps) {
+export default function PatientS1(props: PatientS1Props) {
 
   const info: DataCardInfo = {
     id: 's1_patient',
@@ -44,14 +44,14 @@ export default function S1_Patient(props: S1_PatientProps) {
     // **** add to our data ****
     if ((props.data) && (props.data.length > 0)) {
       let updated: SingleRequestData = {...props.data[0], info: `Using patient id: ${patientId}`};
-      props.setData(info.stepNumber!, [updated]);
+      props.setData([updated]);
     } else {
       let updated: SingleRequestData = {
         name: 'Patient',
         id: 'patient',
         info: `Using patient id: ${patientId}`,
       }
-      props.setData(info.stepNumber!, [updated]);
+      props.setData([updated]);
     }
 
     // **** register with parent ****

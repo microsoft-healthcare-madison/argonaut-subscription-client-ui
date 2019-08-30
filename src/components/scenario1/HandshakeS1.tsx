@@ -6,14 +6,14 @@ import { SingleRequestData } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 
-export interface S1_HandshakeProps {
+export interface HandshakeS1Props {
   paneProps: ContentPaneProps,
   status: DataCardStatus,
   data: SingleRequestData[],
 }
 
 /** Component representing the Scenario 1 Handshake Card */
-export default function S1_Handshake(props: S1_HandshakeProps) {
+export default function HandshakeS1(props: HandshakeS1Props) {
 
   const info: DataCardInfo = {
     id: 's1_handshake',

@@ -1,6 +1,6 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 
-import { 
+import {
   IconName,
   Toaster,
   Position,
@@ -11,8 +11,7 @@ import {
 import {IconNames} from '@blueprintjs/icons';
 
 import {ConfigurationPane} from './ConfigurationPane';
-import {Scenario1Pane} from './scenario1/Scenario1Pane';
-import {Scenario2Pane} from './Scenario2Pane';
+import Scenario2Pane from './Scenario2Pane';
 import { UiTabInformation } from '../models/UiTabInformation';
 import MainNavigation from './MainNavigation';
 import { ConnectionInformation } from '../models/ConnectionInformation';
@@ -20,14 +19,14 @@ import { StorageHelper } from '../util/StorageHelper';
 import { PlaygroundPane } from './PlaygroundPane';
 import { CopyHelper } from '../util/CopyHelper';
 import { BasicObjectStore } from '../util/BasicObjectStore';
+import ScenarioPane1 from './scenario1/ScenarioPane1';
 
 /** tab configuration - MUST be in 'id' order - first tab is shown at launch */
 let _tabs: UiTabInformation[] = [
   {title: 'Config', tip: 'Configure Settings and Servers', id: '0', panel: React.createFactory(ConfigurationPane)},
-  {title: 'Patient+REST', tip:'Single Patient to REST-Hook', id: '1', panel: React.createFactory(Scenario1Pane)},
+  {title: 'Patient+REST', tip:'Single Patient to REST-Hook', id: '1', panel: React.createFactory(ScenarioPane1)},
   {title: 'Group+REST', tip:'Patient Group to REST-Hook', id: '2', panel: React.createFactory(Scenario2Pane)},
   {title: 'Playground', tip:'Playground for testing Subscriptions', id: '3', panel: React.createFactory(PlaygroundPane)},
-  // {title: 'Trigger', tip:'Manual trigger events', id: '3', panel: React.createFactory(TriggerPane)},
 ]
 
 // **** extend the Window to include our _env settings ****
@@ -45,22 +44,23 @@ export interface MainPageProps {}
 export default function MainPage() {
   // **** set up local state ****
 
-  const [initialLoad, setInitialLoad] = useState<boolean>(true);
+  const initialLoadRef = useRef<boolean>(true);
+
   const [selectedNavbarTabId, setSelectedNavbarTabId] = useState<string>(_tabs[0].id);
   const [fhirServerInfo, setFhirServerInfo] = useState<ConnectionInformation>({
-      name: 'FHIR Server', 
+      name: 'FHIR Server',
       hint: 'URL for an R4 FHIR Server with Subscription and Topic support',
-      url: window._env.Server_Public_Url, 
-      status: '', 
+      url: window._env.Server_Public_Url,
+      status: '',
       showMessages: false,
       logMessages: false,
       registration: '',
     });
   const [clientHostInfo, setClientHostInfo] = useState<ConnectionInformation>({
-      name: 'Client Host', 
+      name: 'Client Host',
       hint: 'URL for a running argonaut-client-host service - creates endpoints and forwards notifications to this UI',
-      url: window._env.Client_Public_Url, 
-      status: '', 
+      url: window._env.Client_Public_Url,
+      status: '',
       showMessages: false,
       logMessages: false,
       registration: '',
@@ -73,9 +73,9 @@ export default function MainPage() {
   useEffect(() => {
     // **** check for initial load ****
 
-    if (initialLoad) {
+    if (initialLoadRef.current) {
         // **** check for local storage settings ****
-      
+
       if (StorageHelper.isLocalStorageAvailable) {
         // **** update local settings ****
 
@@ -100,50 +100,74 @@ export default function MainPage() {
         setClientHostInfo(clientInfo);
 
         if (localStorage.getItem('uiDark') === 'true') {
-          toggleUiColors();
+          setUiDark(true);
         }
 
         if (localStorage.getItem('codePaneDark') === 'true') {
-          toggleCodePaneColors();
+          setCodePaneDark(true);
         }
       }
 
       // **** no longer initial load ****
 
-      setInitialLoad(false);
+      initialLoadRef.current = false;
     }
-  }, 
-  [clientHostInfo, fhirServerInfo, toggleUiColors, toggleCodePaneColors, initialLoad]);
+  },
+  [clientHostInfo, fhirServerInfo, uiDark, codePaneDark]);
 
   /** Function to toggle the UI colors (light/dark) */
   function toggleUiColors() {
-    // **** update DOM elements ****
-
-    var rootElement: HTMLElement = document.getElementById("root")!;
-    rootElement.className = rootElement.className === 'bp3-dark' ? '' : 'bp3-dark';
-
-    document.body.className = document.body.className === 'body-dark' ? '' : 'body-dark';
-
-    if (StorageHelper.isLocalStorageAvailable) {
-      localStorage.setItem('uiDark', (!uiDark).toString());
-    }
-
-    // **** update state ****
-
     setUiDark(!uiDark);
   };
+  useEffect(() => {
+    var rootElement: HTMLElement = document.getElementById("root")!;
+
+    if (uiDark) {
+      // **** update DOM elements ****
+
+      // rootElement.className = rootElement.className === 'bp3-dark' ? '' : 'bp3-dark';
+      if (rootElement.className !== 'bp3-dark') {
+        rootElement.className = 'bp3-dark';
+      }
+      // document.body.className = document.body.className === 'body-dark' ? '' : 'body-dark';
+      if (document.body.className !== 'body-dark') {
+        document.body.className = 'body-dark';
+      }
+
+      if (StorageHelper.isLocalStorageAvailable) {
+        localStorage.setItem('uiDark', (uiDark).toString());
+      }
+
+      return;
+    }
+
+    // **** update DOM elements ****
+
+    // rootElement.className = rootElement.className === 'bp3-dark' ? '' : 'bp3-dark';
+    if (rootElement.className === 'bp3-dark') {
+      rootElement.className = '';
+    }
+    // document.body.className = document.body.className === 'body-dark' ? '' : 'body-dark';
+    if (document.body.className === 'body-dark') {
+      document.body.className = '';
+    }
+
+    if (StorageHelper.isLocalStorageAvailable) {
+      localStorage.setItem('uiDark', (uiDark).toString());
+    }
+    
+  }, [uiDark]);
 
   /** Function to toggle the code pane colors (light/dark) */
   function toggleCodePaneColors() {
-    if (StorageHelper.isLocalStorageAvailable) {
-      localStorage.setItem('codePaneDark', (!codePaneDark).toString());
-    }
-
-    // **** update state ****
-
     setCodePaneDark(!codePaneDark);
   };
-  
+  useEffect(() => {
+    if (StorageHelper.isLocalStorageAvailable) {
+      localStorage.setItem('codePaneDark', (codePaneDark).toString());
+    }
+  }, [codePaneDark]);
+
   /** Function to connect a ClientHost WebSocket to the specified host (max: 1) */
   function connectToClientHostWebSocket(clientHostInfo: ConnectionInformation) {
     // **** close any existing Client Host websocket connections  ****
@@ -157,7 +181,7 @@ export default function MainPage() {
     // **** build the websocket URL ****
 
     let wsUrl: string = new URL(
-      '/websockets?uid='+clientHostInfo.registration, 
+      '/websockets?uid='+clientHostInfo.registration,
       clientHostInfo.url.replace('http', 'ws')).toString();
 
     // **** connect to our server ****
@@ -181,7 +205,7 @@ export default function MainPage() {
   function handleClientHostWebSocketError(event: Event) {
     // **** close our websocket ****
 
-    var updatedInfo: ConnectionInformation = {...clientHostInfo, 
+    var updatedInfo: ConnectionInformation = {...clientHostInfo,
       status: ''
     };
     setClientHostInfo(updatedInfo);
@@ -195,7 +219,7 @@ export default function MainPage() {
   function handleClientHostWebSocketClose(event: Event) {
     // **** close our websocket ****
 
-    var updatedInfo: ConnectionInformation = {...clientHostInfo, 
+    var updatedInfo: ConnectionInformation = {...clientHostInfo,
       status: ''
     };
     setClientHostInfo(updatedInfo);
@@ -283,14 +307,14 @@ export default function MainPage() {
   return (
     <div>
       {/* Render the navigation bar */}
-      <MainNavigation 
-        selectedTabId={selectedNavbarTabId} 
-        tabs={_tabs} 
+      <MainNavigation
+        selectedTabId={selectedNavbarTabId}
+        tabs={_tabs}
         onSelectedTabChanged={setSelectedNavbarTabId}
         fhirServerInfo={fhirServerInfo}
         clientHostInfo={clientHostInfo}
         />
-      <div id='mainContent'>
+      {/* <div id='mainContent'> */}
         {/* Render the correct content pane, as selected in our tabs above */}
         { _tabs[Number(selectedNavbarTabId)].panel({
           fhirServerInfo: fhirServerInfo,
@@ -306,7 +330,7 @@ export default function MainPage() {
           toggleCodePaneColors:toggleCodePaneColors,
           copyToClipboard: copyToClipboard,
         }) }
-      </div>
+      {/* </div> */}
     </div>
   );
 }

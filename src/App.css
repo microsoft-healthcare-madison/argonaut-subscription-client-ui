@@ -26,7 +26,7 @@
 
 .codeTab {
   overflow: auto !important;
-  max-height: 500px;
+  max-height: 510px;
   max-width: calc(100vw - 250px);
   min-width: 50vw;
 }

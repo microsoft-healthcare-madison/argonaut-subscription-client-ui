@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 
 import {
-  HTMLSelect, Button, FormGroup, InputGroup, Spinner,
+  HTMLSelect, Button, FormGroup, InputGroup,
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { DataCardInfo } from '../../models/DataCardInfo';
@@ -12,19 +12,19 @@ import { EndpointRegistration } from '../../models/EndpointRegistration';
 import { ApiHelper } from '../../util/ApiHelper';
 import * as fhir from '../../models/fhir_r4_selected';
 
-export interface S1_SubscriptionProps {
+export interface SubscriptionS1Props {
   paneProps: ContentPaneProps,
   registerSubscription: ((subscription: fhir.Subscription) => void),
   status: DataCardStatus,
-  updateStatus: ((step: number, status: DataCardStatus) => void),
+  updateStatus: ((status: DataCardStatus) => void),
   data: SingleRequestData[],
-  setData: ((step: number, data: SingleRequestData[]) => void),
+  setData: ((data: SingleRequestData[]) => void),
   selectedPatientId: string,
   endpoint: EndpointRegistration,
 }
 
 /** Component representing the Scenario 1 Subscription Card */
-export default function S1_Subscription(props: S1_SubscriptionProps) {
+export default function SubscriptionS1(props: SubscriptionS1Props) {
 
   const info: DataCardInfo = {
     id: 's1_subscription',
@@ -43,7 +43,7 @@ export default function S1_Subscription(props: S1_SubscriptionProps) {
   }
   
   function createSubscription() {
-    props.updateStatus(info.stepNumber!, {...props.status, busy: true});
+    props.updateStatus({...props.status, busy: true});
 
 		// **** build the url for our call ***
 
@@ -103,7 +103,7 @@ export default function S1_Subscription(props: S1_SubscriptionProps) {
           responseDataType: RenderDataAsTypes.FHIR,
           };
 
-        props.setData(info.stepNumber!, [updated]);
+        props.setData([updated]);
 
         // **** register this subscription (updates status) ****
 
@@ -120,8 +120,8 @@ export default function S1_Subscription(props: S1_SubscriptionProps) {
           responseDataType: RenderDataAsTypes.Error
           };
 
-        props.setData(info.stepNumber!, [updated]);
-        props.updateStatus(info.stepNumber!, {...props.status, busy: false});
+        props.setData([updated]);
+        props.updateStatus({...props.status, busy: false});
 			});
   }
 

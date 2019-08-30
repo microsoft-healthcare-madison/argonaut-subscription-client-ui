@@ -100,7 +100,8 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
 	}
 
   public render() {
-    return ([
+    return (
+	  <div id='mainContent'>
       <Card elevation={Elevation.TWO} key='config_card'>
         <FormGroup
           label = {this.props.fhirServerInfo.name + ' URL'}
@@ -153,7 +154,7 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
           label='Use Dark Theme for Code Pane'
           onChange={() => this.props.toggleCodePaneColors(true)}
           />
-      </Card>,
+      </Card>
       <Card elevation={Elevation.TWO} key='info_card'>
         <Text>
 					<H5>Argonaut Subscriptions Reference Implementation</H5>
@@ -231,8 +232,9 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
             </tbody>
           </HTMLTable>
 				</Text>
-      </Card>,
-    ]);
+      </Card>
+    </div>
+    );
   }
 
   /** Event handler for toggling the Show Client Host Messages switch */

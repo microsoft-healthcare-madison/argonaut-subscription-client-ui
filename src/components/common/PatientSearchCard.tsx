@@ -13,7 +13,7 @@ import { DataCardInfo } from '../../models/DataCardInfo';
 export interface PatientSearchProps {
   paneProps: ContentPaneProps,
   info: DataCardInfo,
-  setData: ((step: number, data: SingleRequestData[]) => void),
+  setData: ((data: SingleRequestData[]) => void),
   registerSelectedPatient: ((patientId: string) => void),
 }
 
@@ -105,7 +105,7 @@ export default function PatientSearchCard(props: PatientSearchProps) {
 
         setBusy(false);
         setPatients(bundlePatients);
-        props.setData(props.info.stepNumber!, data);
+        props.setData(data);
       })
       .catch((reason: any) => {
         // **** build data for display ****
@@ -124,7 +124,7 @@ export default function PatientSearchCard(props: PatientSearchProps) {
 
         setBusy(false);
         setPatients([]);
-        props.setData(props.info.stepNumber!, data);
+        props.setData(data);
 			})
       ;
 	}

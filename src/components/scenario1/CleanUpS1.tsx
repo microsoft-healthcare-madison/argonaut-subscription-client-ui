@@ -5,13 +5,11 @@ import {
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { DataCardInfo } from '../../models/DataCardInfo';
-import { ApiHelper } from '../../util/ApiHelper';
-import * as fhir from '../../models/fhir_r4_selected';
-import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
+import { SingleRequestData } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 
-export interface S1_CleanUpProps {
+export interface CleanUpS1Props {
   paneProps: ContentPaneProps,
   cleanUp: (() => void),
   status: DataCardStatus,
@@ -19,7 +17,7 @@ export interface S1_CleanUpProps {
 }
 
 /** Component representing the Scenario 1 Clean Up Card */
-export default function S1_CleanUp(props: S1_CleanUpProps) {
+export default function CleanUpS1(props: CleanUpS1Props) {
 
   const info: DataCardInfo = {
     id: 's1_cleanup',

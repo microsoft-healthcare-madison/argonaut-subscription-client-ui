@@ -2,23 +2,20 @@ import * as React from 'react';
 
 // import {IconNames} from "@blueprintjs/icons";
 import { ContentPaneProps } from '../models/ContentPaneProps';
-import { Card } from '@blueprintjs/core';
+import { Card, Elevation, NonIdealState } from '@blueprintjs/core';
+import { IconNames } from '@blueprintjs/icons';
 
-export class Scenario2Pane extends React.PureComponent<ContentPaneProps> {
-  public state = {
-      isOpen : false,
-  };
-
-  public render() {
-    return (
-      <Card>
-        <h5>Not Yet Implemented</h5>
-      </Card>
-
-    );
-  }
-
-  private handleClick = () => {
-    this.setState({isOpen: !this.state.isOpen});
-}
+export default function Scenario2Pane(props: ContentPaneProps) {
+  return(
+		<div id='mainContent'>
+			<Card elevation={Elevation.TWO}>
+				<NonIdealState
+					icon={IconNames.ISSUE}
+					title='Not Implemented'
+          description='Scenario 2 has not yet been implemented in the User Interface.
+            Thank you for your patience.'
+					/>
+			</Card>
+		</div>
+  );
 }

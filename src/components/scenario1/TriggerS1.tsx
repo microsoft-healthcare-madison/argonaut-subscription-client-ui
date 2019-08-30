@@ -1,29 +1,28 @@
 import React, {useState} from 'react';
 
 import {
-  HTMLSelect, Button, FormGroup, InputGroup, Spinner,
+  HTMLSelect, Button, FormGroup,
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { DataCardInfo } from '../../models/DataCardInfo';
 import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
-import { EndpointRegistration } from '../../models/EndpointRegistration';
 import { ApiHelper } from '../../util/ApiHelper';
 import * as fhir from '../../models/fhir_r4_selected';
 
-export interface S1_TriggerProps {
+export interface TriggerS1Props {
   paneProps: ContentPaneProps,
   registerEncounterSent: (() => void),
   status: DataCardStatus,
-  updateStatus: ((step: number, status: DataCardStatus) => void),
+  updateStatus: ((status: DataCardStatus) => void),
   data: SingleRequestData[],
-  setData: ((step: number, data: SingleRequestData[]) => void),
+  setData: ((data: SingleRequestData[]) => void),
   selectedPatientId: string,
 }
 
 /** Component representing the Scenario 1 Trigger Card */
-export default function S1_Trigger(props: S1_TriggerProps) {
+export default function TriggerS1(props: TriggerS1Props) {
 
   const info: DataCardInfo = {
     id: 's1_trigger',
@@ -37,7 +36,7 @@ export default function S1_Trigger(props: S1_TriggerProps) {
   const encounterStatus: string = 'in-progress';
   
   function sendEncounter() {
-    props.updateStatus(info.stepNumber!, {...props.status, busy: true});
+    props.updateStatus({...props.status, busy: true});
 
 		// **** build the url for our call ***
 
@@ -73,8 +72,8 @@ export default function S1_Trigger(props: S1_TriggerProps) {
           responseDataType: RenderDataAsTypes.FHIR,
           };
 
-        props.setData(info.stepNumber!, [updated]);
-        props.updateStatus(info.stepNumber!, {...props.status, busy: false});
+        props.setData([updated]);
+        props.updateStatus({...props.status, busy: false});
 
         props.registerEncounterSent();
 			})
@@ -91,8 +90,8 @@ export default function S1_Trigger(props: S1_TriggerProps) {
           responseDataType: RenderDataAsTypes.Error
           };
 
-        props.setData(info.stepNumber!, [updated]);
-        props.updateStatus(info.stepNumber!, {...props.status, busy: false});
+        props.setData([updated]);
+        props.updateStatus({...props.status, busy: false});
 			});
   }
 

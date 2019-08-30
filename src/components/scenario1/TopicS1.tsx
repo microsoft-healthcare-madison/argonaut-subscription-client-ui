@@ -11,16 +11,16 @@ import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 
-export interface S1_TopicProps {
+export interface TopicS1Props {
   paneProps: ContentPaneProps,
   status: DataCardStatus,
-  updateStatus: ((step: number, status: DataCardStatus) => void),
+  updateStatus: ((status: DataCardStatus) => void),
   data: SingleRequestData[],
-  setData: ((step: number, data: SingleRequestData[]) => void),
+  setData: ((data: SingleRequestData[]) => void),
 }
 
 /** Component representing the Scenario 1 Topic Card */
-export default function S1_Topic(props: S1_TopicProps) {
+export default function TopicS1(props: TopicS1Props) {
 
   const info: DataCardInfo = {
     id: 's1_topic',
@@ -34,7 +34,7 @@ export default function S1_Topic(props: S1_TopicProps) {
   function handleGetTopicListClick() {
     // **** update our state to show we are busy ****
 
-    props.updateStatus(info.stepNumber!, {...props.status, busy: true});
+    props.updateStatus({...props.status, busy: true});
 
     // **** construct the registration REST url ****
 
@@ -58,11 +58,11 @@ export default function S1_Topic(props: S1_TopicProps) {
 
         // **** update data ****
 
-        props.setData(info.stepNumber!, data);
+        props.setData(data);
 
         // **** update our step (completed) ****
 
-        props.updateStatus(info.stepNumber!, {available: true, complete: true, busy: false});
+        props.updateStatus({available: true, complete: true, busy: false});
       })
       .catch((reason: any) => {
         // **** build data for display ****
@@ -79,11 +79,11 @@ export default function S1_Topic(props: S1_TopicProps) {
 
         // **** update data ****
 
-        props.setData(info.stepNumber!, data);
+        props.setData(data);
 
         // **** update our step (failed) ****
 
-        props.updateStatus(info.stepNumber!, {available: true, complete: false, busy: false});
+        props.updateStatus({available: true, complete: false, busy: false});
 			})
       ;
   }
