@@ -16,7 +16,7 @@ export interface EndpointPlaygroundProps {
   data: SingleRequestData[],
   setData: ((data: SingleRequestData[]) => void),
   endpoints: EndpointRegistration[],
-  registerEndpoint: ((endpoint: EndpointRegistration) => void),
+  setEndpoints: ((data: EndpointRegistration[]) => void),
 }
 
 /** Component representing the Playground Endpoint Card */
@@ -67,13 +67,19 @@ export default function EndpointPlayground(props: EndpointPlaygroundProps) {
         updatedData.push(updated);
         props.setData(updatedData);
 
-        // **** register this endpoint (updates status) ****
+        // **** update our endpoints ****
 
-        props.registerEndpoint(value);
+        let values: EndpointRegistration[] = props.endpoints.slice();
+        values.push(value);
+        props.setEndpoints(values);
 
         // **** increment our endpoint counter ****
 
         endpointCountRef.current = endpointCountRef.current + 1;
+
+        // **** clear our busy status ****
+
+        props.updateStatus({...props.status, busy: false});
       })
       .catch((reason: any) => {
         
@@ -92,6 +98,60 @@ export default function EndpointPlayground(props: EndpointPlaygroundProps) {
       });
   };
 
+  function removeEndpoint(index: number) {
+    if ((index < 0) || (index >= props.endpoints.length)) {
+      return;
+    }
+    // **** flag busy ****
+
+    props.updateStatus({...props.status, busy: true});
+
+    // **** grab our endpoint ****
+
+    let endpoint: EndpointRegistration = props.endpoints[index];
+
+    // **** build the url for our call ***
+
+    let url: string = new URL(
+      `api/Clients/${props.paneProps.clientHostInfo.registration}/Endpoints/${endpoint.uid!}`, 
+      props.paneProps.clientHostInfo.url
+      ).toString();
+
+    // **** ask for this endpoint to be created ****
+
+    ApiHelper.apiDelete(url)
+      .then(() => {
+        let updatedData: SingleRequestData[] = props.data.slice();
+        updatedData.splice(index, 1);
+        props.setData(updatedData);
+
+        // **** update our endpoints ****
+
+        let values: EndpointRegistration[] = props.endpoints.slice();
+        values.splice(index, 1);
+        props.setEndpoints(values);
+
+        // **** clear our busy status ****
+
+        props.updateStatus({...props.status, busy: false});
+      })
+      .catch((reason: any) => {
+        let updatedData: SingleRequestData[] = props.data.slice();
+        updatedData.splice(index, 1);
+        props.setData(updatedData);
+
+        // **** update our endpoints ****
+
+        let values: EndpointRegistration[] = props.endpoints.slice();
+        values.splice(index, 1);
+        props.setEndpoints(values);
+
+        // **** clear our busy status ****
+
+        props.updateStatus({...props.status, busy: false});
+      });
+  }
+
   /** Return this component */
   return(
     <DataCard
@@ -99,6 +159,7 @@ export default function EndpointPlayground(props: EndpointPlaygroundProps) {
       data={props.data}
       paneProps={props.paneProps}
       status={props.status}
+      processRowDelete={removeEndpoint}
       >
       <Button
         onClick={createEndpoint}

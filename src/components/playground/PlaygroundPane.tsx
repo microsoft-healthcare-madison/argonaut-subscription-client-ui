@@ -19,25 +19,25 @@ import EndpointPlayground from './EndpointPlayground';
 export default function PlaygroundPane(props: ContentPaneProps) {
 
 	const _statusAvailable: DataCardStatus = {available: true, complete: false, busy: false};
-	const _statusNotAvailable: DataCardStatus = {available: false, complete: false, busy: false};
+	// const _statusNotAvailable: DataCardStatus = {available: false, complete: false, busy: false};
 	const _statusBusy: DataCardStatus = {available: true, complete: false, busy: true};
 	const _statusComplete: DataCardStatus = {available: true, complete: true, busy: false};
 
 	const [connected, setConnected] = useState<boolean>(true);
-	
+
 	const [notificationData, setNotificationData] = useState<SingleRequestData[]>([]);
-	const [notificationStatus, setNotificationStatus] = useState<DataCardStatus>(_statusNotAvailable);
+	const [notificationStatus, setNotificationStatus] = useState<DataCardStatus>(_statusAvailable);
 
 	const [topicData, setTopicData] = useState<SingleRequestData[]>([]);
 	const [topicStatus, setTopicStatus] = useState<DataCardStatus>(_statusAvailable);
 	const [topics, setTopics] = useState<fhir.Topic[]>([]);
-	
+
 	const [endpointData, setEndpointData] = useState<SingleRequestData[]>([]);
-	const [endpointStatus, setEndpointStatus] = useState<DataCardStatus>(_statusNotAvailable);
+	const [endpointStatus, setEndpointStatus] = useState<DataCardStatus>(_statusAvailable);
 	const [endpoints, setEndpoints] = useState<EndpointRegistration[]>([]);
 
 	const [subscriptionData, setSubscriptionData] = useState<SingleRequestData[]>([]);
-	const [subscriptionStatus, setSubscriptionStatus] = useState<DataCardStatus>(_statusNotAvailable);
+	const [subscriptionStatus, setSubscriptionStatus] = useState<DataCardStatus>(_statusAvailable);
 	const [subscriptions, setSubscriptions] = useState<fhir.Subscription[]>([]);
 
 
@@ -66,9 +66,9 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 
 		props.registerHostMessageHandler(handleHostMessage);
 	});
-	
+
 	// **** check for not being connected ****
-	
+
 	if (!connected) {
 	return(
 		<div id='mainContent'>
@@ -127,7 +127,7 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 		// }
 	}
 
-	
+
 	/** Register a subscription as active in this scenario */
 	function registerSubscription(value: fhir.Subscription) {
 		let values: fhir.Subscription[] = {...subscriptions};
@@ -143,20 +143,6 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 		setNotificationStatus(_statusBusy);
 	}
 
-	/** Register an endpoint as active in this scenario */
-	function registerEndpoint(value: EndpointRegistration) {
-
-		let values: EndpointRegistration[] = endpoints.slice();
-		values.push(value);
-		setEndpoints(values);
-
-		// **** update status ****
-
-		setEndpointStatus(_statusComplete);
-		setSubscriptionStatus(_statusAvailable);
-	}
-
-	
 	// **** if we are connected, render scenario content ****
 	return (
 		<div id='mainContent'>
@@ -185,7 +171,7 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 				setData={setTopicData}
 				setTopics={setTopics}
 				/>
-			
+
 			{/* Endpoint Playground Card */}
 			<EndpointPlayground
 				key='playground_endpoint'
@@ -195,9 +181,9 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 				data={endpointData}
 				setData={setEndpointData}
 				endpoints={endpoints}
-				registerEndpoint={registerEndpoint}
+				setEndpoints={setEndpoints}
 				/>
-			
+
 			{/* Subscription Playground Card */}
 			<SubscriptionPlayground
 				key='playground_subscription'
@@ -212,7 +198,7 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 				topics={topics}
 				/>
 		</div>
-	);	
+	);
 
 
 }

@@ -114,6 +114,14 @@ export default function RequestDataPanel(props: RequestPanelProps) {
       onChange={handleTabChange}
       >
       <div>
+        <Tooltip content='Copy To Clipboard'>
+          <Button 
+            icon={IconNames.DUPLICATE} 
+            minimal 
+            style={{marginLeft:5, marginRight:5, marginTop:10}}
+            onClick={handleCopyClick}
+            />
+        </Tooltip>
         { (props.processRowDelete !== undefined) &&
           <Tooltip content='Delete'>
             <Button 
@@ -124,14 +132,6 @@ export default function RequestDataPanel(props: RequestPanelProps) {
               />
           </Tooltip>
         }
-        <Tooltip content='Copy To Clipboard'>
-          <Button 
-            icon={IconNames.DUPLICATE} 
-            minimal 
-            style={{marginLeft:5, marginRight:5, marginTop:10}}
-            onClick={handleCopyClick}
-            />
-        </Tooltip>
       </div>
       { (props.data[dataRowIndex].requestUrl !== undefined) &&
         <Tab

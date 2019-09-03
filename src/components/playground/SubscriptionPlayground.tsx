@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 
 import {
-  HTMLSelect, Button, FormGroup, InputGroup,
+  HTMLSelect, Button, FormGroup, InputGroup, ControlGroup,
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { DataCardInfo } from '../../models/DataCardInfo';
@@ -34,20 +34,62 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
     optional: false,
   };
   
-  const [topicUrl, setTopicUrl] = useState<string>('');
-  const [endpointUid, setEndpointUid] = useState<string>('');
+  const [topicIndex, setTopicIndex] = useState<number>(-1);
+  const [endpointIndex, setEndpointIndex] = useState<number>(-1);
 
   const [payloadType, setPayloadType] = useState<string>('id-only');
   const [headers, setHeaders] = useState<string>('Authorization: Bearer secret-token-abc-123');
 
+  const [filterByIndex, setFilterByIndex] = useState<number>(-1);
+  const [filterByMatchTypeIndex, setFilterByMatchTypeIndex] = useState<number>(-1);
+  const [filterByValue, setFilterByValue] = useState<string>('');
+
   useEffect(() => {
-    if ((topicUrl === '') && (props.topics.length > 0)) {
-      setTopicUrl(props.topics[0].url!);
+    if (endpointIndex >= props.endpoints.length) {
+      setEndpointIndex(-1);
     }
-    if ((endpointUid === '') && (props.endpoints.length > 0)) {
-      setEndpointUid(props.endpoints[0].uid!);
+    if ((endpointIndex < 0) && (props.endpoints.length > 0)) {
+      setEndpointIndex(0);
     }
-  }, [endpointUid, props.endpoints, topicUrl, props.topics]);
+  }, [endpointIndex, props.endpoints]);
+
+  useEffect(() => {
+    if (topicIndex >= props.topics.length) {
+      setTopicIndex(-1);
+    }
+    if ((topicIndex < 0) && (props.topics.length > 0)) {
+      setTopicIndex(0);
+    }
+
+    if ((topicIndex === -1) && 
+        ((filterByIndex !== -1) || (filterByMatchTypeIndex !== -1))) {
+      setFilterByIndex(-1);
+      setFilterByMatchTypeIndex(-1);
+    }
+
+    if (topicIndex > -1) {
+      let topic: fhir.Topic = props.topics[topicIndex];
+      if ((!topic.canFilterBy) || (filterByIndex >= topic.canFilterBy!.length)) {
+        setFilterByIndex(-1);
+      }
+      if ((filterByIndex < 0) &&
+          (topic.canFilterBy) &&
+          (topic.canFilterBy!.length > 0)) {
+        setFilterByIndex(0);
+      }
+      if (filterByIndex > -1) {
+        let filterBy: fhir.TopicCanFilterBy = topic.canFilterBy![filterByIndex];
+        if ((!filterBy.matchType) || (filterByMatchTypeIndex >= filterBy.matchType!.length)) {
+          setFilterByMatchTypeIndex(-1);
+        }
+        if ((filterByMatchTypeIndex < 0) &&
+            (filterBy.matchType) && 
+            (filterBy.matchType!.length > 0)) {
+          setFilterByMatchTypeIndex(0);
+        }
+      }
+    }
+  }, [topicIndex, props.topics, filterByIndex, filterByMatchTypeIndex]);
 
   /** Get a FHIR Instant value from a JavaScript Date */
 	function getInstantFromDate(date: Date) {
@@ -60,7 +102,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 		// **** build the url for our call ***
 
     let url: string = new URL('Subscription/', props.paneProps.fhirServerInfo.url).toString();
-    let endpointUrl: string = new URL(`Endpoints/${endpointUid}`, props.paneProps.clientHostInfo.url).toString();
+    let endpointUrl: string = new URL(`Endpoints/${props.endpoints[endpointIndex].uid}`, props.paneProps.clientHostInfo.url).toString();
 
     let header: string[] = (headers)
       ? headers.split(',')
@@ -139,12 +181,12 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 
   /** Process HTML events for the topic select box */
 	function handleTopicNameChange(event: React.FormEvent<HTMLSelectElement>) {
-		setTopicUrl(event.currentTarget.value);
+		setTopicIndex(parseInt(event.currentTarget.value));
   }
 
   /** Process HTML events for the endpoint select box */
   function handleEndpointChange(event: React.FormEvent<HTMLSelectElement>) {
-    setEndpointUid(event.currentTarget.value);
+    setEndpointIndex(parseInt(event.currentTarget.value));
   }
 
   /** Process HTML events for the payload type select box */
@@ -155,6 +197,21 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
   /** Process HTML events for headers (update state for managed) */
   function handleHeadersChange(event: React.ChangeEvent<HTMLInputElement>) {
     setHeaders(event.target.value);
+  }
+
+  /** Process HTML events for the filter by name select box */
+	function handleFilterByNameChange(event: React.FormEvent<HTMLSelectElement>) {
+		setFilterByIndex(parseInt(event.currentTarget.value));
+  }
+
+  /** Process HTML events for the filter by match type select box */
+	function handleFilterByMatchTypeChange(event: React.FormEvent<HTMLSelectElement>) {
+		setFilterByMatchTypeIndex(parseInt(event.currentTarget.value));
+  }
+
+  /** Process HTML events for filter balue (update state for managed) */
+  function handleFilterByValueChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setFilterByValue(event.target.value);
   }
   
   /** Return this component */
@@ -174,10 +231,10 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         <HTMLSelect
           id='topic'
           onChange={handleTopicNameChange}
-          value={topicUrl}
+          value={topicIndex}
           >
-          { Object.values(props.topics).map((value) => (
-            <option key={value.title!} value={value.url!}>{value.title!}</option>
+          { Object.values(props.topics).map((value, index) => (
+            <option key={value.title!} value={index}>{value.title!}</option>
               ))}
         </HTMLSelect>
       </FormGroup>
@@ -189,10 +246,10 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         <HTMLSelect
           id='endpoint'
           onChange={handleEndpointChange}
-          value={endpointUid}
+          value={endpointIndex}
           >
-          { Object.values(props.endpoints).map((value) => (
-            <option key={value.uid} value={value.uid}>{value.name}</option>
+          { Object.values(props.endpoints).map((value, index) => (
+            <option key={value.uid} value={index}>{value.name}</option>
               ))}
         </HTMLSelect>
       </FormGroup>
@@ -222,11 +279,46 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
           onChange={handleHeadersChange}
           />
       </FormGroup>
+      { ((topicIndex > -1) && (props.topics[topicIndex].canFilterBy)) &&
+        <FormGroup
+          label='Filter by'
+          helperText='Filter based on the available Topic Filters (Search Parameters). Leave blank for no filter.'
+          labelFor='filter-by'
+          >
+          <ControlGroup
+            id='filter-by'
+            >
+            <HTMLSelect
+              onChange={handleFilterByNameChange}
+              value={filterByIndex}
+              >
+              { Object.values(props.topics[topicIndex].canFilterBy!).map((value, index) => (
+                <option key={value.name} value={index}>{value.name}</option>
+              )) }
+            </HTMLSelect>
+            <HTMLSelect
+              onChange={handleFilterByMatchTypeChange}
+              value={filterByMatchTypeIndex}
+              >
+              { (filterByIndex > -1) && 
+                Object.values(props.topics[topicIndex].canFilterBy![filterByIndex].matchType!).map((value, index) => (
+                <option key={`opt_${index}`} value={index}>{value}</option>
+              ))}
+            </HTMLSelect>
+            <InputGroup
+              id='filter-by-value'
+              value={filterByValue}
+              onChange={handleFilterByValueChange}
+              />
+          </ControlGroup>
+        </FormGroup>
+      }
+
       <Button
         disabled={(!props.status.available) || 
                   (props.status.busy) || 
-                  (topicUrl === '') || 
-                  (endpointUid === '') ||
+                  (topicIndex < 0) || 
+                  (endpointIndex < 0) ||
                   (true)}
         onClick={createSubscription}
         style={{margin: 5}}

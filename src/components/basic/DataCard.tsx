@@ -22,7 +22,8 @@ export interface DataCardProps {
   status: DataCardStatus
   data: SingleRequestData[],
   paneProps: ContentPaneProps,
-  children?: React.ReactNode
+  children?: React.ReactNode,
+  processRowDelete?: ((index: number) => void),
 }
 
 export default function DataCard(props: DataCardProps) {
@@ -94,6 +95,7 @@ export default function DataCard(props: DataCardProps) {
             paneProps={props.paneProps}
             data={props.data}
             selectedDataRowIndex={selectedDataIndex}
+            processRowDelete={props.processRowDelete}
             />
         </div>
       }

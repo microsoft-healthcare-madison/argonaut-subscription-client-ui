@@ -112,8 +112,7 @@ export default function MainPage() {
 
       initialLoadRef.current = false;
     }
-  },
-  [clientHostInfo, fhirServerInfo, uiDark, codePaneDark]);
+  }, [clientHostInfo, fhirServerInfo]);
 
   /** Function to toggle the UI colors (light/dark) */
   function toggleUiColors() {
