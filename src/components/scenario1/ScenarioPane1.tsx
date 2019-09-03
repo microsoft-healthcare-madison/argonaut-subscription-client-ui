@@ -286,6 +286,7 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 			setCleanUpData([]);
 		}
 	}
+
 	/** Callback function to process ClientHost messages */
 	function handleHostMessage(message: string) {
 		// **** vars we want ****
@@ -373,7 +374,6 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 			}
 		}
 	}
-
 
 	// **** if we are connected, render scenario content ****
 	return (

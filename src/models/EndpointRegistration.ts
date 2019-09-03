@@ -6,6 +6,7 @@ export enum EndpointChannelType {
 }
 
 export interface EndpointRegistration {
+  name: string;
   uid?: string;
   channelType: EndpointChannelType;
   urlPart: string;

@@ -16,7 +16,7 @@ import { UiTabInformation } from '../models/UiTabInformation';
 import MainNavigation from './MainNavigation';
 import { ConnectionInformation } from '../models/ConnectionInformation';
 import { StorageHelper } from '../util/StorageHelper';
-import { PlaygroundPane } from './PlaygroundPane';
+import PlaygroundPane  from './playground/PlaygroundPane';
 import { CopyHelper } from '../util/CopyHelper';
 import { BasicObjectStore } from '../util/BasicObjectStore';
 import ScenarioPane1 from './scenario1/ScenarioPane1';

@@ -11,23 +11,23 @@ import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 
-export interface TopicS1Props {
+export interface TopicPlaygroundProps {
   paneProps: ContentPaneProps,
   status: DataCardStatus,
   updateStatus: ((status: DataCardStatus) => void),
   data: SingleRequestData[],
   setData: ((data: SingleRequestData[]) => void),
+  setTopics: ((topics: fhir.Topic[]) => void),
 }
 
-/** Component representing the Scenario 1 Topic Card */
-export default function TopicS1(props: TopicS1Props) {
+/** Component representing the Playground Topic Card */
+export default function TopicPlayground(props: TopicPlaygroundProps) {
 
   const info: DataCardInfo = {
-    id: 's1_topic',
-    stepNumber: 1,
-    heading: 'Get Topic list from FHIR Server',
+    id: 'playground_topic',
+    heading: 'FHIR Server - Topic interactions',
     description: '',
-    optional: true,
+    optional: false,
   };
 
   /** Handle user requests to get a topic list */
@@ -56,6 +56,19 @@ export default function TopicS1(props: TopicS1Props) {
           }
         ]
 
+        // **** check for topics in the bundle ****
+
+        let returnedTopics: fhir.Topic[] = [];
+        if (value.entry) {
+          // **** each bundle.entry.resource is a Topic ****
+          value.entry!.forEach((entry) => {
+            if (entry.resource) {
+              returnedTopics.push(entry.resource! as fhir.Topic);
+            }
+          })
+        }
+        props.setTopics(returnedTopics);
+
         // **** update data ****
 
         props.setData(data);
@@ -80,6 +93,7 @@ export default function TopicS1(props: TopicS1Props) {
         // **** update data ****
 
         props.setData(data);
+        props.setTopics([]);
 
         // **** update our step (failed) ****
 

@@ -44,10 +44,12 @@ export default function EndpointS1(props: EndpointS1Props) {
 
       ApiHelper.apiPost<EndpointRegistration>(url, '')
         .then((value: EndpointRegistration) => {
+          value.name = `Endpoint #${props.data.length}`;
+
           // **** show the client endpoint information ****
 
           let updated: SingleRequestData = {
-            name: 'Create Endpoint',
+            name: value.name,
             id: 'create_endpoint',
             requestUrl: url, 
             responseData: JSON.stringify(value, null, 2),

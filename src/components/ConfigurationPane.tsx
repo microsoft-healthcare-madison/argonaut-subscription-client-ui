@@ -11,6 +11,8 @@ import {
   H5,
   Text,
   HTMLTable,
+  Icon,
+  Callout,
 } from '@blueprintjs/core';
 
 import { ContentPaneProps } from '../models/ContentPaneProps';
@@ -18,6 +20,7 @@ import { ConnectionInformation } from '../models/ConnectionInformation';
 import { ClientHostRegistration } from '../models/ClientHostRegistration';
 import { ApiHelper } from '../util/ApiHelper';
 import { StorageHelper } from '../util/StorageHelper';
+import { IconNames } from '@blueprintjs/icons';
 
 /** Type definition for the current object's state variable */
 interface ComponentState {
@@ -160,6 +163,13 @@ export class ConfigurationPane extends React.PureComponent<ContentPaneProps> {
 					<H5>Argonaut Subscriptions Reference Implementation</H5>
           This module is a front-end user interface to test the current 
           iteration of changes to the FHIR Subscription resource.
+          <br/>
+          <br/>
+          <Callout icon={IconNames.WARNING_SIGN} intent={Intent.WARNING}>
+          This is an open FHIR endpoint for testing and educational purposes only.
+          <br/>
+          Uploading real patient data is strictly prohibited.
+          </Callout>
           <br/>
           <br/>
           Note that this software is under heavy development and will be
