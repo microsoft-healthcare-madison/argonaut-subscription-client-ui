@@ -10,7 +10,7 @@ import {IconNames} from "@blueprintjs/icons";
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import TopicPlayground from './TopicPlayground';
 import { DataCardStatus } from '../../models/DataCardStatus';
-import { SingleRequestData } from '../../models/RequestData';
+import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import NotificationPlayground from './NotificationPlayground';
 import SubscriptionPlayground from './SubscriptionPlayground';
 import { EndpointRegistration } from '../../models/EndpointRegistration';
@@ -86,47 +86,62 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 
 	/** Callback function to process ClientHost messages */
 	function handleHostMessage(message: string) {
-		// // **** vars we want ****
+		// **** vars we want ****
 
-		// let eventCount: number = NaN;
-		// let bundleEventCount: number = NaN;
-		// let status: string;
-		// let topicUrl: string;
-		// let subscriptionUrl: string;
+		let eventCount: number = NaN;
+		let bundleEventCount: number = NaN;
+		let status: string;
+		let topicUrl: string;
+		let subscriptionUrl: string;
 
-		// let bundle: fhir.Bundle;
+		let bundle: fhir.Bundle;
 
-		// // **** resolve this message into a bundle ****
+		// **** resolve this message into a bundle ****
 
-		// try {
-		// 	bundle = JSON.parse(message);
-		// } catch(error) {
-		// 	// **** assume non-bundle message got through ****
-		// 	return;
-		// }
+		try {
+			bundle = JSON.parse(message);
+		} catch(error) {
+			// **** assume non-bundle message got through ****
+			return;
+		}
 
-		// // **** check for the extensions we need ****
+		// **** check for the extensions we need ****
 
-		// if ((bundle) &&
-		// 		(bundle.meta) &&
-		// 		(bundle.meta.extension))
-		// {
-		// 	bundle.meta.extension.forEach(element => {
-		// 		if (element.url.endsWith('subscriptionEventCount')) {
-		// 			eventCount = element.valueUnsignedInt!;
-		// 		} else if (element.url.endsWith('bundleEventCount')) {
-		// 			bundleEventCount = element.valueUnsignedInt!;
-		// 		} else if (element.url.endsWith('subscriptionStatus')) {
-		// 			status = element.valueString!;
-		// 		} else if (element.url.endsWith('subscriptionTopicUrl')) {
-		// 			topicUrl = element.valueString!;
-		// 		} else if (element.url.endsWith('subscriptionUrl')) {
-		// 			subscriptionUrl = element.valueString!;
-		// 		}
-		// 	});
-		// }
+		if ((bundle) &&
+				(bundle.meta) &&
+				(bundle.meta.extension))
+		{
+			bundle.meta.extension.forEach(element => {
+				if (element.url.endsWith('subscriptionEventCount')) {
+					eventCount = element.valueUnsignedInt!;
+				} else if (element.url.endsWith('bundleEventCount')) {
+					bundleEventCount = element.valueUnsignedInt!;
+				} else if (element.url.endsWith('subscriptionStatus')) {
+					status = element.valueString!;
+				} else if (element.url.endsWith('subscriptionTopicUrl')) {
+					topicUrl = element.valueString!;
+				} else if (element.url.endsWith('subscriptionUrl')) {
+					subscriptionUrl = element.valueString!;
+				}
+			});
+		}
+
+		// **** add to our display ****
+
+		let rec:SingleRequestData = {
+			id:`event_${notificationData.length}`, 
+			name: `Notification #${notificationData.length}`,
+			responseData: JSON.stringify(bundle, null, 2),
+			responseDataType: RenderDataAsTypes.FHIR
+		}
+
+		let data: SingleRequestData[] = notificationData.slice();
+		data.push(rec);
+
+		// **** update our state ****
+
+		setNotificationData(data);
 	}
-
 
 	/** Register a subscription as active in this scenario */
 	function registerSubscription(value: fhir.Subscription) {

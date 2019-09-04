@@ -21,7 +21,7 @@
   flex-direction: column;
   flex-wrap: nowrap;
   align-items: stretch;
-  width: 100vw;
+  width: calc(100vw - 20px);
 }
 
 .codeTab {

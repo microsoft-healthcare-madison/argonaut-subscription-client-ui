@@ -388,7 +388,7 @@ export default function MainPage() {
           fhirServerInfo: fhirServerInfo,
           updateFhiServerInfo: setFhirServerInfo,
           clientHostInfo: clientHostInfo,
-          updateClientInfo: setClientHostInfo,
+          updateClientHostInfo: setClientHostInfo,
           connect: connect,
           disconnect: disconnect,
           registerHostMessageHandler: registerPaneClientHostMessageHandler, //setPaneHostMessageHandler,
