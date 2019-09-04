@@ -3,10 +3,15 @@ import { IconName } from '@blueprintjs/core';
 
 export interface ContentPaneProps {
   fhirServerInfo: ConnectionInformation;
+  updateFhirServerInfo: ((info: ConnectionInformation) => void);
   clientHostInfo: ConnectionInformation;
-  updateFhirServerInfo: ((fhirServerInfo: ConnectionInformation) => void);
-  updateClientHostInfo: ((clientHostInfo: ConnectionInformation) => void);
-  connectClientHostWebSocket: ((clientHostInfo: ConnectionInformation) => void);
+  updateClientHostInfo: ((info: ConnectionInformation) => void);
+  connect: ((
+    fhirServer: ConnectionInformation, 
+    clientHost: ConnectionInformation,
+    completionHandler: ((success: boolean) => void)
+    ) => void);
+  disconnect : (() => void);
   registerHostMessageHandler: ((handler: ((message: string) => void)) => void);
   toaster: ((message: string, iconName?: IconName, timeout?: number) => void);
   uiDark: boolean;

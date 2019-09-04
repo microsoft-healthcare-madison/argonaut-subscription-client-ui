@@ -10,7 +10,7 @@ import {
 
 import {IconNames} from '@blueprintjs/icons';
 
-import {ConfigurationPane} from './ConfigurationPane';
+import ConfigurationPane from './ConfigurationPane';
 import Scenario2Pane from './Scenario2Pane';
 import { UiTabInformation } from '../models/UiTabInformation';
 import MainNavigation from './MainNavigation';
@@ -18,8 +18,9 @@ import { ConnectionInformation } from '../models/ConnectionInformation';
 import { StorageHelper } from '../util/StorageHelper';
 import PlaygroundPane  from './playground/PlaygroundPane';
 import { CopyHelper } from '../util/CopyHelper';
-import { BasicObjectStore } from '../util/BasicObjectStore';
 import ScenarioPane1 from './scenario1/ScenarioPane1';
+import { ApiHelper } from '../util/ApiHelper';
+import { ClientHostRegistration } from '../models/ClientHostRegistration';
 
 /** tab configuration - MUST be in 'id' order - first tab is shown at launch */
 let _tabs: UiTabInformation[] = [
@@ -45,6 +46,9 @@ export default function MainPage() {
   // **** set up local state ****
 
   const initialLoadRef = useRef<boolean>(true);
+  const _clientHostWebSocketRef = useRef<WebSocket | null>(null);
+  const _paneHostMessageHandlerRef = useRef<((message: string) => void) | null>(null);
+  const _toasterRef = useRef<IToaster | null>(null);
 
   const [selectedNavbarTabId, setSelectedNavbarTabId] = useState<string>(_tabs[0].id);
   const [fhirServerInfo, setFhirServerInfo] = useState<ConnectionInformation>({
@@ -167,38 +171,103 @@ export default function MainPage() {
     }
   }, [codePaneDark]);
 
-  /** Function to connect a ClientHost WebSocket to the specified host (max: 1) */
-  function connectToClientHostWebSocket(clientHostInfo: ConnectionInformation) {
-    // **** close any existing Client Host websocket connections  ****
-
-    if (BasicObjectStore._clientHostWebSocket) {
-      BasicObjectStore._clientHostWebSocket.onmessage = null;
-      BasicObjectStore._clientHostWebSocket.close();
-      BasicObjectStore._clientHostWebSocket = null;
+  /** Disconnect from all connected servers */
+  function disconnect() {
+    if (_clientHostWebSocketRef.current) {
+      _clientHostWebSocketRef.current.onmessage = null;
+      _clientHostWebSocketRef.current.close();
+      _clientHostWebSocketRef.current = null;
     }
 
-    // **** build the websocket URL ****
+    if (clientHostInfo.registration) {
+      // **** construct the registration REST url ****
 
-    let wsUrl: string = new URL(
-      '/websockets?uid='+clientHostInfo.registration,
-      clientHostInfo.url.replace('http', 'ws')).toString();
+      let url: string = new URL(
+        `api/Clients/${clientHostInfo.registration}/`,
+        clientHostInfo.url
+        ).toString();
 
-    // **** connect to our server ****
+      // **** unregister this client ****
 
-    BasicObjectStore._clientHostWebSocket = new WebSocket(wsUrl);
+      ApiHelper.apiDelete(url);
+    }
+    setClientHostInfo({...clientHostInfo, registration: '', status: ''});
+    setFhirServerInfo({...fhirServerInfo, status: ''});
+  }
 
-    // **** setup our receive handler ****
+  /** Connect to a client host and fhir server and update local information */
+  function connect(
+      fhirServer: ConnectionInformation, 
+      clientHost: ConnectionInformation,
+      completionHandler: ((success: boolean) => void)
+      ) {
+    // **** close any existing Client Host websocket connections  ****
 
-    BasicObjectStore._clientHostWebSocket.onmessage = clientHostMessageHandler;
+    if (clientHostInfo.status !== '') {
+      disconnect();
+    }
 
-    // **** setup an error handler to disconnect ****
+    // **** for now, just say that the fhir server is connected ****
 
-    BasicObjectStore._clientHostWebSocket.onerror = handleClientHostWebSocketError;
-    BasicObjectStore._clientHostWebSocket.onclose = handleClientHostWebSocketClose;
+    let updatedFhirServer: ConnectionInformation = {...fhirServer, status: 'ok'};
+    setFhirServerInfo(updatedFhirServer);
 
-    // **** tell the user we are connected ****
+    // **** construct the registration REST url ****
 
-    showToastMessage('Connected to Client Host', IconNames.INFO_SIGN, 3000);
+    let registrationUrl: URL = new URL('api/Clients/', clientHost.url);
+
+    // **** attempt to register ourself as a client ****
+
+    var clientHostRegistration: ClientHostRegistration = {uid: '', fhirServerUrl: fhirServer.url};
+
+    ApiHelper.apiPost<ClientHostRegistration>(registrationUrl.toString(), JSON.stringify(clientHostRegistration))
+      .then((value: ClientHostRegistration) => {
+        // **** update our client host information ****
+
+        let updatedClientInfo: ConnectionInformation = {...clientHost, 
+          registration: value.uid,
+          status: 'ok',
+        };
+
+        // **** build the websocket URL ****
+
+        let wsUrl: string = new URL(
+          '/websockets?uid='+updatedClientInfo.registration,
+          updatedClientInfo.url.replace('http', 'ws')).toString();
+
+        // **** connect to our server ****
+
+        _clientHostWebSocketRef.current = new WebSocket(wsUrl);
+
+        // **** setup our receive handler ****
+
+        _clientHostWebSocketRef.current.onmessage = clientHostMessageHandler;
+
+        // **** setup an error handler to disconnect ****
+
+        _clientHostWebSocketRef.current.onerror = handleClientHostWebSocketError;
+        _clientHostWebSocketRef.current.onclose = handleClientHostWebSocketClose;
+
+        // **** tell the user we are connected ****
+
+        showToastMessage('Connected to Client Host', IconNames.INFO_SIGN, 3000);
+
+        // **** update our client host info ****
+
+        setClientHostInfo(updatedClientInfo);
+
+        // **** flag we are done successfully ****
+
+        if (completionHandler) {
+          completionHandler(true);
+        }
+      })
+      .catch((reason: any) => {
+        if (completionHandler) {
+          completionHandler(false);
+        }
+      })
+      ;
   }
 
   function handleClientHostWebSocketError(event: Event) {
@@ -230,7 +299,7 @@ export default function MainPage() {
 
   /** Callback function to allow panes to register to receive client host notifications (max: 1) */
   function registerPaneClientHostMessageHandler(handler: ((message: string) => void)) {
-    BasicObjectStore._paneHostMessageHandler = handler;
+    _paneHostMessageHandlerRef.current = handler;
   }
 
   /** Function to process client host messages received via the WebSocket */
@@ -255,8 +324,8 @@ export default function MainPage() {
 
     // **** propagate (if necessary) ****
 
-    if (BasicObjectStore._paneHostMessageHandler !== null) {
-      BasicObjectStore._paneHostMessageHandler!(event.data);
+    if (_paneHostMessageHandlerRef.current) {
+      _paneHostMessageHandlerRef.current!(event.data);
     }
   }
 
@@ -268,7 +337,7 @@ export default function MainPage() {
 
   /** Function to either get the current Toast (short message) object, or create a new one */
   function getOrCreateToaster() {
-    if (!BasicObjectStore._toaster) {
+    if (!_toasterRef.current) {
       // **** configure our toaster display ****
 
       var toasterProps: IToasterProps = {
@@ -278,10 +347,10 @@ export default function MainPage() {
       }
 
       // **** static create the toaster on the DOM ****
-      BasicObjectStore._toaster = Toaster.create(toasterProps, document.body);
+      _toasterRef.current = Toaster.create(toasterProps, document.body);
     }
 
-    return BasicObjectStore._toaster;
+    return _toasterRef.current;
   }
 
   /** Function to perform copying generic text to the clipboard */
@@ -317,10 +386,11 @@ export default function MainPage() {
         {/* Render the correct content pane, as selected in our tabs above */}
         { _tabs[Number(selectedNavbarTabId)].panel({
           fhirServerInfo: fhirServerInfo,
+          updateFhiServerInfo: setFhirServerInfo,
           clientHostInfo: clientHostInfo,
-          updateFhirServerInfo: setFhirServerInfo,
-          updateClientHostInfo: setClientHostInfo,
-          connectClientHostWebSocket: connectToClientHostWebSocket,
+          updateClientInfo: setClientHostInfo,
+          connect: connect,
+          disconnect: disconnect,
           registerHostMessageHandler: registerPaneClientHostMessageHandler, //setPaneHostMessageHandler,
           toaster: showToastMessage,
           uiDark: uiDark,
