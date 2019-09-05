@@ -56,7 +56,9 @@ export default function EndpointS1(props: EndpointS1Props) {
             responseDataType: RenderDataAsTypes.FHIR,
             info: 'Endpoint Created:\n' +
               `\tUID: ${value.uid}\n` +
-              `\tURL: ${props.paneProps.clientHostInfo.url}Endpoints/${value.uid}/\n` +
+              `\tURL: ${props.paneProps.clientHostInfo.url}` +
+                `${props.paneProps.clientHostInfo.url.endsWith('/') ? '' : '/'}` +
+                `Endpoints/${value.uid}/\n` +
               '',
             };
 

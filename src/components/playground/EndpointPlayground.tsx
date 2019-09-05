@@ -59,7 +59,9 @@ export default function EndpointPlayground(props: EndpointPlaygroundProps) {
           info: 'Endpoint Created:\n' +
             `\tName: ${value.name}\n` +
             `\tUID: ${value.uid}\n` +
-            `\tURL: ${props.paneProps.clientHostInfo.url}Endpoints/${value.uid}/\n` +
+            `\tURL: ${props.paneProps.clientHostInfo.url}` +
+              `${props.paneProps.clientHostInfo.url.endsWith('/') ? '' : '/'}` +
+              `Endpoints/${value.uid}/\n` +
             '',
           };
 
