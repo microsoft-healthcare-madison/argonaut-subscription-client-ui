@@ -276,7 +276,7 @@ export default function ConfigurationPane(props: ContentPaneProps) {
             <tr>
               <td>Argonaut Subscription Connectathon Scenarios</td>
               <td><a
-                href='https://github.com/argonautproject/subscriptions/tree/master/connectathon-scenarios-201909' 
+                href='http://aka.ms/argo-sub-connectathon-2019-09' 
                 target='_blank'
                 rel="noopener noreferrer"
                 >github.com</a>
