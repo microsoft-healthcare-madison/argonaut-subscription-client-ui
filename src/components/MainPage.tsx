@@ -304,6 +304,7 @@ export default function MainPage() {
 
   /** Function to process client host messages received via the WebSocket */
   function clientHostMessageHandler(event: MessageEvent) {
+    // console.log('Received message event', event);
     // **** check for keepalive message (discard) ****
 
     if ((event.data) && ((event.data as string).startsWith('keepalive'))) {

@@ -115,7 +115,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 			header: header,
 			heartbeatPeriod: 60,
 			payload: {content: payloadType, contentType: 'application/fhir+json'},
-			type: {...fhir.SubscriptionChannelTypeCodes.rest_hook, text: 'REST Hook'},
+			type: {coding: [fhir.SubscriptionChannelTypeCodes.rest_hook], text: 'REST Hook'},
 		}
 
 		// **** build our filter information ****

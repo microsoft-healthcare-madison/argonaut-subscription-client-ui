@@ -30,12 +30,15 @@ export default function ConfigurationPane(props: ContentPaneProps) {
 
   const [busy, setBusy] = useState<boolean>(false);
 
+  const connected = (props.clientHostInfo.status === 'ok');
+
   useEffect(() => {
     if (initialLoadRef.current) {
 
       // **** check for requesting a connection ****
 
       if ((StorageHelper.isLocalStorageAvailable) &&
+          (!connected) &&
           (localStorage.getItem('connectionRequested') === 'true')) {
         setRequestConnectionToggle(true);
       }
@@ -46,14 +49,12 @@ export default function ConfigurationPane(props: ContentPaneProps) {
     }
   }, []);
 
-  const connected = (props.clientHostInfo.status === 'ok');
-
   useEffect(() => {
 
     if (!requestConnectionToggle) {
       return;
     }
-    console.log('ConfigurationPane.useEffect <<< here');
+
     // **** clear our flag ****
 
     setRequestConnectionToggle(false);
@@ -88,8 +89,42 @@ export default function ConfigurationPane(props: ContentPaneProps) {
       return;
     }
 
+    // **** check most basic of input ****
+
+    if ((!fhirServerUrl) || 
+        (fhirServerUrl.length < 8) || 
+        (!fhirServerUrl.startsWith('http'))) {
+      // **** error ****
+
+      props.toaster('Invalid FHIR Server URL!', IconNames.ERROR);
+      setBusy(false);
+      return;
+    }
+
+    if ((!clientHostUrl) || 
+        (clientHostUrl.length < 8) || 
+        (!clientHostUrl.startsWith('http'))) {
+      // **** error ****
+
+      props.toaster('Invalid Client Host URL!', IconNames.ERROR);
+      setBusy(false);
+      return;
+    }
+
+    // **** use updated URLs for server and client ****
+
     let serverInfo: ConnectionInformation = {...props.fhirServerInfo, url: fhirServerUrl};
     let clientInfo: ConnectionInformation = {...props.clientHostInfo, url: clientHostUrl};
+
+    // **** make sure the URLs end with a trailing slash ****
+
+    if (!fhirServerUrl.endsWith('/')) {
+      serverInfo.url = fhirServerUrl + '/';
+    }
+
+    if (!clientHostUrl.endsWith('/')) {
+      clientInfo.url = clientHostUrl + '/';
+    }
 
     // **** connect to the servers ****
 
@@ -232,7 +267,7 @@ export default function ConfigurationPane(props: ContentPaneProps) {
             <tr>
               <td>FHIR Build branch of current changes (Subscription, Topic, etc.)</td>
               <td><a
-                href='http://build.fhir.org/branches/argonaut-subscription/' 
+                href='http://build.fhir.org/' 
                 target='_blank'
                 rel="noopener noreferrer"
                 >build.fhir.org</a>

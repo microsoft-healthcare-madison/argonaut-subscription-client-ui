@@ -61,7 +61,7 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
 			header: header,
 			heartbeatPeriod: 60,
 			payload: {content: payloadType, contentType: 'application/fhir+json'},
-			type: {...fhir.SubscriptionChannelTypeCodes.rest_hook, text: 'REST Hook'},
+			type: {coding: [fhir.SubscriptionChannelTypeCodes.rest_hook], text: 'REST Hook'},
 		}
 
 		// **** build our filter information ****

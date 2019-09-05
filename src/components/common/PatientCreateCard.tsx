@@ -135,6 +135,8 @@ export default function PatientCreateCard(props: PatientCreateProps) {
           name: 'Patient Create',
           id: 'patient_create', 
           requestUrl: url,
+          requestData: JSON.stringify(patient, null, 2),
+          requestDataType: RenderDataAsTypes.FHIR,
           responseData: JSON.stringify(value, null, 2),
           responseDataType: RenderDataAsTypes.FHIR,
         };
@@ -143,6 +145,10 @@ export default function PatientCreateCard(props: PatientCreateProps) {
 
         setBusy(false);
         props.setData([data]);
+
+        // **** flag this patient has been selected ****
+
+        props.registerSelectedPatient(value.id!);
 			})
 			.catch((reason: any) => {
         // **** build data for display ****
