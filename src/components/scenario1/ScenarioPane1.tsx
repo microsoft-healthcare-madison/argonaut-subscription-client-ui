@@ -97,7 +97,7 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 			<Card elevation={Elevation.TWO}>
 				<NonIdealState
 					icon={IconNames.ISSUE}
-					title='Not Connected to Client Host'
+					title='Not Connected'
 					description='You must be connected to a FHIR Server and Client Host before running this scenario.'
 					/>
 			</Card>

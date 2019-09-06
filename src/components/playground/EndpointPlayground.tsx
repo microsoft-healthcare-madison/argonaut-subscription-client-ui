@@ -61,6 +61,7 @@ export default function EndpointPlayground(props: EndpointPlaygroundProps) {
             `\tUID: ${value.uid}\n` +
             `\tURL: ${props.paneProps.clientHostInfo.url}Endpoints/${value.uid}/\n` +
             '',
+          enabled: true,
           };
 
         let updatedData: SingleRequestData[] = props.data.slice();
@@ -152,6 +153,57 @@ export default function EndpointPlayground(props: EndpointPlaygroundProps) {
       });
   }
 
+  function toggleEnabled(index: number) {
+    if ((index < 0) || (index >= props.endpoints.length)) {
+      return;
+    }
+
+    // **** flag busy ****
+
+    props.updateStatus({...props.status, busy: true});
+
+    // **** grab our endpoint ****
+
+    let endpoint: EndpointRegistration = props.endpoints[index];
+    
+    // **** build the url for our call ***
+
+    let url: string = new URL(
+      `api/Clients/${props.paneProps.clientHostInfo.registration}/Endpoints/${endpoint.uid!}/` +
+        `${endpoint.enabled ? 'disable' : 'enable'}`, 
+      props.paneProps.clientHostInfo.url
+      ).toString();
+
+      
+    // **** ask for this endpoint to be toggled ****
+
+    ApiHelper.apiPost<EndpointRegistration>(url, '')
+      .then((value: EndpointRegistration) => {
+        let updatedData: SingleRequestData[] = props.data.slice();
+        updatedData[index].enabled = value.enabled;
+        props.setData(updatedData);
+
+
+        // **** update this endpoint ****
+
+        let values: EndpointRegistration[] = props.endpoints.slice();
+        values.splice(index, 1, value);
+        props.setEndpoints(values);
+
+        // **** clear our busy status ****
+
+        props.updateStatus({...props.status, busy: false});
+      })
+      .catch((reason: any) => {
+        // **** log an error ****
+        console.log('Could not toggle endpoint state', reason);
+
+        // **** clear our busy status ****
+
+        props.updateStatus({...props.status, busy: false});
+      });
+  }
+
   /** Return this component */
   return(
     <DataCard
@@ -160,6 +212,7 @@ export default function EndpointPlayground(props: EndpointPlaygroundProps) {
       paneProps={props.paneProps}
       status={props.status}
       processRowDelete={removeEndpoint}
+      processRowToggle={toggleEnabled}
       >
       <Button
         onClick={createEndpoint}

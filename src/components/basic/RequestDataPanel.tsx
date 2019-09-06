@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 
 import {
-  Button, Tabs, Tab, Tooltip, TabId, Icon, 
+  Button, Tabs, Tab, Tooltip, TabId, Icon, Switch, 
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { IconNames } from '@blueprintjs/icons';
@@ -13,7 +13,9 @@ import { atomOneDark, atomOneLight } from 'react-syntax-highlighter/dist/esm/sty
 export interface RequestPanelProps {
   paneProps: ContentPaneProps,
   data: SingleRequestData[],
+  busy?: boolean,
   processRowDelete?: ((index: number) => void),
+  processRowToggle?: ((index: number) => void),
   selectedDataRowIndex?: number,
 }
 
@@ -58,7 +60,6 @@ export default function RequestDataPanel(props: RequestPanelProps) {
   if ((!props.data) || (props.data.length === 0)) {
     return(null);
   }
-
 
   /** Function to get an appropriate Icon based on data type */
   function iconNameForType(dataType: RenderDataAsTypes) {
@@ -105,6 +106,10 @@ export default function RequestDataPanel(props: RequestPanelProps) {
     props.processRowDelete!(dataRowIndex);
   }
 
+  function handleToggle() {
+    props.processRowToggle!(dataRowIndex);
+  }
+
   /** Return this component */
   return(
     <Tabs
@@ -133,6 +138,16 @@ export default function RequestDataPanel(props: RequestPanelProps) {
           </Tooltip>
         }
       </div>
+      { (props.processRowToggle !== undefined) &&
+        <div>
+          <Switch
+            disabled={props.busy}
+            checked={props.data[dataRowIndex].enabled}
+            label='Enabled' 
+            onChange={handleToggle}
+            />
+        </div>
+      }
       { (props.data[dataRowIndex].requestUrl !== undefined) &&
         <Tab
           key='request_url'

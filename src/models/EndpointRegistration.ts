@@ -10,4 +10,5 @@ export interface EndpointRegistration {
   uid?: string;
   channelType: EndpointChannelType;
   urlPart: string;
+  enabled: boolean;
 }

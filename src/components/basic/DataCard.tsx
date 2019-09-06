@@ -24,6 +24,7 @@ export interface DataCardProps {
   paneProps: ContentPaneProps,
   children?: React.ReactNode,
   processRowDelete?: ((index: number) => void),
+  processRowToggle?: ((index: number) => void),
 }
 
 export default function DataCard(props: DataCardProps) {
@@ -88,14 +89,22 @@ export default function DataCard(props: DataCardProps) {
       </H5>
       { showContent &&
         <div>
-          <H6>{props.info.description}</H6>
-          {props.children}
-          <br />
+          { (props.info.description !== '') &&
+            <H6>{props.info.description}</H6>
+          }
+          { (props.children !== undefined) &&
+            props.children
+          }
+          { (props.children !== undefined) &&
+            <br />
+          }
           <RequestDataPanel
             paneProps={props.paneProps}
             data={props.data}
+            busy={props.status.busy}
             selectedDataRowIndex={selectedDataIndex}
             processRowDelete={props.processRowDelete}
+            processRowToggle={props.processRowToggle}
             />
         </div>
       }

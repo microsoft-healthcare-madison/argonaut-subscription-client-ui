@@ -75,9 +75,8 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 			<Card elevation={Elevation.TWO}>
 				<NonIdealState
 					icon={IconNames.ISSUE}
-					title='Not Implemented'
-					description='Playground comming soon!
-						Thank you for your patience.'
+					title='Not Connected'
+					description='You must be connected to a FHIR Server and Client Host before using the playground.'
 					/>
 			</Card>
 		</div>

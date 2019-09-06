@@ -15,4 +15,5 @@ export interface SingleRequestData {
   responseDataType?: RenderDataAsTypes;
   responseData?: string;
   info?: string;
+  enabled?: boolean;
 }
