@@ -20,6 +20,7 @@ export interface SubscriptionS1Props {
   data: SingleRequestData[],
   setData: ((data: SingleRequestData[]) => void),
   selectedPatientId: string,
+  subscription: fhir.Subscription,
   endpoint: EndpointRegistration,
 }
 
@@ -125,6 +126,46 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
 			});
   }
 
+  function refreshSubscription(dataRowIndex: number) {
+    props.updateStatus({...props.status, busy: true});
+
+		// **** build the url for our call ***
+
+    let url: string = new URL(`Subscription/${props.subscription.id!}`, props.paneProps.fhirServerInfo.url).toString();
+
+		// **** ask for this subscription to be created ****
+
+		ApiHelper.apiGet<fhir.Subscription>(url)
+    .then((value: fhir.Subscription) => {
+      // **** show the client subscription information ****
+
+      let updated: SingleRequestData = {...props.data[0],
+        responseData: JSON.stringify(value, null, 2),
+        responseDataType: RenderDataAsTypes.FHIR,
+        };
+
+      props.setData([updated]);
+
+      // **** no longer busy ****
+
+      props.updateStatus({...props.status, busy:false});
+    })
+    .catch((reason: any) => {
+      // **** show the client subscription information ****
+
+      let updated: SingleRequestData = {
+        name: 'Create Subscription',
+        id: 'create_subscription',
+        requestUrl: url, 
+        responseData: `Request for Subscription (${url}) failed:\n${reason}`,
+        responseDataType: RenderDataAsTypes.Error
+        };
+
+      props.setData([updated]);
+      props.updateStatus({...props.status, busy: false});
+    });
+  }
+
   /** Process HTML events for the payload type select box */
 	function handlePayloadTypeChange(event: React.FormEvent<HTMLSelectElement>) {
 		setPayloadType(event.currentTarget.value);
@@ -142,6 +183,8 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
       data={props.data}
       paneProps={props.paneProps}
       status={props.status}
+      tabButtonText='Get Status'
+      tabButtonHandler={refreshSubscription}
       >
       <FormGroup
         label='Subscription Notification Payload Type'
@@ -158,7 +201,7 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
               ))}
         </HTMLSelect>
       </FormGroup>
-      <FormGroup
+      {/* <FormGroup
         label='Subscription Headers'
         helperText='Comma (,) separated list of headers to include with notifications (per channel requirements)'
         labelFor='subscription-headers'
@@ -168,7 +211,7 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
           value={headers}
           onChange={handleHeadersChange}
           />
-      </FormGroup>
+      </FormGroup> */}
       <Button
         disabled={(!props.status.available) || (props.status.busy)}
         onClick={createSubscription}

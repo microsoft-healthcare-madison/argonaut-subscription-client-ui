@@ -17,6 +17,8 @@ export interface RequestPanelProps {
   processRowDelete?: ((index: number) => void),
   processRowToggle?: ((index: number) => void),
   selectedDataRowIndex?: number,
+  tabButtonText?: string,
+  tabButtonHandler?: ((index: number) => void),
 }
 
 export default function RequestDataPanel(props: RequestPanelProps) {
@@ -110,6 +112,10 @@ export default function RequestDataPanel(props: RequestPanelProps) {
     props.processRowToggle!(dataRowIndex);
   }
 
+  function handleTabButtonClick() {
+    props.tabButtonHandler!(dataRowIndex);
+  }
+
   /** Return this component */
   return(
     <Tabs
@@ -145,6 +151,15 @@ export default function RequestDataPanel(props: RequestPanelProps) {
             checked={props.data[dataRowIndex].enabled}
             label='Enabled' 
             onChange={handleToggle}
+            />
+        </div>
+      }
+      { ((props.tabButtonText !== undefined) && (props.tabButtonHandler !== undefined)) &&
+        <div>
+          <Button
+            disabled={props.busy}
+            text={props.tabButtonText!}
+            onClick={handleTabButtonClick}
             />
         </div>
       }

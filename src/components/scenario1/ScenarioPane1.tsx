@@ -431,6 +431,7 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 			data={subscriptionData}
 			setData={setSubscriptionData}
 			selectedPatientId={selectedPatientId!}
+			subscription={subscription!}
 			endpoint={endpoint!}
 			/>
 		

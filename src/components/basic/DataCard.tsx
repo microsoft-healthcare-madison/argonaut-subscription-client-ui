@@ -25,6 +25,8 @@ export interface DataCardProps {
   children?: React.ReactNode,
   processRowDelete?: ((index: number) => void),
   processRowToggle?: ((index: number) => void),
+  tabButtonText?: string,
+  tabButtonHandler?: ((index: number) => void),
 }
 
 export default function DataCard(props: DataCardProps) {
@@ -105,6 +107,8 @@ export default function DataCard(props: DataCardProps) {
             selectedDataRowIndex={selectedDataIndex}
             processRowDelete={props.processRowDelete}
             processRowToggle={props.processRowToggle}
+            tabButtonText={props.tabButtonText}
+            tabButtonHandler={props.tabButtonHandler}
             />
         </div>
       }
