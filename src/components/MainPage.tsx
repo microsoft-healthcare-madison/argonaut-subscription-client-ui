@@ -22,6 +22,8 @@ import ScenarioPane1 from './scenario1/ScenarioPane1';
 import { ApiHelper } from '../util/ApiHelper';
 import { ClientHostRegistration } from '../models/ClientHostRegistration';
 
+import * as fhir from '../models/fhir_r4_selected';
+
 /** tab configuration - MUST be in 'id' order - first tab is shown at launch */
 let _tabs: UiTabInformation[] = [
   {title: 'Config', tip: 'Configure Settings and Servers', id: '0', panel: React.createFactory(ConfigurationPane)},
@@ -196,7 +198,7 @@ export default function MainPage() {
   }
 
   /** Connect to a client host and fhir server and update local information */
-  function connect(
+  async function connect(
       fhirServer: ConnectionInformation, 
       clientHost: ConnectionInformation,
       completionHandler: ((success: boolean) => void)
@@ -207,33 +209,99 @@ export default function MainPage() {
       disconnect();
     }
 
-    // **** for now, just say that the fhir server is connected ****
+    /** Test to see if a resource capability includes support for creation */
+    function resourceSupportsCreate(resource: fhir.CapabilityStatementRestResource) {
+      if (!resource.interaction) {
+        return false;
+      }
+      let found = false;
+      resource.interaction!.forEach((interaction: fhir.CapabilityStatementRestResourceInteraction) => {
+        if (interaction.code === fhir.CapabilityStatementRestResourceInteractionCodeCodes.CREATE) {
+          found = true;
+        }
+      });
+      return found;
+    }
 
-    let updatedFhirServer: ConnectionInformation = {...fhirServer, status: 'ok'};
-    setFhirServerInfo(updatedFhirServer);
+    async function connectServer(serverInfo: ConnectionInformation) {
+      try {
+        // **** build a URL to the server capabilities statement ****
 
-    // **** construct the registration REST url ****
+        let capabilityUrl: string = new URL('metadata', serverInfo.url).toString();
 
-    let registrationUrl: URL = new URL('api/Clients/', clientHost.url);
+        // **** attempt to get the server capabilities ****
 
-    // **** attempt to register ourself as a client ****
+        let capabilities: fhir.CapabilityStatement = await ApiHelper.apiGet<fhir.CapabilityStatement>(capabilityUrl);
 
-    var clientHostRegistration: ClientHostRegistration = {uid: '', fhirServerUrl: fhirServer.url};
+        // **** check for data we need ****
 
-    ApiHelper.apiPost<ClientHostRegistration>(registrationUrl.toString(), JSON.stringify(clientHostRegistration))
-      .then((value: ClientHostRegistration) => {
-        // **** update our client host information ****
+        if ((capabilities === null) ||
+            (capabilities.rest === null) ||
+            (capabilities.rest!.length === 0)) {
+          throw('Minimum server requirements not met.');
+        }
 
-        let updatedClientInfo: ConnectionInformation = {...clientHost, 
-          registration: value.uid,
+        // let hasResourcePatient: boolean = false;
+        var createPatient: boolean = false;
+
+        // let hasResourceEncounter: boolean = false;
+        var createEncounter: boolean = false;
+
+        capabilities.rest!.forEach((restCapability: fhir.CapabilityStatementRest) => {
+          if ((restCapability === null) ||
+              (restCapability.resource === null) ||
+              (restCapability.resource!.length === 0)) {
+            return;
+          }
+          // **** map resources in this rest endpoint ****
+
+          restCapability.resource!.forEach((resource: fhir.CapabilityStatementRestResource) => {
+            if (resource === null) {
+              return;
+            }
+            if (resource.type === 'Patient') {
+              // hasResourcePatient = true;
+              createPatient = !resourceSupportsCreate(resource);
+            }
+            if (resource.type === 'Encounter') {
+              // hasResourceEncounter = true;
+              createEncounter = resourceSupportsCreate(resource);
+            }
+          });
+        });
+
+        // **** still here means success ****
+
+        return {...serverInfo, 
           status: 'ok',
+          supportsCreatePatient: createPatient,
+          supportsCreateEncounter: createEncounter,
         };
+      } catch (err) {
+        return {...serverInfo, status: 'error'};
+      }
+    }
 
+    async function connectClientHost(clientInfo: ConnectionInformation) {
+      try {
+        // **** construct the registration REST url ****
+
+        let registrationUrl: string = new URL('api/Clients/', clientInfo.url).toString();
+
+        // **** attempt to register ourself as a client ****
+
+        var clientHostRegistration: ClientHostRegistration = {uid: '', fhirServerUrl: fhirServer.url};
+
+        let clientHost: ClientHostRegistration = await ApiHelper.apiPost<ClientHostRegistration>(
+          registrationUrl, 
+          JSON.stringify(clientHostRegistration)
+          );
+        
         // **** build the websocket URL ****
 
         let wsUrl: string = new URL(
-          '/websockets?uid='+updatedClientInfo.registration,
-          updatedClientInfo.url.replace('http', 'ws')).toString();
+          '/websockets?uid='+clientHost.uid,
+          clientInfo.url.replace('http', 'ws')).toString();
 
         // **** connect to our server ****
 
@@ -248,26 +316,59 @@ export default function MainPage() {
         _clientHostWebSocketRef.current.onerror = handleClientHostWebSocketError;
         _clientHostWebSocketRef.current.onclose = handleClientHostWebSocketClose;
 
-        // **** tell the user we are connected ****
+        // **** update our client host information ****
 
-        showToastMessage('Connected to Client Host', IconNames.INFO_SIGN, 3000);
+        return {...clientInfo, 
+          registration: clientHost.uid,
+          status: 'ok',
+        };
 
-        // **** update our client host info ****
+      } catch (err) {
+        return {...clientInfo, status: 'error'};
+      }
+    }
 
-        setClientHostInfo(updatedClientInfo);
+    // **** attempt to connect to the FHIR server ****
 
-        // **** flag we are done successfully ****
+    let updatedFhirServer: ConnectionInformation = await connectServer(fhirServer);
 
-        if (completionHandler) {
-          completionHandler(true);
-        }
-      })
-      .catch((reason: any) => {
-        if (completionHandler) {
-          completionHandler(false);
-        }
-      })
-      ;
+    // **** check status ****
+
+    if (updatedFhirServer.status !== 'ok') {
+      showToastMessage('Failed to connect to FHIR server', IconNames.ERROR, 2000);
+      if (completionHandler) {
+        completionHandler(false);
+      }
+      return;
+    }
+
+    // **** attempt to connect to the Client Host server ****
+
+    let updatedClientInfo: ConnectionInformation = await connectClientHost(clientHost);
+
+    // **** check status ****
+
+    if (updatedClientInfo.status !== 'ok') {
+      showToastMessage('Failed to connect to Client Host', IconNames.ERROR, 2000);
+      if (completionHandler) {
+        completionHandler(false);
+      }
+      return;
+    }
+
+    // **** update info ****
+    
+    setFhirServerInfo(updatedFhirServer);
+    setClientHostInfo(updatedClientInfo);
+
+    // **** tell the user we are connected ****
+
+    showToastMessage('Connected!', IconNames.INFO_SIGN, 2000);
+    // **** flag we are done successfully ****
+
+    if (completionHandler) {
+      completionHandler(true);
+    }
   }
 
   function handleClientHostWebSocketError(event: Event) {

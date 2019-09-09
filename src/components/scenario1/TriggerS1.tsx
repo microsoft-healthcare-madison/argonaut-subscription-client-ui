@@ -99,8 +99,27 @@ export default function TriggerS1(props: TriggerS1Props) {
 	function handleEncounterClassChange(event: React.FormEvent<HTMLSelectElement>) {
 		setPayloadType(event.currentTarget.value);
   }
+
+  // **** check for NOT being allowed to create encounters
   
-  /** Return this component */
+  if (!props.paneProps.fhirServerInfo.supportsCreateEncounter) {
+    return (
+    <DataCard
+      info={info}
+      data={props.data}
+      paneProps={props.paneProps}
+      status={props.status}
+      >
+      <br/>
+      <p>This FHIR Server does not support the direct creation of Encounter resources.</p>
+      <p>Please use the Server-provided method for creating an Encounter with a status
+        of 'in-progress' to show a successful notification below.
+      </p>
+    </DataCard>
+    );
+  }
+  
+  // **** return the standard component ****
   return(
     <DataCard
       info={info}

@@ -8,4 +8,6 @@ export interface ConnectionInformation {
   logMessages: boolean;
   registration: string;
   // incomingMessageHandler: ((name: string, message: string) => void);
+  supportsCreatePatient?: boolean;
+  supportsCreateEncounter?: boolean;
 }

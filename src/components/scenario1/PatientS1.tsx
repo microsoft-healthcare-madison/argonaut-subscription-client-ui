@@ -26,7 +26,7 @@ export default function PatientS1(props: PatientS1Props) {
   const info: DataCardInfo = {
     id: 's1_patient',
     stepNumber: 2,
-    heading: 'Select or Create a Patient',
+    heading: (props.paneProps.fhirServerInfo.supportsCreatePatient) ? 'Select or Create a Patient' : 'Select a Patient',
     description: '',
     optional: false,
   };
@@ -59,7 +59,30 @@ export default function PatientS1(props: PatientS1Props) {
     props.registerSelectedPatientId(patientId);
   }
 
-  /** Return this component */
+  // **** check for NOT supporting create ****
+
+  if (!props.paneProps.fhirServerInfo.supportsCreatePatient) {
+    // **** return only search ****
+
+    return(
+      <DataCard
+        info={info}
+        data={props.data}
+        paneProps={props.paneProps}
+        status={props.status}
+        >
+        <PatientSearchCard
+          paneProps={props.paneProps}
+          info={info}
+          setData={props.setData}
+          registerSelectedPatient={handleSelectPatient}
+          />
+      </DataCard>
+    );
+  }
+
+  // **** return card with search and create options ****
+
   return(
     <DataCard
       info={info}
@@ -68,12 +91,12 @@ export default function PatientS1(props: PatientS1Props) {
       status={props.status}
       >
       <Tabs
-					animate={true}
-					id='tabsStep2'
-					vertical={false}
-					selectedTabId={selectedTabId}
-					onChange={handleTabChange}
-					>
+          animate={true}
+          id='tabsStep2'
+          vertical={false}
+          selectedTabId={selectedTabId}
+          onChange={handleTabChange}
+          >
           <Tab 
             id='s2_search' 
             title='Search' 
@@ -98,8 +121,8 @@ export default function PatientS1(props: PatientS1Props) {
                 />
             }
             />
-				</Tabs>
-
+        </Tabs>
     </DataCard>
   );
+
 }

@@ -345,6 +345,14 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 
 			setHandshakeData([data]);
 			setHandshakeStatus(_statusComplete);
+
+			// **** check for NOT being allowed to trigger on this server ****
+
+			if (!props.fhirServerInfo.supportsCreateEncounter) {
+				setTriggerCount(100000);
+				setNotificationStatus(_statusBusy);
+			}
+			
 			setTriggerStatus(_statusAvailable);
 
 		} else {
