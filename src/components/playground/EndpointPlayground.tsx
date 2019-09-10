@@ -6,7 +6,7 @@ import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import { EndpointRegistration } from '../../models/EndpointRegistration';
-import { ApiHelper } from '../../util/ApiHelper';
+import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
 import { Button } from '@blueprintjs/core';
 
 export interface EndpointPlaygroundProps {
@@ -32,7 +32,7 @@ export default function EndpointPlayground(props: EndpointPlaygroundProps) {
   const endpointCountRef = useRef<number>(0);
 
   /** Create an endpoint */
-  function createEndpoint() {
+  async function createEndpoint() {
     props.updateStatus({...props.status, busy: true});
 
     // **** build the url for our call ***
@@ -44,59 +44,85 @@ export default function EndpointPlayground(props: EndpointPlaygroundProps) {
 
     // **** ask for this endpoint to be created ****
 
-    ApiHelper.apiPost<EndpointRegistration>(url, '')
-      .then((value: EndpointRegistration) => {
-        value.name = `Endpoint #${endpointCountRef.current}`;
+    try {
+      let response:ApiResponse<EndpointRegistration> = await ApiHelper.apiPost<EndpointRegistration>(
+        url,
+        undefined
+      );
 
-        // **** show the client endpoint information ****
-
-        let updated: SingleRequestData = {
-          name: value.name,
-          id: 'create_endpoint',
-          requestUrl: url, 
-          responseData: JSON.stringify(value, null, 2),
-          responseDataType: RenderDataAsTypes.JSON,
-          info: 'Endpoint Created:\n' +
-            `\tName: ${value.name}\n` +
-            `\tUID: ${value.uid}\n` +
-            `\tURL: ${props.paneProps.clientHostInfo.url}Endpoints/${value.uid}/\n` +
-            '',
-          enabled: true,
-          };
-
-        let updatedData: SingleRequestData[] = props.data.slice();
-        updatedData.push(updated);
-        props.setData(updatedData);
-
-        // **** update our endpoints ****
-
-        let values: EndpointRegistration[] = props.endpoints.slice();
-        values.push(value);
-        props.setEndpoints(values);
-
-        // **** increment our endpoint counter ****
-
-        endpointCountRef.current = endpointCountRef.current + 1;
-
-        // **** clear our busy status ****
-
-        props.updateStatus({...props.status, busy: false});
-      })
-      .catch((reason: any) => {
-        
+      if (!response.value) {
         // **** show the client endpoint information ****
 
         let updated: SingleRequestData = {
           name: 'Create Endpoint',
           id: 'create_endpoint',
           requestUrl: url, 
-          responseData: `Request for endpoint (${url}) failed:\n${reason}`,
-          responseDataType: RenderDataAsTypes.Error
+          responseData: `Request for Endpoint (${url}) failed:\n` +
+            `${response.statusCode} - "${response.statusText}"\n` +
+            `${response.body}`,
+          responseDataType: RenderDataAsTypes.Error,
           };
-
-        props.setData([updated]);
+        
+        let updatedData: SingleRequestData[] = props.data.slice();
+        updatedData.push(updated);
+        props.setData(updatedData);
         props.updateStatus({...props.status, busy: false});
-      });
+        return;
+      }
+
+      response.value.name = `Endpoint #${endpointCountRef.current}`;
+
+      // **** show the client endpoint information ****
+
+      let updated: SingleRequestData = {
+        name: response.value.name,
+        id: 'create_endpoint',
+        requestUrl: url, 
+        responseData: JSON.stringify(response.value, null, 2),
+        responseDataType: RenderDataAsTypes.JSON,
+        info: 'Endpoint Created:\n' +
+          `\tName: ${response.value.name}\n` +
+          `\tUID: ${response.value.uid}\n` +
+          `\tURL: ${props.paneProps.clientHostInfo.url}Endpoints/${response.value.uid}/\n` +
+          '',
+        enabled: true,
+        };
+
+      let updatedData: SingleRequestData[] = props.data.slice();
+      updatedData.push(updated);
+      props.setData(updatedData);
+
+      // **** update our endpoints ****
+
+      let values: EndpointRegistration[] = props.endpoints.slice();
+      values.push(response.value);
+      props.setEndpoints(values);
+
+      // **** increment our endpoint counter ****
+
+      endpointCountRef.current = endpointCountRef.current + 1;
+
+      // **** clear our busy status ****
+
+      props.updateStatus({...props.status, busy: false});
+    } catch (err) {
+
+      // **** show the client endpoint information ****
+
+      let updated: SingleRequestData = {
+        name: 'Create Endpoint',
+        id: 'create_endpoint',
+        requestUrl: url, 
+        responseData: `Request for endpoint (${url}) failed:\n${err}`,
+        responseDataType: RenderDataAsTypes.Error
+        };
+
+      let updatedData: SingleRequestData[] = props.data.slice();
+      updatedData.push(updated);
+      props.setData(updatedData);
+
+      props.updateStatus({...props.status, busy: false});
+    }
   };
 
   function removeEndpoint(index: number) {
@@ -153,7 +179,7 @@ export default function EndpointPlayground(props: EndpointPlaygroundProps) {
       });
   }
 
-  function toggleEnabled(index: number) {
+  async function toggleEnabled(index: number) {
     if ((index < 0) || (index >= props.endpoints.length)) {
       return;
     }
@@ -174,34 +200,47 @@ export default function EndpointPlayground(props: EndpointPlaygroundProps) {
       props.paneProps.clientHostInfo.url
       ).toString();
 
-      
     // **** ask for this endpoint to be toggled ****
 
-    ApiHelper.apiPost<EndpointRegistration>(url, '')
-      .then((value: EndpointRegistration) => {
-        let updatedData: SingleRequestData[] = props.data.slice();
-        updatedData[index].enabled = value.enabled;
-        props.setData(updatedData);
+    try {
+      let response:ApiResponse<EndpointRegistration> = await ApiHelper.apiPost<EndpointRegistration>(
+        url,
+        undefined
+      );
 
-
-        // **** update this endpoint ****
-
-        let values: EndpointRegistration[] = props.endpoints.slice();
-        values.splice(index, 1, value);
-        props.setEndpoints(values);
-
-        // **** clear our busy status ****
-
-        props.updateStatus({...props.status, busy: false});
-      })
-      .catch((reason: any) => {
+      if (!response.value) {
         // **** log an error ****
-        console.log('Could not toggle endpoint state', reason);
+        console.log('Could not toggle endpoint state', response);
 
         // **** clear our busy status ****
 
         props.updateStatus({...props.status, busy: false});
-      });
+        return;
+      }
+
+      let updatedData: SingleRequestData[] = props.data.slice();
+      updatedData[index].enabled = response.value.enabled;
+      props.setData(updatedData);
+
+
+      // **** update this endpoint ****
+
+      let values: EndpointRegistration[] = props.endpoints.slice();
+      values.splice(index, 1, response.value);
+      props.setEndpoints(values);
+
+      // **** clear our busy status ****
+
+      props.updateStatus({...props.status, busy: false});
+
+    } catch (err) {
+      // **** log an error ****
+      console.log('Could not toggle endpoint state', err);
+
+      // **** clear our busy status ****
+
+      props.updateStatus({...props.status, busy: false});
+    }
   }
 
   /** Return this component */

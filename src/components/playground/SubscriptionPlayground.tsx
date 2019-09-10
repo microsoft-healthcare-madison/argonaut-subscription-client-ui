@@ -9,7 +9,7 @@ import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import { EndpointRegistration } from '../../models/EndpointRegistration';
-import { ApiHelper } from '../../util/ApiHelper';
+import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
 import * as fhir from '../../models/fhir_r4_selected';
 
 export interface SubscriptionPlaygroundProps {
@@ -96,7 +96,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 		return (JSON.stringify(date).replace(/['"]+/g, ''));
   }
   
-  function createSubscription() {
+  async function createSubscription() {
     props.updateStatus({...props.status, busy: true});
 
 		// **** build the url for our call ***
@@ -141,11 +141,18 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 			status: 'requested',
 		}
 
-		// **** ask for this subscription to be created ****
+    // **** try to create the subscription ****
 
-		ApiHelper.apiPost<fhir.Subscription>(url, JSON.stringify(subscription))
-			.then((value: fhir.Subscription) => {
-				// **** show the client subscription information ****
+    try {
+      let response: ApiResponse<fhir.Subscription> = await ApiHelper.apiPostFhir(
+        url,
+        subscription,
+        props.paneProps.fhirServerInfo.authHeaderContent,
+        props.paneProps.fhirServerInfo.preferHeaderContent
+        );
+      
+      if (response.value) {
+        // **** show the client subscription information ****
 
         let updated: SingleRequestData = {
           name: 'Create Subscription',
@@ -153,30 +160,58 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
           requestUrl: url, 
           requestData: JSON.stringify(subscription, null, 2),
           requestDataType: RenderDataAsTypes.FHIR,
-          responseData: JSON.stringify(value, null, 2),
-          responseDataType: RenderDataAsTypes.FHIR,
+          responseData: response.value ? JSON.stringify(response.value, null, 2) : response.body,
+          responseDataType: response.value ? RenderDataAsTypes.FHIR : RenderDataAsTypes.Text,
+          outcome: response.outcome ? JSON.stringify(response.outcome, null, 2) : undefined,
           };
 
         props.setData([updated]);
-
+        
         // **** register this subscription (updates status) ****
 
-        props.registerSubscription(value);
-			})
-			.catch((reason: any) => {
-        // **** show the client subscription information ****
+        props.registerSubscription(response.value!);
 
-        let updated: SingleRequestData = {
-          name: 'Create Subscription',
-          id: 'create_subscription',
-          requestUrl: url, 
-          responseData: `Request for Subscription (${url}) failed:\n${reason}`,
-          responseDataType: RenderDataAsTypes.Error
-          };
+        // **** done ****
+        return;
+      }
 
-        props.setData([updated]);
-        props.updateStatus({...props.status, busy: false});
-			});
+      // **** show the client subscription information ****
+
+      let updated: SingleRequestData = {
+        name: 'Create Subscription',
+        id: 'create_subscription',
+        requestUrl: url, 
+        responseData: `Request for Subscription (${url}) failed:\n` +
+          `${response.statusCode} - "${response.statusText}"\n` +
+          `${response.body}`,
+        responseDataType: RenderDataAsTypes.Error,
+        outcome: response.outcome ? JSON.stringify(response.outcome, null, 2) : undefined,
+        };
+
+      props.setData([updated]);
+      props.updateStatus({...props.status, busy: false});
+
+      // **** done ****
+
+      return;
+    } catch (err) {
+      // **** show the client subscription information ****
+
+      let updated: SingleRequestData = {
+        name: 'Create Subscription',
+        id: 'create_subscription',
+        requestUrl: url, 
+        responseData: `Request for Subscription (${url}) failed:\n${err}`,
+        responseDataType: RenderDataAsTypes.Error
+        };
+
+      props.setData([updated]);
+      props.updateStatus({...props.status, busy: false});
+
+      // **** done ****
+
+      return;
+    }
   }
 
   /** Process HTML events for the topic select box */

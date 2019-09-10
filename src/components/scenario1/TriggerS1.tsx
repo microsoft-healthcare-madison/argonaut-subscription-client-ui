@@ -8,7 +8,7 @@ import { DataCardInfo } from '../../models/DataCardInfo';
 import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
-import { ApiHelper } from '../../util/ApiHelper';
+import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
 import * as fhir from '../../models/fhir_r4_selected';
 
 export interface TriggerS1Props {
@@ -35,7 +35,7 @@ export default function TriggerS1(props: TriggerS1Props) {
   const [encounterClass, setPayloadType] = useState<string>('VR');
   const encounterStatus: string = 'in-progress';
   
-  function sendEncounter() {
+  async function sendEncounter() {
     props.updateStatus({...props.status, busy: true});
 
 		// **** build the url for our call ***
@@ -54,30 +54,19 @@ export default function TriggerS1(props: TriggerS1Props) {
 			subject: {
 				reference: `Patient/${props.selectedPatientId}`,
 			}
-		}
+    }
 
-		// **** ask for this encounter to be created ****
+    // **** ask for this encounter to be created ****
+    
+    try {
+      let response:ApiResponse<fhir.Encounter> = await ApiHelper.apiPostFhir<fhir.Encounter>(
+        url,
+        encounter,
+        props.paneProps.fhirServerInfo.authHeaderContent,
+        props.paneProps.fhirServerInfo.preferHeaderContent
+      );
 
-		ApiHelper.apiPost<fhir.Encounter>(url, JSON.stringify(encounter))
-			.then((value: fhir.Encounter) => {
-				// **** show the client encounter information ****
-
-        let updated: SingleRequestData = {
-          name: 'Create Encounter',
-          id: 'create_encounter',
-          requestUrl: url, 
-          requestData: JSON.stringify(encounter, null, 2),
-          requestDataType: RenderDataAsTypes.FHIR,
-          responseData: JSON.stringify(value, null, 2),
-          responseDataType: RenderDataAsTypes.FHIR,
-          };
-
-        props.setData([updated]);
-        props.updateStatus({...props.status, busy: false});
-
-        props.registerEncounterSent();
-			})
-			.catch((reason: any) => {
+      if (!response.value) {
         // **** show the client subscription information ****
 
         let updated: SingleRequestData = {
@@ -86,13 +75,51 @@ export default function TriggerS1(props: TriggerS1Props) {
           requestUrl: url, 
           requestData: JSON.stringify(encounter, null, 2),
           requestDataType: RenderDataAsTypes.FHIR,
-          responseData: `Request for Encounter (${url}) failed:\n${reason}`,
-          responseDataType: RenderDataAsTypes.Error
+          responseData: `Request for Encounter (${url}) failed:\n` +
+            `${response.statusCode} - "${response.statusText}"\n` +
+            `${response.body}`,
+          responseDataType: RenderDataAsTypes.Error,
+          outcome: response.outcome ? JSON.stringify(response.outcome, null, 2) : undefined,
           };
 
         props.setData([updated]);
         props.updateStatus({...props.status, busy: false});
-			});
+        return;
+      }
+
+      // **** show the client encounter information ****
+
+      let updated: SingleRequestData = {
+        name: 'Create Encounter',
+        id: 'create_encounter',
+        requestUrl: url, 
+        requestData: JSON.stringify(encounter, null, 2),
+        requestDataType: RenderDataAsTypes.FHIR,
+        responseData: JSON.stringify(response.value, null, 2),
+        responseDataType: RenderDataAsTypes.FHIR,
+        outcome: response.outcome ? JSON.stringify(response.outcome, null, 2) : undefined,
+        };
+
+      props.setData([updated]);
+      props.updateStatus({...props.status, busy: false});
+
+      props.registerEncounterSent();
+    } catch (err) {
+      // **** show the client subscription information ****
+
+      let updated: SingleRequestData = {
+        name: 'Create Encounter',
+        id: 'create_encounter',
+        requestUrl: url, 
+        requestData: JSON.stringify(encounter, null, 2),
+        requestDataType: RenderDataAsTypes.FHIR,
+        responseData: `Request for Encounter (${url}) failed:\n${err}`,
+        responseDataType: RenderDataAsTypes.Error
+        };
+
+      props.setData([updated]);
+      props.updateStatus({...props.status, busy: false});
+    }
   }
 
   /** Process HTML events for the payload type select box */

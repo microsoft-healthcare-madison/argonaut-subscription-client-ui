@@ -12,6 +12,7 @@ import {
   Text,
   HTMLTable,
   Callout,
+  HTMLSelect,
 } from '@blueprintjs/core';
 
 import { ContentPaneProps } from '../models/ContentPaneProps';
@@ -24,6 +25,8 @@ export default function ConfigurationPane(props: ContentPaneProps) {
   const initialLoadRef = useRef<boolean>(true);
 
   const [fhirServerUrl, setFhirServerUrl] = useState<string>(props.fhirServerInfo.url);
+  const [fhirServerAuth, setFhirServerAuth] = useState<string>(props.fhirServerInfo.authHeaderContent!);
+  const [fhirServerPrefer, setFhirServerPrefer] = useState<string>(props.fhirServerInfo.preferHeaderContent);
   const [clientHostUrl, setClientHostUrl] = useState<string>(props.clientHostInfo.url);
   
   const [requestConnectionToggle, setRequestConnectionToggle] = useState<boolean>(false);
@@ -34,6 +37,24 @@ export default function ConfigurationPane(props: ContentPaneProps) {
 
   useEffect(() => {
     if (initialLoadRef.current) {
+
+      // **** update local settings that we need values for ****
+
+      if (localStorage.getItem('fhirServerUrl')) {
+        setFhirServerUrl(localStorage.getItem('fhirServerUrl')!);
+      }
+
+      if (localStorage.getItem('fhirServerAuth')) {
+        setFhirServerAuth(localStorage.getItem('fhirServerAuth')!);
+      }
+
+      if (localStorage.getItem('fhirServerPrefer')) {
+        setFhirServerPrefer(localStorage.getItem('fhirServerPrefer')!);
+      }
+
+      if (localStorage.getItem('clientHostUrl')) {
+        setClientHostUrl(localStorage.getItem('clientHostUrl')!);
+      }
 
       // **** check for requesting a connection ****
 
@@ -113,7 +134,11 @@ export default function ConfigurationPane(props: ContentPaneProps) {
 
     // **** use updated URLs for server and client ****
 
-    let serverInfo: ConnectionInformation = {...props.fhirServerInfo, url: fhirServerUrl};
+    let serverInfo: ConnectionInformation = {...props.fhirServerInfo, 
+      url: fhirServerUrl,
+      authHeaderContent: fhirServerAuth,
+      preferHeaderContent: fhirServerPrefer,
+    };
     let clientInfo: ConnectionInformation = {...props.clientHostInfo, url: clientHostUrl};
 
     // **** make sure the URLs end with a trailing slash ****
@@ -172,6 +197,23 @@ export default function ConfigurationPane(props: ContentPaneProps) {
     }
   }
 
+  function handleFhirServerAuthChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setFhirServerAuth(event.target.value);
+
+    if (StorageHelper.isLocalStorageAvailable) {
+      localStorage.setItem('fhirServerAuth', event.target.value);
+    }
+  }
+
+  function handleFhirServerPreferChange(event: React.FormEvent<HTMLSelectElement>) {
+    setFhirServerPrefer(event.currentTarget.value);
+
+    if (StorageHelper.isLocalStorageAvailable) {
+      localStorage.setItem('fhirServerPrefer', event.currentTarget.value);
+    }
+  }
+
+
 	/** Process HTML events for the Client Host URL text box (update state for managed) */
   function handleClientHostUrlChange(event: React.ChangeEvent<HTMLInputElement>) {
     setClientHostUrl(event.target.value);
@@ -196,6 +238,34 @@ export default function ConfigurationPane(props: ContentPaneProps) {
           disabled={connected}
           />
       </FormGroup>
+      <FormGroup
+        label = 'FHIR Server Authorization Header'
+        helperText = 'CONTENT of the authorization header the server requires, if any'
+        labelFor='fhir-server-auth'
+        >
+        <InputGroup 
+          id='fhir-server-auth'
+          value={fhirServerAuth}
+          onChange={handleFhirServerAuthChange}
+          disabled={connected}
+          />
+      </FormGroup>
+      <FormGroup
+        label = 'FHIR Server Prefer Header'
+        helperText = 'Type of content preferred by the client for returns'
+        labelFor='fhir-server-prefer'
+        >
+        <HTMLSelect
+          onChange={handleFhirServerPreferChange}
+          value={fhirServerPrefer}
+          disabled={connected}
+          >
+          <option>minimal</option>
+          <option>representation</option>
+          <option>OperationOutcome</option>
+        </HTMLSelect>
+      </FormGroup>
+
       <FormGroup
         label = {props.clientHostInfo.name + ' URL'}
         helperText = {props.clientHostInfo.hint}

@@ -4,7 +4,7 @@ import {
   Button, Card, H6, HTMLSelect, InputGroup, Spinner, FormGroup,
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
-import { ApiHelper } from '../../util/ApiHelper';
+import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
 import * as fhir from '../../models/fhir_r4_selected';
 import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import { DateInput } from '@blueprintjs/datetime';
@@ -104,7 +104,7 @@ export default function PatientCreateCard(props: PatientCreateProps) {
   }
   
   /** Function to handle a user request to create a patient */
-  function handleCreatePatientClick() {
+  async function handleCreatePatientClick() {
     // **** flag we are busy ****
     
     setBusy(true);
@@ -127,46 +127,70 @@ export default function PatientCreateCard(props: PatientCreateProps) {
 
 		let url: string = new URL(`Patient/${patient.id!}?_format=json`, props.paneProps.fhirServerInfo.url).toString();
 
-		ApiHelper.apiPutFhir<fhir.Patient>(url.toString(), JSON.stringify(patient))
-			.then((value: fhir.Patient) => {
-        // **** build data for display ****
+    try {
+      let response:ApiResponse<fhir.Patient> = await ApiHelper.apiPutFhir<fhir.Patient>(
+        url,
+        patient,
+        props.paneProps.fhirServerInfo.authHeaderContent,
+        props.paneProps.fhirServerInfo.preferHeaderContent
+        );
+      
+      if (!response.value) {
+        // **** show the client error information ****
 
-        let data: SingleRequestData = {
+        let updated: SingleRequestData = {
           name: 'Patient Create',
           id: 'patient_create', 
-          requestUrl: url,
-          requestData: JSON.stringify(patient, null, 2),
-          requestDataType: RenderDataAsTypes.FHIR,
-          responseData: JSON.stringify(value, null, 2),
-          responseDataType: RenderDataAsTypes.FHIR,
-        };
+          requestUrl: url, 
+          responseData: `Request for Subscription (${url}) failed:\n` +
+            `${response.statusCode} - "${response.statusText}"\n` +
+            `${response.body}`,
+          responseDataType: RenderDataAsTypes.Error,
+          };
 
-				// **** update our state ****
-
+        props.setData([updated]);
         setBusy(false);
-        props.setData([data]);
 
-        // **** flag this patient has been selected ****
+        return;
+      }
 
-        props.registerSelectedPatient(value.id!);
-			})
-			.catch((reason: any) => {
-        // **** build data for display ****
+      // **** build data for display ****
 
-        let data: SingleRequestData = {
-          name: 'Patient Create',
-          id: 'patient_create', 
-          requestUrl: url,
-          responseData: `Failed to PUT Patient to: ${url}:\n${reason}`,
-          responseDataType: RenderDataAsTypes.Error
-        };
+      let data: SingleRequestData = {
+        name: 'Patient Create',
+        id: 'patient_create', 
+        requestUrl: url,
+        requestData: JSON.stringify(patient, null, 2),
+        requestDataType: RenderDataAsTypes.FHIR,
+        responseData: JSON.stringify(response.value, null, 2),
+        responseDataType: RenderDataAsTypes.FHIR,
+        outcome: response.outcome ? JSON.stringify(response.outcome) : undefined,
+      };
 
-        // **** update our state ****
+      // **** update our state ****
 
-        setBusy(false);
-        props.setData([data]);
-			})
-			;
+      setBusy(false);
+      props.setData([data]);
+
+      // **** flag this patient has been selected ****
+
+      props.registerSelectedPatient(response.value!.id!);
+    } catch (err) {
+      // **** build data for display ****
+
+      let data: SingleRequestData = {
+        name: 'Patient Create',
+        id: 'patient_create', 
+        requestUrl: url,
+        responseData: `Failed to PUT Patient to: ${url}:\n${err}`,
+        responseDataType: RenderDataAsTypes.Error
+      };
+
+      // **** update our state ****
+
+      setBusy(false);
+      props.setData([data]);
+    }
   }
 
   /** Return this component */

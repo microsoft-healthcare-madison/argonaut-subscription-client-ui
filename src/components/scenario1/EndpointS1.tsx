@@ -6,7 +6,7 @@ import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import { EndpointRegistration } from '../../models/EndpointRegistration';
-import { ApiHelper } from '../../util/ApiHelper';
+import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
 
 export interface EndpointS1Props {
   paneProps: ContentPaneProps,
@@ -30,7 +30,7 @@ export default function EndpointS1(props: EndpointS1Props) {
 
   useEffect(() => {
     /** Create an endpoint */
-    function createEndpoint() {
+    async function createEndpoint() {
       props.updateStatus({...props.status, busy: true});
 
       // **** build the url for our call ***
@@ -40,49 +40,69 @@ export default function EndpointS1(props: EndpointS1Props) {
         props.paneProps.clientHostInfo.url
         ).toString();
 
-      // **** ask for this endpoint to be created ****
+      // **** try to create the endpoint ****
+      
+      try {
+        let response:ApiResponse<EndpointRegistration> = await ApiHelper.apiPost<EndpointRegistration>(
+          url,
+          undefined
+        );
 
-      ApiHelper.apiPost<EndpointRegistration>(url, '')
-        .then((value: EndpointRegistration) => {
-          value.name = `Endpoint #${props.data.length}`;
-
-          // **** show the client endpoint information ****
-
-          let updated: SingleRequestData = {
-            name: value.name,
-            id: 'create_endpoint',
-            requestUrl: url, 
-            responseData: JSON.stringify(value, null, 2),
-            responseDataType: RenderDataAsTypes.JSON,
-            info: 'Endpoint Created:\n' +
-              `\tUID: ${value.uid}\n` +
-              `\tURL: ${props.paneProps.clientHostInfo.url}Endpoints/${value.uid}/\n` +
-              '',
-            };
-
-          props.setData([updated]);
-
-          // **** register this endpoint (updates status) ****
-
-          props.registerEndpoint(value);
-
-        })
-        .catch((reason: any) => {
-          
+        if (!response.value) {
           // **** show the client endpoint information ****
 
           let updated: SingleRequestData = {
             name: 'Create Endpoint',
             id: 'create_endpoint',
             requestUrl: url, 
-            responseData: `Request for endpoint (${url}) failed:\n${reason}`,
-            responseDataType: RenderDataAsTypes.Error
+            responseData: `Request for Endpoint (${url}) failed:\n` +
+            `${response.statusCode} - "${response.statusText}"\n` +
+            `${response.body}`,
+            responseDataType: RenderDataAsTypes.Error,
             };
 
           props.setData([updated]);
           props.updateStatus({...props.status, busy: false});
-        });
-      };
+          return;
+        }
+
+        response.value.name = `Endpoint #${props.data.length}`;
+
+        // **** show the client endpoint information ****
+
+        let updated: SingleRequestData = {
+          name: response.value.name,
+          id: 'create_endpoint',
+          requestUrl: url, 
+          responseData: JSON.stringify(response.value, null, 2),
+          responseDataType: RenderDataAsTypes.JSON,
+          info: 'Endpoint Created:\n' +
+            `\tUID: ${response.value.uid}\n` +
+            `\tURL: ${props.paneProps.clientHostInfo.url}Endpoints/${response.value.uid}/\n` +
+            '',
+          };
+
+        props.setData([updated]);
+
+        // **** register this endpoint (updates status) ****
+
+        props.registerEndpoint(response.value);
+
+      } catch (err) {
+        // **** show the client endpoint information ****
+
+        let updated: SingleRequestData = {
+          name: 'Create Endpoint',
+          id: 'create_endpoint',
+          requestUrl: url, 
+          responseData: `Request for endpoint (${url}) failed:\n${err}`,
+          responseDataType: RenderDataAsTypes.Error
+          };
+
+        props.setData([updated]);
+        props.updateStatus({...props.status, busy: false});
+      }
+    };
 
     // **** check for available and endpoint is needed ****
 

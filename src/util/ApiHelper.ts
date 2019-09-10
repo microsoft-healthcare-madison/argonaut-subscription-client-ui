@@ -1,122 +1,528 @@
+import * as fhir from "../models/fhir_r4_selected";
+
+export interface ApiResponse<T> {
+  statusCode?: number;
+  statusText?: string;
+  body?: string;
+  value?: T;
+  outcome?: fhir.OperationOutcome;
+  error?: any;
+}
 
 export class ApiHelper {
+
+  static async apiGet<T>(url: string, authHeader?: string): Promise<ApiResponse<T>> {
+    try {
+      let headers: Headers = new Headers();
+      headers.append('Accept', 'application/json');
+      if (authHeader) {
+        headers.append('Authorization', authHeader);
+      }
+
+      let response: Response = await fetch(url, {
+        method: 'GET',
+        headers: headers, 
+      });
+      let body: string = await response.text();
+      let typed: T|undefined = undefined;
+
+      // **** attempt Typed parse ****
+
+      try {
+        typed = JSON.parse(body);
+      } catch (parseError) {
+        // **** ignore ****
+      }
+      return {
+        statusCode: response.status,
+        statusText: response.statusText,
+        body: body,
+        value: typed,
+      };
+      
+    } catch (err) {
+      return {
+        error: err,
+      };
+    }
+  }
   
-  static apiGet<T>(url: string): Promise<T> {
-    return fetch(url, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-      },
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(response.statusText);
+  // static apiGet<T>(url: string): Promise<T> {
+  //   return fetch(url, {
+  //     method: 'GET',
+  //     headers: {
+  //       'Accept': 'application/json',
+  //     },
+  //     })
+  //     .then(response => {
+  //       if (!response.ok) {
+  //         throw new Error(response.statusText);
+  //       }
+  //       return response.json() as Promise<T>;
+  //     })
+  // }
+
+
+  static async apiGetFhir<T>(url: string, authHeader?: string): Promise<ApiResponse<T>> {
+    try {
+      let headers: Headers = new Headers();
+      headers.append('Accept', 'application/fhir+json');
+      if (authHeader) {
+        headers.append('Authorization', authHeader);
+      }
+
+      let response: Response = await fetch(url, {
+        method: 'GET',
+        headers: headers, 
+      });
+      let body: string = await response.text();
+      let typed: T|undefined = undefined;
+      let outcome: fhir.OperationOutcome|undefined = undefined;
+
+      // **** attempt typed parses ****
+
+      try {
+        let parsed:any = JSON.parse(body);
+        if ((parsed.resourceType) && (parsed.resourceType !== 'OperationOutcome')) {
+          typed = parsed;
         }
-        return response.json() as Promise<T>;
-      })
+        if (parsed.resourceType === 'OperationOutcome') {
+          outcome = parsed;
+        }
+      } catch (parseError) {
+        // **** ignore ****
+      }
+      
+      return {
+        statusCode: response.status,
+        statusText: response.statusText,
+        body: body,
+        value: typed,
+        outcome: outcome,
+      };
+      
+    } catch (err) {
+      return {
+        error: err,
+      };
+    }
+  }
+  
+  // static apiGetFhir<T>(url: string): Promise<T> {
+  //   return fetch(url, {
+  //     method: 'GET',
+  //     headers: {
+  //       'Accept': 'application/fhir+json',
+  //     },
+  //     })
+  //     .then(response => {
+  //       if (!response.ok) {
+  //         throw new Error(response.statusText);
+  //       }
+  //       return response.json() as Promise<T>;
+  //     })
+  // }
+
+  
+  static async apiPost<T>(url:string, data:T|undefined, authHeader?:string): Promise<ApiResponse<T>> {
+    try {
+      let headers: Headers = new Headers();
+      headers.append('Accept', 'application/json');
+      headers.append('Content-Type', 'application/json');
+      if (authHeader) {
+        headers.append('Authorization', authHeader);
+      }
+      let response: Response = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: data ? JSON.stringify(data) : '',
+      });
+      let body: string = await response.text();
+      let typed: T|undefined = undefined;
+
+      // **** attempt Typed parse ****
+
+      try {
+        typed = JSON.parse(body);
+      } catch (parseError) {
+        // **** ignore ****
+      }
+      return {
+        statusCode: response.status,
+        statusText: response.statusText,
+        body: body,
+        value: typed,
+      };
+      
+    } catch (err) {
+      return {
+        error: err,
+      };
+    }
+  }
+  
+  // static apiPost<T>(url: string, jsonData: string): Promise<T> {
+  //   return fetch(url, {
+  //     method: 'POST',
+  //     headers: {
+  //       'Accept': 'application/json',
+  //       'Content-Type': 'application/json',
+  //     },
+  //     body: jsonData
+  //     })
+  //     .then(response => {
+  //       if (!response.ok) {
+  //         throw new Error(response.statusText);
+  //       }
+  //       return response.json() as Promise<T>;
+  //     })
+  // }
+
+  static async apiPostFhir<T>(url:string, data:T, authHeader?:string, preferHeader?:string): Promise<ApiResponse<T>> {
+    try {
+      let headers: Headers = new Headers();
+      headers.append('Accept', 'application/fhir+json');
+      headers.append('Content-Type', 'application/fhir+json;charset=utf-8');
+      if (authHeader) {
+        headers.append('Authorization', authHeader);
+      }
+      if (preferHeader) {
+        headers.append('Prefer', `return=${preferHeader}`);
+      } else {
+        headers.append('Prefer', 'return=representation');
+      }
+      let response: Response = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(data),
+      });
+
+      let location:string|null = response.headers.has('Location') ? response.headers.get('Location') : null;
+      let body: string = await response.text();
+      let typed: T|undefined = undefined;
+      let outcome: fhir.OperationOutcome|undefined = undefined;
+
+      // **** attempt typed parse ****
+
+      try {
+        let parsed:any = JSON.parse(body);
+        if ((parsed) && (parsed.resourceType) && (parsed.resourceType !== 'OperationOutcome')) {
+          typed = parsed;
+        }
+        if ((parsed) && (parsed.resourceType === 'OperationOutcome')) {
+          outcome = parsed;
+        }
+      } catch (parseError) {
+        // **** ignore ****
+      }
+
+      // **** check for not having data and having a location header ****
+
+      if ((!typed) && (location)) {
+        // **** perform our get ****
+
+        try {
+          let getResponse: ApiResponse<T> = await this.apiGetFhir<T>(location!, authHeader);
+          typed = getResponse.value;
+        } catch (getError) {
+          // **** ignore errors here for now ****
+        }
+      }
+
+      // **** return our info ****
+      
+      return {
+        statusCode: response.status,
+        statusText: response.statusText,
+        body: body,
+        value: typed,
+        outcome: outcome,
+      };
+      
+    } catch (err) {
+      return {
+        error: err,
+      };
+    }
   }
 
-  static apiGetFhir<T>(url: string): Promise<T> {
-    return fetch(url, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/fhir+json',
-      },
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(response.statusText);
+  // static apiPostFhir<T>(url: string, jsonData: string): Promise<T> {
+  //   return fetch(url, {
+  //     method: 'POST',
+  //     headers: {
+  //       'Accept': 'application/fhir+json;charset=utf-8',
+  //       'Content-Type': 'application/fhir+json;charset=utf-8',
+  //       'Prefer':'return=representation',
+  //     },
+  //     body: jsonData
+  //     })
+  //     .then(response => {
+  //       if (!response.ok) {
+  //         throw new Error(response.statusText);
+  //       }
+  //       return response.json() as Promise<T>;
+  //     })
+  // }
+
+  
+  static async apiPutFhir<T>(url:string, data:T, authHeader?:string, preferHeader?:string): Promise<ApiResponse<T>> {
+    try {
+      let headers: Headers = new Headers();
+      headers.append('Accept', 'application/fhir+json');
+      headers.append('Content-Type', 'application/fhir+json;charset=utf-8');
+      if (authHeader) {
+        headers.append('Authorization', authHeader);
+      }
+      if (preferHeader) {
+        headers.append('Prefer', `return=${preferHeader}`);
+      } else {
+        headers.append('Prefer', 'return=representation');
+      }
+      let response: Response = await fetch(url, {
+        method: 'PUT',
+        headers: headers,
+        body: JSON.stringify(data),
+      });
+      let body: string = await response.text();
+      let typed: T|undefined = undefined;
+      let outcome: fhir.OperationOutcome|undefined = undefined;
+
+      // **** attempt typed parse ****
+
+      try {
+        let parsed:any = JSON.parse(body);
+        if ((parsed.resourceType) && (parsed.resourceType !== 'OperationOutcome')) {
+          typed = parsed;
         }
-        return response.json() as Promise<T>;
-      })
+        if (parsed.resourceType === 'OperationOutcome') {
+          outcome = parsed;
+        }
+      } catch (parseError) {
+        // **** ignore ****
+      }
+
+      // **** check for not having data and having a location header ****
+
+      if ((!typed) && (response.headers.has('Location'))) {
+        // **** grab the location ****
+
+        let location: string = response.headers.get('Location')!;
+
+        // **** perform our get ****
+
+        try {
+          let getResponse: ApiResponse<T> = await this.apiGetFhir<T>(location, authHeader);
+          typed = getResponse.value;
+        } catch (getError) {
+          // **** ignore errors here for now ****
+        }
+      }
+      
+      return {
+        statusCode: response.status,
+        statusText: response.statusText,
+        body: body,
+        value: typed,
+        outcome: outcome,
+      };
+      
+    } catch (err) {
+      return {
+        error: err,
+      };
+    }
   }
 
-  static apiPost<T>(url: string, jsonData: string): Promise<T> {
-    return fetch(url, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: jsonData
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(response.statusText);
-        }
-        return response.json() as Promise<T>;
-      })
+  // static apiPutFhir<T>(url: string, jsonData: string): Promise<T> {
+  //   return fetch(url, {
+  //     method: 'PUT',
+  //     headers: {
+  //       'Accept': 'application/fhir+json;charset=utf-8',
+  //       'Content-Type': 'application/fhir+json;charset=utf-8',
+  //       'Prefer':'return=representation',
+  //     },
+  //     body: jsonData
+  //     })
+  //     .then(response => {
+  //       if (!response.ok) {
+  //         throw new Error(response.statusText);
+  //       }
+  //       return response.json() as Promise<T>;
+  //     })
+  // }
+
+  
+  static async apiPut<T>(url:string, jsonData:string, authHeader?:string): Promise<ApiResponse<T>> {
+    try {
+      let headers: Headers = new Headers();
+      headers.append('Accept', 'application/json');
+      headers.append('Content-Type', 'application/json');
+      if (authHeader) {
+        headers.append('Authorization', authHeader);
+      }
+      let response: Response = await fetch(url, {
+        method: 'PUT',
+        headers: headers,
+        body: jsonData,
+      });
+      let body: string = await response.text();
+      let typed: T|undefined = undefined;
+
+      // **** attempt Typed parse ****
+
+      try {
+        typed = JSON.parse(body);
+      } catch (parseError) {
+        // **** ignore ****
+      }
+      return {
+        statusCode: response.status,
+        statusText: response.statusText,
+        body: body,
+        value: typed,
+      };
+      
+    } catch (err) {
+      return {
+        error: err,
+      };
+    }
   }
 
-  static apiPostFhir<T>(url: string, jsonData: string): Promise<T> {
-    return fetch(url, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/fhir+json; charset=utf-8',
-        'Content-Type': 'application/fhir+json; charset=utf-8',
-        'Prefer':'return=representation',
-      },
-      body: jsonData
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(response.statusText);
-        }
-        return response.json() as Promise<T>;
-      })
+  // static apiPut<T>(url: string, jsonData: string): Promise<T> {
+  //   return fetch(url, {
+  //     method: 'PUT',
+  //     headers: {
+  //       'Accept': 'application/json',
+  //       'Content-Type': 'application/json',
+  //     },
+  //     body: jsonData
+  //     })
+  //     .then(response => {
+  //       if (!response.ok) {
+  //         throw new Error(response.statusText);
+  //       }
+  //       return response.json() as Promise<T>;
+  //     })
+  // }
+
+  
+  static async apiDelete<T>(url:string, authHeader?:string): Promise<ApiResponse<T>> {
+    try {
+      let headers: Headers = new Headers();
+      headers.append('Accept', 'application/json');
+      headers.append('Content-Type', 'application/json');
+      if (authHeader) {
+        headers.append('Authorization', authHeader);
+      }
+      let response: Response = await fetch(url, {
+        method: 'DELETE',
+        headers: headers,
+      });
+      let body: string = await response.text();
+      let typed: T|undefined = undefined;
+
+      // **** attempt Typed parse ****
+
+      try {
+        typed = JSON.parse(body);
+      } catch (parseError) {
+        // **** ignore ****
+      }
+
+      return {
+        statusCode: response.status,
+        statusText: response.statusText,
+        body: body,
+        value: typed,
+      };
+      
+    } catch (err) {
+      return {
+        error: err,
+      };
+    }
   }
 
-  static apiPutFhir<T>(url: string, jsonData: string): Promise<T> {
-    return fetch(url, {
-      method: 'PUT',
-      headers: {
-        'Accept': 'application/fhir+json',
-        'Content-Type': 'application/fhir+json',
-      },
-      body: jsonData
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(response.statusText);
+  
+  static async apiDeleteFhir<T>(url:string, authHeader?:string, preferHeader?:string): Promise<ApiResponse<T>> {
+    try {
+      let headers: Headers = new Headers();
+      headers.append('Accept', 'application/fhir+json');
+      headers.append('Content-Type', 'application/fhir+json;charset=utf-8');
+      if (authHeader) {
+        headers.append('Authorization', authHeader);
+      }
+      if (preferHeader) {
+        headers.append('Prefer', `return=${preferHeader}`);
+      } else {
+        headers.append('Prefer', 'return=representation');
+      }
+      let response: Response = await fetch(url, {
+        method: 'DELETE',
+        headers: headers,
+      });
+      let body: string = await response.text();
+      let typed: T|undefined = undefined;
+      let outcome: fhir.OperationOutcome|undefined = undefined;
+
+      // **** attempt Typed parse ****
+
+      try {
+        let parsed:any = JSON.parse(body);
+        if ((parsed.resourceType) && (parsed.resourceType !== 'OperationOutcome')) {
+          typed = parsed;
         }
-        return response.json() as Promise<T>;
-      })
+        if (parsed.resourceType === 'OperationOutcome') {
+          outcome = parsed;
+        }
+      } catch (parseError) {
+        // **** ignore ****
+      }
+
+      return {
+        statusCode: response.status,
+        statusText: response.statusText,
+        body: body,
+        value: typed,
+        outcome: outcome,
+      };
+      
+    } catch (err) {
+      return {
+        error: err,
+      };
+    }
   }
 
-  static apiPut<T>(url: string, jsonData: string): Promise<T> {
-    return fetch(url, {
-      method: 'PUT',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: jsonData
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(response.statusText);
-        }
-        return response.json() as Promise<T>;
-      })
+  // static apiDelete(url: string): Promise<boolean> {
+  //   return fetch(url, {
+  //     method: 'DELETE',
+  //     headers: {
+  //       'Accept': 'application/json',
+  //       'Content-Type': 'application/json',
+  //     },
+  //     })
+  //     .then(response => {
+  //       if (!response.ok) {
+  //         throw new Error(response.statusText);
+  //       }
+  //       return true;
+  //     })
+  //     .catch(reason => {
+  //       return false;
+  //     })
+  // }
+
+  static urlForSubscription(id:string, serverUrl:string):string {
+		return new URL(`Subscription/${encodeURIComponent(id)}`, serverUrl).toString();
   }
 
-  static apiDelete(url: string): Promise<boolean> {
-    return fetch(url, {
-      method: 'DELETE',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(response.statusText);
-        }
-        return true;
-      })
-      .catch(reason => {
-        return false;
-      })
+  static urlForEndpoint(clientRegistration:string, id:string, clientHostUrl:string):string {
+    return new URL(
+			`api/Clients/${encodeURIComponent(clientRegistration)}/Endpoints/${encodeURIComponent(id)}/`, 
+			clientHostUrl
+      ).toString();
   }
 
   static deleteSubscription(id: string, serverUrl: string) {

@@ -19,7 +19,7 @@ import { StorageHelper } from '../util/StorageHelper';
 import PlaygroundPane  from './playground/PlaygroundPane';
 import { CopyHelper } from '../util/CopyHelper';
 import ScenarioPane1 from './scenario1/ScenarioPane1';
-import { ApiHelper } from '../util/ApiHelper';
+import { ApiHelper, ApiResponse } from '../util/ApiHelper';
 import { ClientHostRegistration } from '../models/ClientHostRegistration';
 
 import * as fhir from '../models/fhir_r4_selected';
@@ -61,6 +61,8 @@ export default function MainPage() {
       showMessages: false,
       logMessages: false,
       registration: '',
+      authHeaderContent: '',
+      preferHeaderContent: 'representation',
     });
   const [clientHostInfo, setClientHostInfo] = useState<ConnectionInformation>({
       name: 'Client Host',
@@ -70,6 +72,8 @@ export default function MainPage() {
       showMessages: false,
       logMessages: false,
       registration: '',
+      authHeaderContent: '',
+      preferHeaderContent: 'representation',
     });
   const [uiDark, setUiDark] = useState<boolean>(false);
   const [codePaneDark, setCodePaneDark] = useState<boolean>(false);
@@ -83,11 +87,24 @@ export default function MainPage() {
         // **** check for local storage settings ****
 
       if (StorageHelper.isLocalStorageAvailable) {
+
+        let serverInfo = {...fhirServerInfo};
+
         // **** update local settings ****
 
         if (localStorage.getItem('fhirServerUrl')) {
-          setFhirServerInfo({...fhirServerInfo, url: localStorage.getItem('fhirServerUrl')!});
+          serverInfo.url= localStorage.getItem('fhirServerUrl')!;
         }
+
+        if (localStorage.getItem('fhirServerAuth')) {
+          serverInfo.authHeaderContent = localStorage.getItem('fhirServerAuth')!;
+        }
+
+        if (localStorage.getItem('fhirServerPrefer')) {
+          serverInfo.preferHeaderContent = localStorage.getItem('fhirServerPrefer')!;
+        }
+        
+        setFhirServerInfo(serverInfo);
 
         let clientInfo = {...clientHostInfo};
 
@@ -231,20 +248,28 @@ export default function MainPage() {
 
         // **** attempt to get the server capabilities ****
 
-        let capabilities: fhir.CapabilityStatement = await ApiHelper.apiGet<fhir.CapabilityStatement>(capabilityUrl);
+        let response: ApiResponse<fhir.CapabilityStatement> = await ApiHelper.apiGet<fhir.CapabilityStatement>(
+          capabilityUrl,
+          fhirServerInfo.authHeaderContent
+          );
+
+        if (!response.value) {
+          throw('Could not get valid CapabilityStatement.');
+        }
+
+        let capabilities: fhir.CapabilityStatement = response.value!;
 
         // **** check for data we need ****
 
-        if ((capabilities === null) ||
-            (capabilities.rest === null) ||
+        if ((capabilities.rest === null) ||
             (capabilities.rest!.length === 0)) {
-          throw('Minimum server requirements not met.');
+          throw('Could not get valid CapabilityStatement.');
         }
 
-        // let hasResourcePatient: boolean = false;
+        let hasResourcePatient: boolean = false;
         var createPatient: boolean = false;
 
-        // let hasResourceEncounter: boolean = false;
+        let hasResourceEncounter: boolean = false;
         var createEncounter: boolean = false;
 
         capabilities.rest!.forEach((restCapability: fhir.CapabilityStatementRest) => {
@@ -260,15 +285,21 @@ export default function MainPage() {
               return;
             }
             if (resource.type === 'Patient') {
-              // hasResourcePatient = true;
-              createPatient = !resourceSupportsCreate(resource);
+              hasResourcePatient = true;
+              createPatient = resourceSupportsCreate(resource);
             }
             if (resource.type === 'Encounter') {
-              // hasResourceEncounter = true;
+              hasResourceEncounter = true;
               createEncounter = resourceSupportsCreate(resource);
             }
           });
         });
+        
+        // **** check for minimum capabilities ****
+
+        if ((!hasResourcePatient) || (!hasResourceEncounter)) {
+          throw('Minimum server requirements not met.');
+        }
 
         // **** still here means success ****
 
@@ -292,15 +323,15 @@ export default function MainPage() {
 
         var clientHostRegistration: ClientHostRegistration = {uid: '', fhirServerUrl: fhirServer.url};
 
-        let clientHost: ClientHostRegistration = await ApiHelper.apiPost<ClientHostRegistration>(
+        let clientHost: ApiResponse<ClientHostRegistration> = await ApiHelper.apiPost<ClientHostRegistration>(
           registrationUrl, 
-          JSON.stringify(clientHostRegistration)
+          clientHostRegistration,
           );
-        
+
         // **** build the websocket URL ****
 
         let wsUrl: string = new URL(
-          '/websockets?uid='+clientHost.uid,
+          '/websockets?uid='+clientHost.value!.uid,
           clientInfo.url.replace('http', 'ws')).toString();
 
         // **** connect to our server ****
@@ -319,7 +350,7 @@ export default function MainPage() {
         // **** update our client host information ****
 
         return {...clientInfo, 
-          registration: clientHost.uid,
+          registration: clientHost.value!.uid,
           status: 'ok',
         };
 

@@ -4,6 +4,7 @@ export enum RenderDataAsTypes {
   FHIR,
   JSON,
   Error,
+  Text,
 }
 
 export interface SingleRequestData {
@@ -14,6 +15,7 @@ export interface SingleRequestData {
   requestData?: string;
   responseDataType?: RenderDataAsTypes;
   responseData?: string;
+  outcome?: string;
   info?: string;
   enabled?: boolean;
 }

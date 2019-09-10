@@ -1,10 +1,10 @@
 import React, {useState} from 'react';
 
 import {
-  Button, Card, H6, ControlGroup, HTMLSelect, InputGroup, Spinner, RadioGroup, Radio,
+  Button, Card, H6, ControlGroup, HTMLSelect, InputGroup, Spinner, RadioGroup, Radio, setHotkeysDialogProps,
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
-import { ApiHelper } from '../../util/ApiHelper';
+import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
 import * as fhir from '../../models/fhir_r4_selected';
 import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import { PatientSelectionInfo } from '../../models/PatientSelectionInfo';
@@ -47,7 +47,7 @@ export default function PatientSearchCard(props: PatientSearchProps) {
   }
 
   /** Function to handle user request to search a FHIR server for patients */
-	function handleSearchClick() {
+	async function handleSearchClick() {
     // **** flag we are searching ****
     
     setBusy(true);
@@ -60,73 +60,86 @@ export default function PatientSearchCard(props: PatientSearchProps) {
 				url += `?${encodeURIComponent(matchType)}=${encodeURIComponent(searchFilter)}`;
 		}
 
-    // **** attempt to get the list of Patients ****
+    try {
+      let response:ApiResponse<fhir.Bundle> = await ApiHelper.apiGetFhir<fhir.Bundle>(
+        url,
+        props.paneProps.fhirServerInfo.authHeaderContent
+      );
 
-    ApiHelper.apiGet<fhir.Bundle>(url)
-      .then((value: fhir.Bundle) => {
+      // **** check for no values ****
 
-				// **** check for no values ****
-
-				if ((!value) || (!value.entry) || (!value.entry)) {
-          setBusy(false);
-          setPatients([]);
-          return;
-				}
-
-				var bundlePatients: PatientSelectionInfo[] = [];
-
-				// **** loop over patients ****
-
-				value.entry!.forEach(entry => {
-					if (!entry.resource) return;
-
-					let patient: fhir.Patient = entry.resource as fhir.Patient;
-
-					if ((patient.id) && (patient.name)) {
-						bundlePatients.push({
-							key: patient.id!, 
-							value: `${patient.name![0].family}, ${patient.name![0].given} (${patient.id!})`});
-					}
-        });
-        
-        // **** build data for display ****
-
+      if ((!response.value) || (!response.value.entry) || (!response.value.entry)) {
         let data: SingleRequestData[] = [
           {
             name: 'Patient Search',
             id: 'patient_search', 
             requestUrl: url,
-            responseData: JSON.stringify(value, null, 2),
-            responseDataType: RenderDataAsTypes.FHIR,
+            responseData: response.body,
+            responseDataType: RenderDataAsTypes.Text,
           }
         ]
-
-				// **** update our state ****
-
-        setBusy(false);
-        setPatients(bundlePatients);
-        props.setData(data);
-      })
-      .catch((reason: any) => {
-        // **** build data for display ****
-
-        let data: SingleRequestData[] = [
-          {
-            name: 'Patient Search',
-            id: 'patient_search', 
-            requestUrl: url,
-            responseData: `Failed to get Patient list from: ${url}:\n${reason}`,
-            responseDataType: RenderDataAsTypes.Error
-          }
-        ]
-
-        // **** update our state ****
 
         setBusy(false);
         setPatients([]);
         props.setData(data);
-			})
-      ;
+        return;
+      }
+
+      var bundlePatients: PatientSelectionInfo[] = [];
+
+      // **** loop over patients ****
+
+      response.value.entry!.forEach(entry => {
+        if (!entry.resource) return;
+
+        let patient: fhir.Patient = entry.resource as fhir.Patient;
+
+        if ((patient.id) && (patient.name)) {
+          bundlePatients.push({
+            key: patient.id!, 
+            value: `${patient.name![0].family}, ${patient.name![0].given} (${patient.id!})`});
+        }
+      });
+      
+      // **** build data for display ****
+
+      let data: SingleRequestData[] = [
+        {
+          name: 'Patient Search',
+          id: 'patient_search', 
+          requestUrl: url,
+          responseData: JSON.stringify(response.value, null, 2),
+          responseDataType: RenderDataAsTypes.FHIR,
+          outcome: response.outcome ? JSON.stringify(response.outcome) : undefined,
+        }
+      ]
+
+      // **** update our state ****
+
+      setBusy(false);
+      setPatients(bundlePatients);
+      props.setData(data);
+      
+    } catch (err) {
+      // **** build data for display ****
+
+      let data: SingleRequestData[] = [
+        {
+          name: 'Patient Search',
+          id: 'patient_search', 
+          requestUrl: url,
+          responseData: `Failed to get Patient list from: ${url}:\n${err}`,
+          responseDataType: RenderDataAsTypes.Error
+        }
+      ]
+
+      // **** update our state ****
+
+      setBusy(false);
+      setPatients([]);
+      props.setData(data);
+    }
+
 	}
 
   /** Return this component */

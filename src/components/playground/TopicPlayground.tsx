@@ -5,7 +5,7 @@ import {
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { DataCardInfo } from '../../models/DataCardInfo';
-import { ApiHelper } from '../../util/ApiHelper';
+import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
 import * as fhir from '../../models/fhir_r4_selected';
 import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
@@ -31,7 +31,7 @@ export default function TopicPlayground(props: TopicPlaygroundProps) {
   };
 
   /** Handle user requests to get a topic list */
-  function handleGetTopicListClick() {
+  async function handleGetTopicListClick() {
     // **** update our state to show we are busy ****
 
     props.updateStatus({...props.status, busy: true});
@@ -42,8 +42,13 @@ export default function TopicPlayground(props: TopicPlaygroundProps) {
 
     // **** attempt to get the list of Topics ****
 
-    ApiHelper.apiGet<fhir.Bundle>(url)
-      .then((value: fhir.Bundle) => {
+    try {
+      let response:ApiResponse<fhir.Bundle> = await ApiHelper.apiGetFhir(
+        url,
+        props.paneProps.fhirServerInfo.authHeaderContent
+      );
+
+      if (!response.value) {
         // **** build data for display ****
 
         let data: SingleRequestData[] = [
@@ -51,55 +56,56 @@ export default function TopicPlayground(props: TopicPlaygroundProps) {
             name: 'Topic Search',
             id: 'topic_search', 
             requestUrl: url,
-            responseData: JSON.stringify(value, null, 2),
-            responseDataType: RenderDataAsTypes.FHIR
+            responseData: `Request for Topic (${url}) failed:\n` +
+            `${response.statusCode} - "${response.statusText}"\n` +
+            `${response.body}`,
+          responseDataType: RenderDataAsTypes.Error,
+          outcome: response.outcome ? JSON.stringify(response.outcome, null, 2) : undefined,
           }
-        ]
-
-        // **** check for topics in the bundle ****
-
-        let returnedTopics: fhir.Topic[] = [];
-        if (value.entry) {
-          // **** each bundle.entry.resource is a Topic ****
-          value.entry!.forEach((entry) => {
-            if (entry.resource) {
-              returnedTopics.push(entry.resource! as fhir.Topic);
-            }
-          })
-        }
-        props.setTopics(returnedTopics);
-
-        // **** update data ****
+        ];
 
         props.setData(data);
-
-        // **** update our step (completed) ****
-
-        props.updateStatus({available: true, complete: true, busy: false});
-      })
-      .catch((reason: any) => {
-        // **** build data for display ****
-
-        let data: SingleRequestData[] = [
-          {
-            name: 'Topic Search',
-            id: 'topic_search', 
-            requestUrl: url,
-            responseData: `Failed to get topic list from: ${url}:\n${reason}`,
-            responseDataType: RenderDataAsTypes.Error
-          }
-        ]
-
-        // **** update data ****
-
-        props.setData(data);
-        props.setTopics([]);
-
-        // **** update our step (failed) ****
-
         props.updateStatus({available: true, complete: false, busy: false});
-			})
-      ;
+        return;
+      }
+
+      // **** build data for display ****
+
+      let data: SingleRequestData[] = [
+        {
+          name: 'Topic Search',
+          id: 'topic_search', 
+          requestUrl: url,
+          responseData: JSON.stringify(response.value, null, 2),
+          responseDataType: RenderDataAsTypes.FHIR,
+          outcome: response.outcome ? JSON.stringify(response.outcome, null, 2) : undefined,
+        }
+      ];
+
+      // **** update data ****
+
+      props.setData(data);
+
+      // **** update our step (completed) ****
+
+      props.updateStatus({available: true, complete: true, busy: false});
+
+    } catch (err) {
+      // **** build data for display ****
+
+      let data: SingleRequestData[] = [
+        {
+          name: 'Topic Search',
+          id: 'topic_search', 
+          requestUrl: url,
+          responseData: `Failed to get topic list from: ${url}:\n${err}`,
+          responseDataType: RenderDataAsTypes.Error
+        }
+      ];
+
+      props.setData(data);
+      props.updateStatus({available: true, complete: false, busy: false});
+    }
   }
 
   /** Return this component */

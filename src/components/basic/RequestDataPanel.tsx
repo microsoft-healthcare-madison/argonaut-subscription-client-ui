@@ -49,6 +49,8 @@ export default function RequestDataPanel(props: RequestPanelProps) {
         setDisplayedTabId('info');
       } else if (props.data[dataRowIndex].responseData) {
         setDisplayedTabId('response_data');
+      } else if (props.data[dataRowIndex].outcome) {
+        setDisplayedTabId('outcome');
       } else if (props.data[dataRowIndex].requestData) {
         setDisplayedTabId('request_data');
       } else if (props.data[dataRowIndex].requestUrl) {
@@ -71,6 +73,7 @@ export default function RequestDataPanel(props: RequestPanelProps) {
       case RenderDataAsTypes.FHIR: return IconNames.FLAME; //break;
       case RenderDataAsTypes.JSON: return IconNames.ALIGN_JUSTIFY; //break;
       case RenderDataAsTypes.Error: return IconNames.ERROR; //break;
+      case RenderDataAsTypes.Text: return IconNames.LABEL; //break;
       default: return IconNames.LABEL; //break;
     }
   }
@@ -98,6 +101,10 @@ export default function RequestDataPanel(props: RequestPanelProps) {
         // break;
       case 'info':
         props.paneProps.copyToClipboard(props.data[dataRowIndex].info!, 'Info');
+        return;
+        // break;
+      case 'outcome':
+        props.paneProps.copyToClipboard(props.data[dataRowIndex].outcome!, 'OperationOutcome');
         return;
         // break;
     }
@@ -195,6 +202,23 @@ export default function RequestDataPanel(props: RequestPanelProps) {
             }
           >
           <Icon icon={iconNameForType(props.data[dataRowIndex].requestDataType!)} /> Request Data
+        </Tab>
+      }
+      { (props.data[dataRowIndex].outcome !== undefined) &&
+        <Tab
+          key='outcome'
+          id='outcome'
+          panel={
+            <SyntaxHighlighter
+              className='codeTab'
+              language='json'
+              style={props.paneProps.codePaneDark ? atomOneDark : atomOneLight}
+              >
+              {props.data[dataRowIndex].outcome!}
+            </SyntaxHighlighter>
+            }
+          >
+          <Icon icon={IconNames.FLAME} /> Outcome
         </Tab>
       }
       { (props.data[dataRowIndex].responseData !== undefined) &&
