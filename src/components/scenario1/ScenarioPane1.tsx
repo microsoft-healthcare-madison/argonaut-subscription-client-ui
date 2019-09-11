@@ -214,18 +214,31 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 	}
 
 	/** Register a subscription as active in this scenario */
-	function registerSubscription(value: fhir.Subscription) {
-		// **** disable subsequent steps ****
+	function registerSubscription(value?: fhir.Subscription) {
+		
+		if (!value)
+		{
+			// **** disable subsequent steps ****
 
-		disableSteps(5);
+			disableSteps(5);
 
-		// **** check for an old subscription ****
+			// **** check for an old subscription ****
 
-		if (subscription) {
-			ApiHelper.deleteSubscription(
-				subscription.id!,
-				props.fhirServerInfo.url
-			);
+			if (subscription) {
+				ApiHelper.deleteSubscription(
+					subscription.id!,
+					props.fhirServerInfo.url
+				);
+				setSubscription(null);
+			}
+
+			// **** flag we are waiting on subscription ****
+			
+			setHandshakeStatus(_statusBusy);
+
+			// **** done ****
+
+			return;
 		}
 
 		// **** save subscription ****
@@ -235,7 +248,6 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 		// **** update status ***
 
 		setSubscriptionStatus(_statusComplete);
-		setHandshakeStatus(_statusBusy);
 	}
 
 	/** Register an endpoint as active in this scenario */

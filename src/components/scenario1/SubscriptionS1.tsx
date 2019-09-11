@@ -14,7 +14,7 @@ import * as fhir from '../../models/fhir_r4_selected';
 
 export interface SubscriptionS1Props {
   paneProps: ContentPaneProps,
-  registerSubscription: ((subscription: fhir.Subscription) => void),
+  registerSubscription: ((subscription?: fhir.Subscription) => void),
   status: DataCardStatus,
   updateStatus: ((status: DataCardStatus) => void),
   data: SingleRequestData[],
@@ -45,6 +45,10 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
   
   async function createSubscription() {
     props.updateStatus({...props.status, busy: true});
+
+    // **** flag our parent to clear any old subscriptions ****
+
+    props.registerSubscription();
 
 		// **** build the url for our call ***
 
