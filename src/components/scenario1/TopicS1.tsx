@@ -17,6 +17,7 @@ export interface TopicS1Props {
   updateStatus: ((status: DataCardStatus) => void),
   data: SingleRequestData[],
   setData: ((data: SingleRequestData[]) => void),
+  setTopic: ((value: fhir.Topic) => void),
 }
 
 /** Component representing the Scenario 1 Topic Card */
@@ -69,6 +70,24 @@ export default function TopicS1(props: TopicS1Props) {
         return;
       }
 
+      // **** find the 'admission' topic ****
+
+      let admissionTopic:fhir.Topic|undefined = undefined;
+
+      if ((response.value.entry) &&
+          (response.value.entry!.length > 0))
+      {
+        response.value.entry.forEach((entry) => {
+          if (!entry.resource) { return; }
+          let topic:fhir.Topic = entry.resource! as fhir.Topic;
+          // if (topic.title === 'admission') {
+          if (topic.url === 'http://argonautproject.org/subscription-ig/Topic/admission') {
+            admissionTopic = topic;
+            props.setTopic(topic);
+          }
+        });
+      }
+
       // **** build data for display ****
 
       let data: SingleRequestData[] = [
@@ -79,6 +98,12 @@ export default function TopicS1(props: TopicS1Props) {
           responseData: JSON.stringify(response.value, null, 2),
           responseDataType: RenderDataAsTypes.FHIR,
           outcome: response.outcome ? JSON.stringify(response.outcome, null, 2) : undefined,
+          info: admissionTopic 
+            ? `Found topic:\n` +
+              `\t${admissionTopic!.title}\n`+
+              `\t${admissionTopic!.url}\n` +
+              `\t${props.paneProps.fhirServerInfo.url}Topic/${admissionTopic!.id}` 
+            : undefined,
         }
       ];
 

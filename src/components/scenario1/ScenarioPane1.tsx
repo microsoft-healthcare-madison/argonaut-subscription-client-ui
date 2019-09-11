@@ -37,6 +37,7 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 	
 	const [topicData, setTopicData] = useState<SingleRequestData[]>([]);
 	const [topicStatus, setTopicStatus] = useState<DataCardStatus>(_statusAvailable);
+	const [selectedTopic, setSelectedTopic] = useState<fhir.Topic|null>(null); 
 	
 	const [patientData, setPatientData] = useState<SingleRequestData[]>([]);
 	const [patientStatus, setPatientStatus] = useState<DataCardStatus>(_statusAvailable);
@@ -417,6 +418,7 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 			updateStatus={setTopicStatus}
 			data={topicData}
 			setData={setTopicData}
+			setTopic={setSelectedTopic}
 			/>
 
 		{/* Select or Create Patient */}
@@ -451,6 +453,7 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 			data={subscriptionData}
 			setData={setSubscriptionData}
 			selectedPatientId={selectedPatientId!}
+			topic={selectedTopic}
 			subscription={subscription!}
 			endpoint={endpoint!}
 			/>

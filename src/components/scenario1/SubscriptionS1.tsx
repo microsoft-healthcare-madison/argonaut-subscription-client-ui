@@ -20,6 +20,7 @@ export interface SubscriptionS1Props {
   data: SingleRequestData[],
   setData: ((data: SingleRequestData[]) => void),
   selectedPatientId: string,
+  topic: fhir.Topic|null,
   subscription: fhir.Subscription,
   endpoint: EndpointRegistration,
 }
@@ -80,6 +81,10 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
 		var expirationTime:Date = new Date();
 		expirationTime.setHours(expirationTime.getHours() + 1);
 
+    let topicUrl:string = props.topic 
+      ? new URL(`Topic/${props.topic!.id!}`, props.paneProps.fhirServerInfo.url).toString()
+      : new URL('Topic/admission', props.paneProps.fhirServerInfo.url).toString();
+
 		// **** build the subscription object ****
 
 		let subscription: fhir.Subscription = {
@@ -87,7 +92,7 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
 			channel: channel,
 			filterBy: [filter],
 			end: getInstantFromDate(expirationTime),
-			topic: {reference:  new URL('Topic/admission', props.paneProps.fhirServerInfo.url).toString()},
+			topic: {reference:  topicUrl},
 			reason: 'Client Testing',
 			status: 'requested',
     }
