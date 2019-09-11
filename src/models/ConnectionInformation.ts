@@ -10,6 +10,7 @@ export interface ConnectionInformation {
   // incomingMessageHandler: ((name: string, message: string) => void);
   supportsCreatePatient?: boolean;
   supportsCreateEncounter?: boolean;
+  supportsCreateGroup?: boolean;
   authHeaderContent?: string;
   preferHeaderContent: string;
 }

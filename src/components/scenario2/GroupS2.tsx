@@ -7,26 +7,27 @@ import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { DataCardInfo } from '../../models/DataCardInfo';
 import { SingleRequestData } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
-import PatientSearchCard from '../common/PatientSearchCard';
 import PatientCreateCard from '../common/PatientCreateCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
+import GroupSearchCard from '../common/GroupSearchCard';
+import GroupCreateCard from '../common/GroupCreateCard';
 
-export interface PatientS1Props {
+export interface GroupS2Props {
   paneProps: ContentPaneProps,
-  registerSelectedPatientId: ((patientId: string) => void),
+  registerSelectedGroupId: ((groupId: string, patientIds: string[]) => void),
   status: DataCardStatus,
   updateStatus: ((status: DataCardStatus) => void),
   data: SingleRequestData[],
   setData: ((data: SingleRequestData[]) => void),
 }
 
-/** Component representing the Scenario 1 Patient Card */
-export default function PatientS1(props: PatientS1Props) {
+/** Component representing the Scenario 2 Group Card */
+export default function GroupS2(props: GroupS2Props) {
 
   const info: DataCardInfo = {
-    id: 's1_patient',
+    id: 's2_group',
     stepNumber: 2,
-    heading: (props.paneProps.fhirServerInfo.supportsCreatePatient) ? 'Select or Create a Patient' : 'Select a Patient',
+    heading: (props.paneProps.fhirServerInfo.supportsCreateGroup) ? 'Select or Create a Group' : 'Select a Group',
     description: '',
     optional: false,
   };
@@ -39,24 +40,24 @@ export default function PatientS1(props: PatientS1Props) {
   }
 
   /** Update data to show selected patient and notify parent */
-  function handleSelectPatient(patientId: string) {
+  function handleSelectGroup(groupId: string, patientIds: string[]) {
 
     // **** add to our data ****
     if ((props.data) && (props.data.length > 0)) {
-      let updated: SingleRequestData = {...props.data[0], info: `Using patient id: ${patientId}`};
+      let updated: SingleRequestData = {...props.data[0], info: `Using group id: ${groupId}`};
       props.setData([updated]);
     } else {
       let updated: SingleRequestData = {
-        name: 'Patient',
-        id: 'patient',
-        info: `Using patient id: ${patientId}`,
+        name: 'Group',
+        id: 'group',
+        info: `Using group id: ${groupId}`,
       }
       props.setData([updated]);
     }
 
     // **** register with parent ****
 
-    props.registerSelectedPatientId(patientId);
+    props.registerSelectedGroupId(groupId, patientIds);
   }
 
   // **** check for NOT supporting create ****
@@ -71,10 +72,10 @@ export default function PatientS1(props: PatientS1Props) {
         paneProps={props.paneProps}
         status={props.status}
         >
-        <PatientSearchCard
+        <GroupSearchCard
           paneProps={props.paneProps}
           setData={props.setData}
-          registerSelectedPatient={handleSelectPatient}
+          registerSelectedGroup={handleSelectGroup}
           />
       </DataCard>
     );
@@ -100,10 +101,10 @@ export default function PatientS1(props: PatientS1Props) {
             id='s2_search' 
             title='Search' 
             panel={
-              <PatientSearchCard
+              <GroupSearchCard
                 paneProps={props.paneProps}
                 setData={props.setData}
-                registerSelectedPatient={handleSelectPatient}
+                registerSelectedGroup={handleSelectGroup}
                 />
             }
             />
@@ -111,10 +112,10 @@ export default function PatientS1(props: PatientS1Props) {
             id='s2_create'
             title='Create'
             panel={
-              <PatientCreateCard
+              <GroupCreateCard
                 paneProps={props.paneProps}
                 setData={props.setData}
-                registerSelectedPatient={props.registerSelectedPatientId}
+                registerSelectedGroup={handleSelectGroup}
                 />
             }
             />

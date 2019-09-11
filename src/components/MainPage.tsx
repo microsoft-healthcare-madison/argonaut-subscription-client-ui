@@ -11,7 +11,6 @@ import {
 import {IconNames} from '@blueprintjs/icons';
 
 import ConfigurationPane from './ConfigurationPane';
-import Scenario2Pane from './Scenario2Pane';
 import { UiTabInformation } from '../models/UiTabInformation';
 import MainNavigation from './MainNavigation';
 import { ConnectionInformation } from '../models/ConnectionInformation';
@@ -19,6 +18,7 @@ import { StorageHelper } from '../util/StorageHelper';
 import PlaygroundPane  from './playground/PlaygroundPane';
 import { CopyHelper } from '../util/CopyHelper';
 import ScenarioPane1 from './scenario1/ScenarioPane1';
+import ScenarioPane2 from './scenario2/ScenarioPane2';
 import { ApiHelper, ApiResponse } from '../util/ApiHelper';
 import { ClientHostRegistration } from '../models/ClientHostRegistration';
 
@@ -28,7 +28,7 @@ import * as fhir from '../models/fhir_r4_selected';
 let _tabs: UiTabInformation[] = [
   {title: 'Config', tip: 'Configure Settings and Servers', id: '0', panel: React.createFactory(ConfigurationPane)},
   {title: 'Patient+REST', tip:'Single Patient to REST-Hook', id: '1', panel: React.createFactory(ScenarioPane1)},
-  {title: 'Group+REST', tip:'Patient Group to REST-Hook', id: '2', panel: React.createFactory(Scenario2Pane)},
+  {title: 'Group+REST', tip:'Patient Group to REST-Hook', id: '2', panel: React.createFactory(ScenarioPane2)},
   {title: 'Playground', tip:'Playground for testing Subscriptions', id: '3', panel: React.createFactory(PlaygroundPane)},
 ]
 
@@ -272,6 +272,9 @@ export default function MainPage() {
         let hasResourceEncounter: boolean = false;
         var createEncounter: boolean = false;
 
+        let hasResourceGroup: boolean = false;
+        var createGroup: boolean = false;
+
         capabilities.rest!.forEach((restCapability: fhir.CapabilityStatementRest) => {
           if ((restCapability === null) ||
               (restCapability.resource === null) ||
@@ -284,13 +287,20 @@ export default function MainPage() {
             if (resource === null) {
               return;
             }
-            if (resource.type === 'Patient') {
-              hasResourcePatient = true;
-              createPatient = resourceSupportsCreate(resource);
-            }
-            if (resource.type === 'Encounter') {
-              hasResourceEncounter = true;
-              createEncounter = resourceSupportsCreate(resource);
+            switch (resource.type) {
+              case 'Patient':
+                  hasResourcePatient = true;
+                  createPatient = resourceSupportsCreate(resource);
+                break;
+              case 'Encounter':
+                  hasResourceEncounter = true;
+                  createEncounter = resourceSupportsCreate(resource);
+                break;
+              case 'Group':
+                  hasResourceGroup = true;
+                  createGroup = resourceSupportsCreate(resource);
+                break;
+              default: break;
             }
           });
         });
@@ -307,6 +317,7 @@ export default function MainPage() {
           status: 'ok',
           supportsCreatePatient: createPatient,
           supportsCreateEncounter: createEncounter,
+          supportsCreateGroup: createGroup,
         };
       } catch (err) {
         return {...serverInfo, status: 'error'};
@@ -496,11 +507,11 @@ export default function MainPage() {
     // **** notify the user ****
 
     if ((success) && (toast)) {
-      showToastMessage(toast, IconNames.CLIPBOARD);
+      showToastMessage(`${toast} Copied!`, IconNames.CLIPBOARD, 500);
     }
 
     if ((!success) && (toast)) {
-      showToastMessage('Failed to copy!', IconNames.WARNING_SIGN);
+      showToastMessage('Failed to copy!', IconNames.WARNING_SIGN, 1000);
     }
   }
 

@@ -12,24 +12,24 @@ import { EndpointRegistration } from '../../models/EndpointRegistration';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
 import * as fhir from '../../models/fhir_r4_selected';
 
-export interface SubscriptionS1Props {
+export interface SubscriptionS2Props {
   paneProps: ContentPaneProps,
   registerSubscription: ((subscription?: fhir.Subscription) => void),
   status: DataCardStatus,
   updateStatus: ((status: DataCardStatus) => void),
   data: SingleRequestData[],
   setData: ((data: SingleRequestData[]) => void),
-  selectedPatientId: string,
+  selectedGroupId: string,
   topic: fhir.Topic|null,
   subscription: fhir.Subscription,
   endpoint: EndpointRegistration,
 }
 
-/** Component representing the Scenario 1 Subscription Card */
-export default function SubscriptionS1(props: SubscriptionS1Props) {
+/** Component representing the Scenario 2 Subscription Card */
+export default function SubscriptionS2(props: SubscriptionS2Props) {
 
   const info: DataCardInfo = {
-    id: 's1_subscription',
+    id: 's2_subscription',
     stepNumber: 4,
     heading: 'Request a Subscription on the FHIR Server',
     description: '',
@@ -73,9 +73,9 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
 		// **** build our filter information ****
 
 		let filter: fhir.SubscriptionFilterBy = {
-			matchType: '=',
+			matchType: 'in',
 			name: 'patient',
-			value: `Patient/${props.selectedPatientId}`	    //`Patient/${patientFilter},Patient/K123`
+			value: `Group/${props.selectedGroupId}`
 		}
 
 		var expirationTime:Date = new Date();

@@ -11,7 +11,7 @@ import PatientSearchCard from '../common/PatientSearchCard';
 import PatientCreateCard from '../common/PatientCreateCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 
-export interface PatientS1Props {
+export interface PatientS2Props {
   paneProps: ContentPaneProps,
   registerSelectedPatientId: ((patientId: string) => void),
   status: DataCardStatus,
@@ -20,11 +20,11 @@ export interface PatientS1Props {
   setData: ((data: SingleRequestData[]) => void),
 }
 
-/** Component representing the Scenario 1 Patient Card */
-export default function PatientS1(props: PatientS1Props) {
+/** Component representing the Scenario 2 Patient Card */
+export default function PatientS2(props: PatientS2Props) {
 
   const info: DataCardInfo = {
-    id: 's1_patient',
+    id: 's2_patient',
     stepNumber: 2,
     heading: (props.paneProps.fhirServerInfo.supportsCreatePatient) ? 'Select or Create a Patient' : 'Select a Patient',
     description: '',

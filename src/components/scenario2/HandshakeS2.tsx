@@ -6,19 +6,19 @@ import { SingleRequestData } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 
-export interface NotificationS1Props {
+export interface HandshakeS2Props {
   paneProps: ContentPaneProps,
   status: DataCardStatus,
   data: SingleRequestData[],
 }
 
-/** Component representing the Scenario 1 Notification Card */
-export default function NotificationS1(props: NotificationS1Props) {
+/** Component representing the Scenario 2 Handshake Card */
+export default function HandshakeS2(props: HandshakeS2Props) {
 
   const info: DataCardInfo = {
-    id: 's1_notification',
-    stepNumber: 7,
-    heading: 'Wait on Subscription notification',
+    id: 's2_handshake',
+    stepNumber: 5,
+    heading: 'Wait on Endpoint Handshake',
     description: '',
     optional: false,
   };

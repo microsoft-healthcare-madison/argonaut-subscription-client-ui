@@ -6,17 +6,17 @@ import { SingleRequestData } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 
-export interface NotificationS1Props {
+export interface NotificationS2Props {
   paneProps: ContentPaneProps,
   status: DataCardStatus,
   data: SingleRequestData[],
 }
 
-/** Component representing the Scenario 1 Notification Card */
-export default function NotificationS1(props: NotificationS1Props) {
+/** Component representing the Scenario 2 Notification Card */
+export default function NotificationS2(props: NotificationS2Props) {
 
   const info: DataCardInfo = {
-    id: 's1_notification',
+    id: 's2_notification',
     stepNumber: 7,
     heading: 'Wait on Subscription notification',
     description: '',

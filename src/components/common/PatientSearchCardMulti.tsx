@@ -1,29 +1,27 @@
 import React, {useState} from 'react';
 
 import {
-  Button, Card, H6, ControlGroup, HTMLSelect, InputGroup, Spinner, RadioGroup, Radio, setHotkeysDialogProps,
+  Button, Card, H6, ControlGroup, HTMLSelect, InputGroup, Spinner, Checkbox, 
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
 import * as fhir from '../../models/fhir_r4_selected';
 import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import { KeySelectionInfo } from '../../models/KeySelectionInfo';
-import { DataCardInfo } from '../../models/DataCardInfo';
 
-export interface PatientSearchProps {
+export interface PatientSearchMultiProps {
   paneProps: ContentPaneProps,
   setData: ((data: SingleRequestData[]) => void),
-  registerSelectedPatient: ((patientId: string) => void),
+  registerSelectedPatients: ((patientIds: string[]) => void),
 }
 
 /** Component representing the Patient Search Card */
-export default function PatientSearchCard(props: PatientSearchProps) {
+export default function PatientSearchMultiCard(props: PatientSearchMultiProps) {
 
   const [matchType, setMatchType] = useState<string>('name');
   const [searchFilter, setSearchFilter] = useState<string>('');
   const [busy, setBusy] = useState<boolean>(false);
   const [patients, setPatients] = useState<KeySelectionInfo[]>([]);
-  const [selectedPatientId, setSelectedPatientId] = useState<string>('');
 
   /** Process HTML events for the match type select box */
 	function handleMatchTypeChange(event: React.FormEvent<HTMLSelectElement>) {
@@ -35,15 +33,24 @@ export default function PatientSearchCard(props: PatientSearchProps) {
     setSearchFilter(event.target.value);
   }
 
-  /** Handle HTML events raised by user changing radio selection */
-	function handleRadioChange(event: React.FormEvent<HTMLInputElement>) {
-    setSelectedPatientId(event.currentTarget.value);
-	}
+  /** Handle HTML events raised by user changing checkbox selection */
+	function handleCheckboxChange(index: number) {
+    let updated:KeySelectionInfo[] = patients.slice();
+    updated[index].checked = !updated[index].checked;
+    setPatients(updated);
 
-  /** Function to push the selected patient ID up into the parent */
-  function handleSelectPatientClick() {
-    props.registerSelectedPatient(selectedPatientId);
-  }
+    // **** grab the list of selected patients ****
+
+    let selected:string[] = [];
+
+    updated.forEach((keyInfo: KeySelectionInfo) => {
+      if (keyInfo.checked) {
+        selected.push(`Patient/${keyInfo.key}`);
+      }
+    });
+
+    props.registerSelectedPatients(selected);
+	}
 
   /** Function to handle user request to search a FHIR server for patients */
 	async function handleSearchClick() {
@@ -144,7 +151,7 @@ export default function PatientSearchCard(props: PatientSearchProps) {
   /** Return this component */
   return(
     <Card style={{margin:0}}>
-      <H6>Search and Select Existing Patient</H6>
+      <H6>Search and Select Multiple Patients</H6>
       <ControlGroup>
         <HTMLSelect
           onChange={handleMatchTypeChange}
@@ -171,29 +178,16 @@ export default function PatientSearchCard(props: PatientSearchProps) {
         <Spinner />
       }
       { (!busy) &&
-        <RadioGroup
-          label={`Select a patient, ${patients.length} found`}
-          onChange={handleRadioChange}
-          selectedValue={selectedPatientId}
-          >
-            { patients.map((patientInfo) => (
-              <Radio
-                key={`s02_p_${patientInfo.key}`} 
-                label={patientInfo.value} 
-                value={patientInfo.key} 
-                checked={patientInfo.key === selectedPatientId}
-                />
-            ))}
-        </RadioGroup>
-      }
-      { (!busy) &&
-        <Button
-          disabled={(selectedPatientId === '')}
-          onClick={handleSelectPatientClick}
-          style={{margin: 5}}
-          >
-          Use Selected Patient
-        </Button>
+
+        patients.map((patientInfo, index) => (
+          <Checkbox
+            key={`s02_p_${patientInfo.key}`} 
+            checked={patientInfo.checked}
+            onChange={() => {handleCheckboxChange(index);}}
+            >
+            {patientInfo.value}
+          </Checkbox>
+        ))
       }
     </Card>
 

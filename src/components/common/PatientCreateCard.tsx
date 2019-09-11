@@ -12,12 +12,11 @@ import { DataCardInfo } from '../../models/DataCardInfo';
 
 export interface PatientCreateProps {
   paneProps: ContentPaneProps,
-  info: DataCardInfo,
   setData: ((data: SingleRequestData[]) => void),
   registerSelectedPatient: ((patientId: string) => void),
 }
 
-/** Component representing the Scenario 1 Patient Card */
+/** Component representing the Patient Create Card */
 export default function PatientCreateCard(props: PatientCreateProps) {
 
   const [givenName, setGivenName] = useState<string>('');
@@ -142,7 +141,9 @@ export default function PatientCreateCard(props: PatientCreateProps) {
           name: 'Patient Create',
           id: 'patient_create', 
           requestUrl: url, 
-          responseData: `Request for Subscription (${url}) failed:\n` +
+          requestData: JSON.stringify(patient, null, 2),
+          requestDataType: RenderDataAsTypes.FHIR,
+          responseData: `Request for Patient (${url}) failed:\n` +
             `${response.statusCode} - "${response.statusText}"\n` +
             `${response.body}`,
           responseDataType: RenderDataAsTypes.Error,
@@ -182,6 +183,8 @@ export default function PatientCreateCard(props: PatientCreateProps) {
         name: 'Patient Create',
         id: 'patient_create', 
         requestUrl: url,
+        requestData: JSON.stringify(patient, null, 2),
+        requestDataType: RenderDataAsTypes.FHIR,
         responseData: `Failed to PUT Patient to: ${url}:\n${err}`,
         responseDataType: RenderDataAsTypes.Error
       };

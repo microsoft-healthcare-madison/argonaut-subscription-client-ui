@@ -10,42 +10,49 @@ import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import { KeySelectionInfo } from '../../models/KeySelectionInfo';
 import { DataCardInfo } from '../../models/DataCardInfo';
 
-export interface PatientSearchProps {
+export interface GroupSearchProps {
   paneProps: ContentPaneProps,
   setData: ((data: SingleRequestData[]) => void),
-  registerSelectedPatient: ((patientId: string) => void),
+  registerSelectedGroup: ((groupId: string, patientIds: string[]) => void),
 }
 
-/** Component representing the Patient Search Card */
-export default function PatientSearchCard(props: PatientSearchProps) {
+/** Component representing the Group Search Card */
+export default function GroupSearchCard(props: GroupSearchProps) {
 
   const [matchType, setMatchType] = useState<string>('name');
   const [searchFilter, setSearchFilter] = useState<string>('');
   const [busy, setBusy] = useState<boolean>(false);
-  const [patients, setPatients] = useState<KeySelectionInfo[]>([]);
-  const [selectedPatientId, setSelectedPatientId] = useState<string>('');
+  const [groups, setGroups] = useState<KeySelectionInfo[]>([]);
+  const [selectedGroupIndex, setSelectedGroupIndex] = useState<number>(-1);
 
   /** Process HTML events for the match type select box */
 	function handleMatchTypeChange(event: React.FormEvent<HTMLSelectElement>) {
 		setMatchType(event.currentTarget.value);
   }
 
-  /** Process HTML events for the patient filter text box (update state for managed) */
+  /** Process HTML events for the group filter text box (update state for managed) */
   function handleSearchFilterChange(event: React.ChangeEvent<HTMLInputElement>) {
     setSearchFilter(event.target.value);
   }
 
   /** Handle HTML events raised by user changing radio selection */
 	function handleRadioChange(event: React.FormEvent<HTMLInputElement>) {
-    setSelectedPatientId(event.currentTarget.value);
+    let index:number = parseInt(event.currentTarget.value);
+
+    if ((index >= 0) && (index < groups.length)) {
+      setSelectedGroupIndex(index);
+    }
 	}
 
-  /** Function to push the selected patient ID up into the parent */
-  function handleSelectPatientClick() {
-    props.registerSelectedPatient(selectedPatientId);
+  /** Function to push the selected group ID up into the parent */
+  function handleSelectGroupClick() {
+    if ((selectedGroupIndex >= 0) && (selectedGroupIndex < groups.length)) {
+      props.registerSelectedGroup(groups[selectedGroupIndex].key, groups[selectedGroupIndex].subIds!);
+    }
+
   }
 
-  /** Function to handle user request to search a FHIR server for patients */
+  /** Function to handle user request to search a FHIR server for groups */
 	async function handleSearchClick() {
     // **** flag we are searching ****
     
@@ -53,7 +60,7 @@ export default function PatientSearchCard(props: PatientSearchProps) {
 
     // **** construct the search url ****
 
-		var url: string = new URL('Patient/', props.paneProps.fhirServerInfo.url).toString();
+		var url: string = new URL('Group/', props.paneProps.fhirServerInfo.url).toString();
 		
 		if (searchFilter) {
 				url += `?${encodeURIComponent(matchType)}=${encodeURIComponent(searchFilter)}`;
@@ -70,8 +77,8 @@ export default function PatientSearchCard(props: PatientSearchProps) {
       if ((!response.value) || (!response.value.entry) || (!response.value.entry)) {
         let data: SingleRequestData[] = [
           {
-            name: 'Patient Search',
-            id: 'patient_search', 
+            name: 'Group Search',
+            id: 'group_search', 
             requestUrl: url,
             responseData: response.body,
             responseDataType: RenderDataAsTypes.Text,
@@ -79,24 +86,41 @@ export default function PatientSearchCard(props: PatientSearchProps) {
         ]
 
         setBusy(false);
-        setPatients([]);
+        setGroups([]);
+        setSelectedGroupIndex(-1);
         props.setData(data);
         return;
       }
 
-      var bundlePatients: KeySelectionInfo[] = [];
+      var bundleGroups: KeySelectionInfo[] = [];
 
-      // **** loop over patients ****
+      // **** loop over groups ****
 
       response.value.entry!.forEach(entry => {
         if (!entry.resource) return;
 
-        let patient: fhir.Patient = entry.resource as fhir.Patient;
+        let group: fhir.Group = entry.resource as fhir.Group;
 
-        if ((patient.id) && (patient.name)) {
-          bundlePatients.push({
-            key: patient.id!, 
-            value: `${patient.name![0].family}, ${patient.name![0].given} (${patient.id!})`});
+        // if (!group.active) return;
+        if (!group.actual) return;
+
+        let memberCount = group.quantity ? group.quantity : (group.member ? group.member!.length : 0);
+        let ids: string[] = [];
+
+        if (group.member) {
+          group.member!.forEach((member: fhir.GroupMember) => {
+            if ((member.entity) && (member.entity.reference)) {
+              ids.push(member.entity.reference);
+            }
+          })
+        }
+
+        if ((group.id) && (group.name)) {
+          bundleGroups.push({
+            key: group.id!, 
+            value: `Group/${group.id} - ${group.name}: ${memberCount} ${group.type} members`,
+            subIds: ids,
+          });
         }
       });
       
@@ -104,8 +128,8 @@ export default function PatientSearchCard(props: PatientSearchProps) {
 
       let data: SingleRequestData[] = [
         {
-          name: 'Patient Search',
-          id: 'patient_search', 
+          name: 'Group Search',
+          id: 'group_search', 
           requestUrl: url,
           responseData: JSON.stringify(response.value, null, 2),
           responseDataType: RenderDataAsTypes.FHIR,
@@ -116,7 +140,8 @@ export default function PatientSearchCard(props: PatientSearchProps) {
       // **** update our state ****
 
       setBusy(false);
-      setPatients(bundlePatients);
+      setGroups(bundleGroups);
+      setSelectedGroupIndex(-1);
       props.setData(data);
       
     } catch (err) {
@@ -124,10 +149,10 @@ export default function PatientSearchCard(props: PatientSearchProps) {
 
       let data: SingleRequestData[] = [
         {
-          name: 'Patient Search',
-          id: 'patient_search', 
+          name: 'Group Search',
+          id: 'group_search', 
           requestUrl: url,
-          responseData: `Failed to get Patient list from: ${url}:\n${err}`,
+          responseData: `Failed to get Group list from: ${url}:\n${err}`,
           responseDataType: RenderDataAsTypes.Error
         }
       ]
@@ -135,7 +160,8 @@ export default function PatientSearchCard(props: PatientSearchProps) {
       // **** update our state ****
 
       setBusy(false);
-      setPatients([]);
+      setGroups([]);
+      setSelectedGroupIndex(-1);
       props.setData(data);
     }
 
@@ -144,15 +170,13 @@ export default function PatientSearchCard(props: PatientSearchProps) {
   /** Return this component */
   return(
     <Card style={{margin:0}}>
-      <H6>Search and Select Existing Patient</H6>
+      <H6>Search and Select Existing Group</H6>
       <ControlGroup>
         <HTMLSelect
           onChange={handleMatchTypeChange}
           defaultValue={matchType}
           >
-          <option>family</option>
-          <option>given</option>
-          <option>_id</option>
+          <option>id</option>
           <option>name</option>
         </HTMLSelect>
         <InputGroup
@@ -172,27 +196,27 @@ export default function PatientSearchCard(props: PatientSearchProps) {
       }
       { (!busy) &&
         <RadioGroup
-          label={`Select a patient, ${patients.length} found`}
+          label={`Select a Group, ${groups.length} found`}
           onChange={handleRadioChange}
-          selectedValue={selectedPatientId}
+          selectedValue={selectedGroupIndex}
           >
-            { patients.map((patientInfo) => (
+            { groups.map((groupInfo, index) => (
               <Radio
-                key={`s02_p_${patientInfo.key}`} 
-                label={patientInfo.value} 
-                value={patientInfo.key} 
-                checked={patientInfo.key === selectedPatientId}
+                key={`s02_g_${groupInfo.key}`} 
+                label={groupInfo.value} 
+                value={index} 
+                checked={index === selectedGroupIndex}
                 />
             ))}
         </RadioGroup>
       }
       { (!busy) &&
         <Button
-          disabled={(selectedPatientId === '')}
-          onClick={handleSelectPatientClick}
+          disabled={(selectedGroupIndex < 0)}
+          onClick={handleSelectGroupClick}
           style={{margin: 5}}
           >
-          Use Selected Patient
+          Use Selected Group
         </Button>
       }
     </Card>

@@ -85,7 +85,7 @@ export default function RequestDataPanel(props: RequestPanelProps) {
 
   /** Function to handle copy requests - grab data from the correct pane and forward request */
   function handleCopyClick() {
-    switch (selectedTabId)
+    switch (displayedTabId)
     {
       case 'request_url':
         props.paneProps.copyToClipboard(props.data[dataRowIndex].requestUrl!, 'Request URL');
