@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 
 import {
-  HTMLSelect, Button, FormGroup, InputGroup, ControlGroup,
+  HTMLSelect, Button, FormGroup, InputGroup, ControlGroup, Overlay, Classes, Card,
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { DataCardInfo } from '../../models/DataCardInfo';
@@ -11,6 +11,9 @@ import { DataCardStatus } from '../../models/DataCardStatus';
 import { EndpointRegistration } from '../../models/EndpointRegistration';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
 import * as fhir from '../../models/fhir_r4_selected';
+import SubscriptionFilters from './SubscriptionFilters';
+import { IconNames } from '@blueprintjs/icons';
+import ResourceSearchMultiCard from '../common/ResourceSarchCardMulti';
 
 export interface SubscriptionPlaygroundProps {
   paneProps: ContentPaneProps,
@@ -38,11 +41,16 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
   const [endpointIndex, setEndpointIndex] = useState<number>(-1);
 
   const [payloadType, setPayloadType] = useState<string>('id-only');
-  const [headers, setHeaders] = useState<string>('Authorization: Bearer secret-token-abc-123');
+  const [headers, setHeaders] = useState<string>('');
 
   const [filterByIndex, setFilterByIndex] = useState<number>(-1);
   const [filterByMatchTypeIndex, setFilterByMatchTypeIndex] = useState<number>(-1);
   const [filterByValue, setFilterByValue] = useState<string>('');
+
+  const [filters, setFilters] = useState<fhir.SubscriptionFilterBy[]>([]);
+
+  const [resourceName, setResourceName] = useState<string>('');
+  const [showSearchOverlay, setShowSearchOverlay] = useState<boolean>(false);
 
   useEffect(() => {
     if (endpointIndex >= props.endpoints.length) {
@@ -136,7 +144,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 			channel: channel,
 			filterBy: [filter],
 			end: getInstantFromDate(expirationTime),
-			topic: {reference:  new URL('Topic/admission', props.paneProps.fhirServerInfo.url).toString()},
+			topic: {reference:  `Topic/${props.topics[topicIndex].id!}`},
 			reason: 'Client Testing',
 			status: 'requested',
 		}
@@ -214,9 +222,98 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
     }
   }
 
+  function registerSelectedIds(ids: string[]) {
+    setFilterByValue(ids.join(','));
+  }
+
+  function toggleSearchOverlay() {
+    if (!showSearchOverlay) {
+      let name: string = '';
+
+      // **** determine our resource name ****
+
+      if ((topicIndex < 0) || 
+          (topicIndex >= props.topics.length)) {
+        props.paneProps.toaster('Please select a Topic prior to searching for filter values.', IconNames.WARNING_SIGN);
+        return;
+      }
+
+      if ((filterByIndex < 0) || 
+          (filterByIndex >= props.topics[topicIndex].canFilterBy!.length)) {
+        props.paneProps.toaster('Please select a filter parameter before searching for filter values.', IconNames.WARNING_SIGN);
+        return;
+      }
+
+      if ((filterByMatchTypeIndex < 0) || 
+          (filterByMatchTypeIndex >= props.topics[topicIndex].canFilterBy![filterByIndex].matchType!.length)) {
+        props.paneProps.toaster('Please select a match type before searching for filter values.', IconNames.WARNING_SIGN);
+        return;
+      }
+
+      if ((props.topics[topicIndex].canFilterBy![filterByIndex].name === 'patient') &&
+          (props.topics[topicIndex].canFilterBy![filterByIndex].matchType![filterByMatchTypeIndex] === '=')) {
+        name = 'Patient';
+      }
+
+      if ((props.topics[topicIndex].canFilterBy![filterByIndex].name === 'patient') &&
+          (props.topics[topicIndex].canFilterBy![filterByIndex].matchType![filterByMatchTypeIndex] === 'in')) {
+        name = 'Group';
+      }
+
+      if ((props.topics[topicIndex].canFilterBy![filterByIndex].name === 'patient') &&
+          (props.topics[topicIndex].canFilterBy![filterByIndex].matchType![filterByMatchTypeIndex] === 'not-in')) {
+        name = 'Group';
+      }
+
+      // **** if there is no known resource name, disable for now ****
+
+      if (!name) {
+        props.paneProps.toaster('Search is not YET available for this combination', IconNames.WARNING_SIGN);
+        return;
+      }
+
+      setResourceName(name);
+    }
+
+    setShowSearchOverlay(!showSearchOverlay);
+  }
+
+  function addFilter() {
+    // **** sanity checks ****
+
+    if (filterByValue === '') {
+        props.paneProps.toaster('Cannot add empty filters!', IconNames.ERROR);
+        return;
+    }
+
+    // **** add this filter ****
+
+    let updated: fhir.SubscriptionFilterBy[] = filters.slice();
+    updated.push({
+      name: props.topics[topicIndex].canFilterBy![filterByIndex].name!,
+      matchType: props.topics[topicIndex].canFilterBy![filterByIndex].matchType![filterByMatchTypeIndex],
+      value: filterByValue,
+    });
+
+    // **** update state ****
+
+    setFilters(updated);
+    setFilterByValue('');
+  }
+
+  function removeFilter(index: number) {
+    let updated: fhir.SubscriptionFilterBy[] = filters.slice();
+    updated.splice(index);
+    setFilters(updated);
+  }
+
   /** Process HTML events for the topic select box */
 	function handleTopicNameChange(event: React.FormEvent<HTMLSelectElement>) {
-		setTopicIndex(parseInt(event.currentTarget.value));
+    if (parseInt(event.currentTarget.value) === topicIndex) {
+      return;
+    }
+    setTopicIndex(parseInt(event.currentTarget.value));
+    setFilters([]);
   }
 
   /** Process HTML events for the endpoint select box */
@@ -248,7 +345,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
   function handleFilterByValueChange(event: React.ChangeEvent<HTMLInputElement>) {
     setFilterByValue(event.target.value);
   }
-  
+
   /** Return this component */
   return(
     <DataCard
@@ -269,7 +366,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
           value={topicIndex}
           >
           { Object.values(props.topics).map((value, index) => (
-            <option key={value.title!} value={index}>{value.title!}</option>
+            <option key={value.title!} value={index}>Topic/{value.id!} ({value.title!})</option>
               ))}
         </HTMLSelect>
       </FormGroup>
@@ -310,6 +407,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         >
         <InputGroup
           id='subscription-headers'
+          placeholder='Authorization: Bearer secret-token-abc-123'
           value={headers}
           onChange={handleHeadersChange}
           />
@@ -317,7 +415,11 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       { ((topicIndex > -1) && (props.topics[topicIndex].canFilterBy)) &&
         <FormGroup
           label='Filter by'
-          helperText='Filter based on the available Topic Filters (Search Parameters). Leave blank for no filter.'
+          helperText={'Filter based on the available Topic Filters (Search Parameters).' +
+            ' Leave blank for no filter.' +
+            ' Multiple VALUES can be entered comma separated for OR joining.' +
+            ' Multiple FILTERS are joined with AND.'
+            }
           labelFor='filter-by'
           >
           <ControlGroup
@@ -345,16 +447,48 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
               value={filterByValue}
               onChange={handleFilterByValueChange}
               />
+            <Button
+              onClick={toggleSearchOverlay}
+              >
+              Search
+            </Button>
+            <Button
+              onClick={addFilter}
+              >
+              Add Filter
+            </Button>
           </ControlGroup>
         </FormGroup>
       }
-
+      <Overlay 
+        isOpen={showSearchOverlay}
+        onClose={toggleSearchOverlay}
+        className={Classes.OVERLAY_SCROLL_CONTAINER}
+        usePortal={false}
+        autoFocus={true}
+        hasBackdrop={true}
+        canEscapeKeyClose={true}
+        canOutsideClickClose={true}
+        >
+        <Card className='centered'>
+          <ResourceSearchMultiCard
+            paneProps={props.paneProps}
+            setData={(data: SingleRequestData[]) => {}}
+            resourceName={resourceName}
+            registerSelectedIds={registerSelectedIds}
+            dismissOverlay={toggleSearchOverlay}
+            />
+        </Card>
+      </Overlay>
+      <SubscriptionFilters
+        filters={filters}
+        removeFilter={removeFilter}
+        />
       <Button
         disabled={(!props.status.available) || 
                   (props.status.busy) || 
                   (topicIndex < 0) || 
-                  (endpointIndex < 0) ||
-                  (true)}
+                  (endpointIndex < 0)}
         onClick={createSubscription}
         style={{margin: 5}}
         >

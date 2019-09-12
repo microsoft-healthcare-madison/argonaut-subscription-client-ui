@@ -73,17 +73,20 @@ export default function TopicS2(props: TopicS2Props) {
       // **** find the 'admission' topic ****
 
       let admissionTopic:fhir.Topic|undefined = undefined;
+      let topicInfo: string = '';
 
-      if ((response.value.entry) &&
-          (response.value.entry!.length > 0))
-      {
+      if (response.value.entry) {
         response.value.entry.forEach((entry) => {
-          if (!entry.resource) { return; }
-          let topic:fhir.Topic = entry.resource! as fhir.Topic;
+          if (!entry.resource) return;
           // if (topic.title === 'admission') {
-          if (topic.url === 'http://argonautproject.org/subscription-ig/Topic/admission') {
-            admissionTopic = topic;
-            props.setTopic(topic);
+          if ((entry.resource as fhir.Topic).url === 'http://argonautproject.org/subscription-ig/Topic/admission') {
+            admissionTopic = (entry.resource as fhir.Topic);
+            props.setTopic((entry.resource as fhir.Topic));
+            topicInfo = topicInfo + 
+              `- Topic/${entry.resource.id}\n` +
+              `\tURL:         ${(entry.resource as fhir.Topic).url}\n` +
+              `\tTitle:       ${(entry.resource as fhir.Topic).title}\n` +
+              `\tDescription: ${(entry.resource as fhir.Topic).description}\n`;
           }
         });
       }
@@ -98,12 +101,7 @@ export default function TopicS2(props: TopicS2Props) {
           responseData: JSON.stringify(response.value, null, 2),
           responseDataType: RenderDataAsTypes.FHIR,
           outcome: response.outcome ? JSON.stringify(response.outcome, null, 2) : undefined,
-          info: admissionTopic 
-            ? `Found topic:\n` +
-              `\t${admissionTopic!.title}\n`+
-              `\t${admissionTopic!.url}\n` +
-              `\t${props.paneProps.fhirServerInfo.url}Topic/${admissionTopic!.id}` 
-            : undefined,
+          info: admissionTopic ? topicInfo : undefined,
         }
       ];
 

@@ -275,6 +275,8 @@ export default function MainPage() {
         // let hasResourceGroup: boolean = false;
         var createGroup: boolean = false;
 
+        let restCapabilities: fhir.CapabilityStatementRestResource[] = [];
+
         capabilities.rest!.forEach((restCapability: fhir.CapabilityStatementRest) => {
           if ((restCapability === null) ||
               (restCapability.resource === null) ||
@@ -284,9 +286,14 @@ export default function MainPage() {
           // **** map resources in this rest endpoint ****
 
           restCapability.resource!.forEach((resource: fhir.CapabilityStatementRestResource) => {
-            if (resource === null) {
-              return;
-            }
+            if (resource === null) return;
+
+            // **** add to our list ****
+
+            restCapabilities.push(resource);
+
+            // **** handle special ones we need flagged ****
+
             switch (resource.type) {
               case 'Patient':
                   hasResourcePatient = true;
@@ -318,6 +325,7 @@ export default function MainPage() {
           supportsCreatePatient: createPatient,
           supportsCreateEncounter: createEncounter,
           supportsCreateGroup: createGroup,
+          capabilitiesRest: restCapabilities,
         };
       } catch (err) {
         return {...serverInfo, status: 'error'};

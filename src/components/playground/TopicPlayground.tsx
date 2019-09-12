@@ -57,16 +57,33 @@ export default function TopicPlayground(props: TopicPlaygroundProps) {
             id: 'topic_search', 
             requestUrl: url,
             responseData: `Request for Topic (${url}) failed:\n` +
-            `${response.statusCode} - "${response.statusText}"\n` +
-            `${response.body}`,
-          responseDataType: RenderDataAsTypes.Error,
-          outcome: response.outcome ? JSON.stringify(response.outcome, null, 2) : undefined,
+              `${response.statusCode} - "${response.statusText}"\n` +
+              `${response.body}`,
+            responseDataType: RenderDataAsTypes.Error,
+            outcome: response.outcome ? JSON.stringify(response.outcome, null, 2) : undefined,
           }
         ];
 
         props.setData(data);
         props.updateStatus({available: true, complete: false, busy: false});
         return;
+      }
+
+      // **** traverse the bundle looking for topics ****
+
+      let topics:fhir.Topic[] = [];
+      let topicInfo: string = '';
+
+      if (response.value.entry) {
+        response.value.entry.forEach((entry: fhir.BundleEntry) => {
+          if (!entry.resource) return;
+          topics.push(entry.resource! as fhir.Topic);
+          topicInfo = topicInfo + 
+            `- Topic/${entry.resource.id}\n` +
+            `\tURL:         ${(entry.resource as fhir.Topic).url}\n` +
+            `\tTitle:       ${(entry.resource as fhir.Topic).title}\n` +
+            `\tDescription: ${(entry.resource as fhir.Topic).description}\n`;
+        });
       }
 
       // **** build data for display ****
@@ -79,12 +96,15 @@ export default function TopicPlayground(props: TopicPlaygroundProps) {
           responseData: JSON.stringify(response.value, null, 2),
           responseDataType: RenderDataAsTypes.FHIR,
           outcome: response.outcome ? JSON.stringify(response.outcome, null, 2) : undefined,
+          info: topicInfo,
         }
       ];
+
 
       // **** update data ****
 
       props.setData(data);
+      props.setTopics(topics);
 
       // **** update our step (completed) ****
 

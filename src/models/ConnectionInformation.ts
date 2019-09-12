@@ -1,3 +1,4 @@
+import { CapabilityStatementRestResource } from "./fhir_r4_selected";
 
 export interface ConnectionInformation {
   name: string;
@@ -13,4 +14,5 @@ export interface ConnectionInformation {
   supportsCreateGroup?: boolean;
   authHeaderContent?: string;
   preferHeaderContent: string;
+  capabilitiesRest?: CapabilityStatementRestResource[];
 }
