@@ -1,14 +1,13 @@
 import React, {useState} from 'react';
 
 import {
-  Button, Card, H6, ControlGroup, HTMLSelect, InputGroup, Spinner, RadioGroup, Radio, setHotkeysDialogProps,
+  Button, Card, H6, ControlGroup, HTMLSelect, InputGroup, Spinner, RadioGroup, Radio,
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
 import * as fhir from '../../models/fhir_r4_selected';
 import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import { KeySelectionInfo } from '../../models/KeySelectionInfo';
-import { DataCardInfo } from '../../models/DataCardInfo';
 
 export interface GroupSearchProps {
   paneProps: ContentPaneProps,
@@ -19,7 +18,7 @@ export interface GroupSearchProps {
 /** Component representing the Group Search Card */
 export default function GroupSearchCard(props: GroupSearchProps) {
 
-  const [matchType, setMatchType] = useState<string>('name');
+  const [matchType, setMatchType] = useState<string>('_id');
   const [searchFilter, setSearchFilter] = useState<string>('');
   const [busy, setBusy] = useState<boolean>(false);
   const [groups, setGroups] = useState<KeySelectionInfo[]>([]);
@@ -63,7 +62,7 @@ export default function GroupSearchCard(props: GroupSearchProps) {
 		var url: string = new URL('Group/', props.paneProps.fhirServerInfo.url).toString();
 		
 		if (searchFilter) {
-				url += `?${encodeURIComponent(matchType)}=${encodeURIComponent(searchFilter)}`;
+				url += `?${encodeURIComponent(matchType)}=${encodeURIComponent(searchFilter)}&actual=true`;
 		}
 
     try {
@@ -176,8 +175,7 @@ export default function GroupSearchCard(props: GroupSearchProps) {
           onChange={handleMatchTypeChange}
           defaultValue={matchType}
           >
-          <option>id</option>
-          <option>name</option>
+          <option>_id</option>
         </HTMLSelect>
         <InputGroup
           id='step02_searchFilter'

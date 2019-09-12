@@ -1,15 +1,12 @@
 import React, {useState, useEffect} from 'react';
 
 import {
-  Button, Card, H6, HTMLSelect, InputGroup, Spinner, FormGroup,
+  Button, Card, H6, InputGroup, Spinner, FormGroup,
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
 import * as fhir from '../../models/fhir_r4_selected';
 import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
-import { DateInput } from '@blueprintjs/datetime';
-import { DataCardInfo } from '../../models/DataCardInfo';
-import PatientSearchCard from './PatientSearchCard';
 import PatientSearchMultiCard from './PatientSearchCardMulti';
 
 export interface GroupCreateProps {

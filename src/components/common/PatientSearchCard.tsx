@@ -1,14 +1,13 @@
 import React, {useState} from 'react';
 
 import {
-  Button, Card, H6, ControlGroup, HTMLSelect, InputGroup, Spinner, RadioGroup, Radio, setHotkeysDialogProps,
+  Button, Card, H6, ControlGroup, HTMLSelect, InputGroup, Spinner, RadioGroup, Radio,
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
 import * as fhir from '../../models/fhir_r4_selected';
 import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import { KeySelectionInfo } from '../../models/KeySelectionInfo';
-import { DataCardInfo } from '../../models/DataCardInfo';
 
 export interface PatientSearchProps {
   paneProps: ContentPaneProps,

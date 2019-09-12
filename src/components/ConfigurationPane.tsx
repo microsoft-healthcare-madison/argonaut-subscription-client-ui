@@ -68,7 +68,7 @@ export default function ConfigurationPane(props: ContentPaneProps) {
 
       initialLoadRef.current = false;
     }
-  }, []);
+  }, [connected]);
 
   useEffect(() => {
 

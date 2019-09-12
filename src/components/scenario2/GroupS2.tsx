@@ -7,7 +7,6 @@ import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { DataCardInfo } from '../../models/DataCardInfo';
 import { SingleRequestData } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
-import PatientCreateCard from '../common/PatientCreateCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import GroupSearchCard from '../common/GroupSearchCard';
 import GroupCreateCard from '../common/GroupCreateCard';

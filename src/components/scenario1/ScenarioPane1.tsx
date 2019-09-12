@@ -306,9 +306,9 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 
 		let eventCount: number = NaN;
 		let bundleEventCount: number = NaN;
-		let status: string;
-		let topicUrl: string;
-		let subscriptionUrl: string;
+		let status: string = '';
+		let topicUrl: string = '' ;
+		let subscriptionUrl: string = '';
 
 		let bundle: fhir.Bundle;
 
@@ -351,7 +351,11 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 				name: 'Handshake',
 				id: 'handshake',
 				responseData: JSON.stringify(bundle, null, 2),
-				responseDataType: RenderDataAsTypes.FHIR
+				responseDataType: RenderDataAsTypes.FHIR,
+				info: `Handshake:\n`+
+					`\tTopic:        ${topicUrl}\n` +
+					`\tSubscription: ${subscriptionUrl}\n` +
+					`\tStatus:       ${status}`,
 			}
 
 			// **** update our state ****
@@ -375,7 +379,13 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 				id:`event_${notificationData.length}`, 
 				name: `Notification #${notificationData.length}`, 	// title: `# ${stepData07.length}`
 				responseData: JSON.stringify(bundle, null, 2),
-				responseDataType: RenderDataAsTypes.FHIR
+				responseDataType: RenderDataAsTypes.FHIR,
+				info: `Notification #${notificationData.length}:\n`+
+					`\tTopic:         ${topicUrl}\n` +
+					`\tSubscription:  ${subscriptionUrl}\n` +
+					`\tStatus:        ${status}\n` +
+					`\tBundle Events: ${bundleEventCount}\n`+
+					`\tTotal Events:  ${eventCount}`,
 			}
 
 			let data: SingleRequestData[] = notificationData.slice();

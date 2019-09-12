@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 
 import {
-  HTMLSelect, Button, FormGroup, InputGroup,
+  HTMLSelect, Button, FormGroup,
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { DataCardInfo } from '../../models/DataCardInfo';
@@ -37,7 +37,6 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
   };
   
   const [payloadType, setPayloadType] = useState<string>('id-only');
-  const [headers, setHeaders] = useState<string>('Authorization: Bearer secret-token-abc-123');
 
   /** Get a FHIR Instant value from a JavaScript Date */
 	function getInstantFromDate(date: Date) {
@@ -56,15 +55,11 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
     let url: string = new URL('Subscription/', props.paneProps.fhirServerInfo.url).toString();
     let endpointUrl: string = new URL(`Endpoints/${props.endpoint.uid!}`, props.paneProps.clientHostInfo.url).toString();
 
-    let header: string[] = (headers)
-      ? headers.split(',')
-      : [];
-
 		// **** build our subscription channel information ****
 
 		let channel: fhir.SubscriptionChannel = {
 			endpoint: endpointUrl,
-			header: header,
+			header: [],
 			heartbeatPeriod: 60,
 			payload: {content: payloadType, contentType: 'application/fhir+json'},
 			type: {coding: [fhir.SubscriptionChannelTypeCodes.rest_hook], text: 'REST Hook'},
@@ -238,11 +233,6 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
 		setPayloadType(event.currentTarget.value);
   }
 
-  /** Process HTML events for headers (update state for managed) */
-  function handleHeadersChange(event: React.ChangeEvent<HTMLInputElement>) {
-    setHeaders(event.target.value);
-  }
-  
   /** Return this component */
   return(
     <DataCard
@@ -268,17 +258,6 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
               ))}
         </HTMLSelect>
       </FormGroup>
-      {/* <FormGroup
-        label='Subscription Headers'
-        helperText='Comma (,) separated list of headers to include with notifications (per channel requirements)'
-        labelFor='subscription-headers'
-        >
-        <InputGroup
-          id='subscription-headers'
-          value={headers}
-          onChange={handleHeadersChange}
-          />
-      </FormGroup> */}
       <Button
         disabled={(!props.status.available) || (props.status.busy)}
         onClick={createSubscription}

@@ -254,7 +254,7 @@ export default function MainPage() {
           );
 
         if (!response.value) {
-          throw('Could not get valid CapabilityStatement.');
+          throw(new Error('Could not get valid CapabilityStatement.'));
         }
 
         let capabilities: fhir.CapabilityStatement = response.value!;
@@ -263,7 +263,7 @@ export default function MainPage() {
 
         if ((capabilities.rest === null) ||
             (capabilities.rest!.length === 0)) {
-          throw('Could not get valid CapabilityStatement.');
+          throw(new Error('Could not get valid CapabilityStatement.'));
         }
 
         let hasResourcePatient: boolean = false;
@@ -272,7 +272,7 @@ export default function MainPage() {
         let hasResourceEncounter: boolean = false;
         var createEncounter: boolean = false;
 
-        let hasResourceGroup: boolean = false;
+        // let hasResourceGroup: boolean = false;
         var createGroup: boolean = false;
 
         capabilities.rest!.forEach((restCapability: fhir.CapabilityStatementRest) => {
@@ -297,7 +297,7 @@ export default function MainPage() {
                   createEncounter = resourceSupportsCreate(resource);
                 break;
               case 'Group':
-                  hasResourceGroup = true;
+                  // hasResourceGroup = true;
                   createGroup = resourceSupportsCreate(resource);
                 break;
               default: break;
@@ -308,7 +308,7 @@ export default function MainPage() {
         // **** check for minimum capabilities ****
 
         if ((!hasResourcePatient) || (!hasResourceEncounter)) {
-          throw('Minimum server requirements not met.');
+          throw(new Error('Minimum server requirements not met.'));
         }
 
         // **** still here means success ****

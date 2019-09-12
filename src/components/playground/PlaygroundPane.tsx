@@ -89,9 +89,9 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 
 		let eventCount: number = NaN;
 		let bundleEventCount: number = NaN;
-		let status: string;
-		let topicUrl: string;
-		let subscriptionUrl: string;
+		let status: string = '';
+		let topicUrl: string = '' ;
+		let subscriptionUrl: string = '';
 
 		let bundle: fhir.Bundle;
 
@@ -131,7 +131,13 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 			id:`event_${notificationData.length}`, 
 			name: `Notification #${notificationData.length}`,
 			responseData: JSON.stringify(bundle, null, 2),
-			responseDataType: RenderDataAsTypes.FHIR
+			responseDataType: RenderDataAsTypes.FHIR,
+			info: `${(eventCount === 0) ? 'Handshake' : 'Notification'} #${notificationData.length}:\n`+
+				`\tTopic:         ${topicUrl}\n` +
+				`\tSubscription:  ${subscriptionUrl}\n` +
+				`\tStatus:        ${status}\n` +
+				`\tBundle Events: ${bundleEventCount}\n`+
+				`\tTotal Events:  ${eventCount}`,
 		}
 
 		let data: SingleRequestData[] = notificationData.slice();

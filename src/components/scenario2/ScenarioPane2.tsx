@@ -15,7 +15,6 @@ import * as fhir from '../../models/fhir_r4_selected';
 import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import TopicS2 from './TopicS2';
-import PatientS2 from './PatientS2';
 import EndpointS2 from './EndpointS2';
 import SubscriptionS2 from './SubscriptionS2';
 import HandshakeS2 from './HandshakeS2';
@@ -115,8 +114,9 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 		}
 
 		if (startingAt <= 2) {
-			setSelectedGroupId('');
-			setGroupData([]);
+      setSelectedGroupId('');
+      setGroupPatientIds([]);
+      setGroupData([]);
 			setGroupStatus(_statusAvailable);
 		}
 
@@ -277,7 +277,7 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 
 		setEndpointStatus(_statusComplete);
 		setSubscriptionStatus(_statusAvailable);
-	}
+  }
 
 	/** Register a patient id as active in this scenario */
 	function registerSelectedGroupId(id: string, patientIds: string[]) {
@@ -285,15 +285,16 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 
 		disableSteps(3);
 
-		// **** save patient id ***
+    // **** save patient id ***
 
     setSelectedGroupId(id);
     setGroupPatientIds(patientIds);
 
-		// **** update status ****
+    // **** update status ****
 
-		setGroupStatus(_statusComplete);
-		setEndpointStatus(_statusAvailable);
+    setGroupStatus(_statusComplete);
+    setEndpointStatus(_statusAvailable);
+
 
 		// **** if there was a clean-up performed, reset the data (no longer clean) ****
 
@@ -309,9 +310,9 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 
 		let eventCount: number = NaN;
 		let bundleEventCount: number = NaN;
-		let status: string;
-		let topicUrl: string;
-		let subscriptionUrl: string;
+		let status: string = '';
+		let topicUrl: string = '' ;
+		let subscriptionUrl: string = '';
 
 		let bundle: fhir.Bundle;
 
@@ -354,7 +355,11 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 				name: 'Handshake',
 				id: 'handshake',
 				responseData: JSON.stringify(bundle, null, 2),
-				responseDataType: RenderDataAsTypes.FHIR
+				responseDataType: RenderDataAsTypes.FHIR,
+				info: `Handshake:\n`+
+					`\tTopic:        ${topicUrl}\n` +
+					`\tSubscription: ${subscriptionUrl}\n` +
+					`\tStatus:       ${status}`,
 			}
 
 			// **** update our state ****
@@ -378,7 +383,13 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 				id:`event_${notificationData.length}`, 
 				name: `Notification #${notificationData.length}`, 	// title: `# ${stepData07.length}`
 				responseData: JSON.stringify(bundle, null, 2),
-				responseDataType: RenderDataAsTypes.FHIR
+				responseDataType: RenderDataAsTypes.FHIR,
+				info: `Notification #${notificationData.length}:\n`+
+					`\tTopic:         ${topicUrl}\n` +
+					`\tSubscription:  ${subscriptionUrl}\n` +
+					`\tStatus:        ${status}\n` +
+					`\tBundle Events: ${bundleEventCount}\n`+
+					`\tTotal Events:  ${eventCount}`,
 			}
 
 			let data: SingleRequestData[] = notificationData.slice();

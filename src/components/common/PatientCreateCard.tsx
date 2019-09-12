@@ -8,7 +8,6 @@ import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
 import * as fhir from '../../models/fhir_r4_selected';
 import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import { DateInput } from '@blueprintjs/datetime';
-import { DataCardInfo } from '../../models/DataCardInfo';
 
 export interface PatientCreateProps {
   paneProps: ContentPaneProps,
