@@ -124,15 +124,15 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 			heartbeatPeriod: 60,
 			payload: {content: payloadType, contentType: 'application/fhir+json'},
 			type: {coding: [fhir.SubscriptionChannelTypeCodes.rest_hook], text: 'REST Hook'},
-		}
+    }
 
-		// **** build our filter information ****
+		// // **** build our filter information ****
 
-		let filter: fhir.SubscriptionFilterBy = {
-			matchType: '=',
-			name: 'patient',
-			value: `Patient/${props.selectedPatientId}`	    //`Patient/${patientFilter},Patient/K123`
-		}
+		// let filter: fhir.SubscriptionFilterBy = {
+		// 	matchType: '=',
+		// 	name: 'patient',
+		// 	value: `Patient/${props.selectedPatientId}`	    //`Patient/${patientFilter},Patient/K123`
+		// }
 
 		var expirationTime:Date = new Date();
 		expirationTime.setHours(expirationTime.getHours() + 1);
@@ -142,7 +142,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 		let subscription: fhir.Subscription = {
 			resourceType: 'Subscription',
 			channel: channel,
-			filterBy: [filter],
+			filterBy: filters,
 			end: getInstantFromDate(expirationTime),
 			topic: {reference:  `Topic/${props.topics[topicIndex].id!}`},
 			reason: 'Client Testing',

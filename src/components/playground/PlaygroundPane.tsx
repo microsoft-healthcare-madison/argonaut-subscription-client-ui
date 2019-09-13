@@ -150,7 +150,7 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 
 	/** Register a subscription as active in this scenario */
 	function registerSubscription(value: fhir.Subscription) {
-		let values: fhir.Subscription[] = {...subscriptions};
+		let values: fhir.Subscription[] = subscriptions.slice();
 		values.push(value);
 
 		// **** save subscription ****

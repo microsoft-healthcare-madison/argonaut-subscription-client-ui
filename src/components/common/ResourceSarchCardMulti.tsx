@@ -213,8 +213,8 @@ export default function ResourceSearchMultiCard(props: ResourceSearchMultiProps)
           onChange={handleMatchTypeChange}
           defaultValue={matchType}
           >
-          {matchTypes.map((value) => (
-            <option>{value}</option>
+          {matchTypes.map((value, index) => (
+            <option key={`opt_${index}`}>{value}</option>
           ))};
         </HTMLSelect>
         <InputGroup
