@@ -111,15 +111,20 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 				(bundle.meta.extension))
 		{
 			bundle.meta.extension.forEach(element => {
-				if (element.url.endsWith('subscriptionEventCount')) {
+				if (element.url.endsWith('subscriptionEventCount') ||
+						element.url.endsWith('subscription-event-count')) {
 					eventCount = element.valueUnsignedInt!;
-				} else if (element.url.endsWith('bundleEventCount')) {
+				} else if (element.url.endsWith('bundleEventCount') ||
+									 element.url.endsWith('bundle-event-count')) {
 					bundleEventCount = element.valueUnsignedInt!;
-				} else if (element.url.endsWith('subscriptionStatus')) {
+				} else if (element.url.endsWith('subscriptionStatus') ||
+									 element.url.endsWith('subscription-status')) {
 					status = element.valueString!;
-				} else if (element.url.endsWith('subscriptionTopicUrl')) {
+				} else if (element.url.endsWith('subscriptionTopicUrl') ||
+									 element.url.endsWith('subscription-topic-url')) {
 					topicUrl = element.valueString!;
-				} else if (element.url.endsWith('subscriptionUrl')) {
+				} else if (element.url.endsWith('subscriptionUrl') ||
+									 element.url.endsWith('subscription-url')) {
 					subscriptionUrl = element.valueString!;
 				}
 			});
@@ -216,6 +221,7 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 				selectedPatientId={''}
 				endpoints={endpoints}
 				topics={topics}
+				subscriptions={subscriptions}
 				/>
 		</div>
 	);

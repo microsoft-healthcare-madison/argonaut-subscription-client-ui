@@ -52,7 +52,7 @@ export default function SubscriptionS2(props: SubscriptionS2Props) {
 
 		// **** build the url for our call ***
 
-    let url: string = new URL('Subscription/', props.paneProps.fhirServerInfo.url).toString();
+    let url: string = new URL('Subscription', props.paneProps.fhirServerInfo.url).toString();
     let endpointUrl: string = new URL(`Endpoints/${props.endpoint.uid!}`, props.paneProps.clientHostInfo.url).toString();
 
 		// **** build our subscription channel information ****

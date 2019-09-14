@@ -38,7 +38,7 @@ export default function TopicPlayground(props: TopicPlaygroundProps) {
 
     // **** construct the registration REST url ****
 
-    let url: string = new URL('Topic/', props.paneProps.fhirServerInfo.url).toString();
+    let url: string = new URL('Topic', props.paneProps.fhirServerInfo.url).toString();
 
     // **** attempt to get the list of Topics ****
 

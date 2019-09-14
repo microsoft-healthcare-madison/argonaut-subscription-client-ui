@@ -39,7 +39,7 @@ export default function TopicS2(props: TopicS2Props) {
 
     // **** construct the registration REST url ****
 
-    let url: string = new URL('Topic/', props.paneProps.fhirServerInfo.url).toString();
+    let url: string = new URL('Topic', props.paneProps.fhirServerInfo.url).toString();
 
     // **** attempt to get the list of Topics ****
 
@@ -83,7 +83,7 @@ export default function TopicS2(props: TopicS2Props) {
             admissionTopic = (entry.resource as fhir.Topic);
             props.setTopic((entry.resource as fhir.Topic));
             topicInfo = topicInfo + 
-              `- Topic/${entry.resource.id}\n` +
+              `- Topic  /${entry.resource.id}\n` +
               `\tURL:         ${(entry.resource as fhir.Topic).url}\n` +
               `\tTitle:       ${(entry.resource as fhir.Topic).title}\n` +
               `\tDescription: ${(entry.resource as fhir.Topic).description}\n`;

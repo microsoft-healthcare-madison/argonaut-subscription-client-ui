@@ -25,6 +25,7 @@ export interface SubscriptionPlaygroundProps {
   selectedPatientId: string,
   endpoints: EndpointRegistration[],
   topics: fhir.Topic[],
+  subscriptions: fhir.Subscription[],
 }
 
 /** Component representing the Playground Subscription Card */
@@ -109,7 +110,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 
 		// **** build the url for our call ***
 
-    let url: string = new URL('Subscription/', props.paneProps.fhirServerInfo.url).toString();
+    let url: string = new URL('Subscription', props.paneProps.fhirServerInfo.url).toString();
     let endpointUrl: string = new URL(`Endpoints/${props.endpoints[endpointIndex].uid}`, props.paneProps.clientHostInfo.url).toString();
 
     let header: string[] = (headers)
@@ -219,6 +220,67 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       // **** done ****
 
       return;
+    }
+  }
+  
+  async function refreshSubscription(dataRowIndex: number) {
+    props.updateStatus({...props.status, busy: true});
+
+		// **** build the url for our call ***
+
+    let url: string = new URL(`Subscription/${props.subscriptions[dataRowIndex].id!}`, props.paneProps.fhirServerInfo.url).toString();
+
+    // **** update the status on this subscription ****
+    
+    try {
+      let response: ApiResponse<fhir.Subscription> = await ApiHelper.apiGet<fhir.Subscription>(
+        url,
+        props.paneProps.fhirServerInfo.authHeaderContent,
+        );
+      
+      if (!response.value) {
+        // **** show the client error information ****
+
+        let updated: SingleRequestData = {...props.data[0],
+          requestUrl: url, 
+          responseData: `Request for Subscription (${url}) failed:\n` +
+            `${response.statusCode} - "${response.statusText}"\n` +
+            `${response.body}`,
+          responseDataType: RenderDataAsTypes.Error,
+          };
+
+        props.setData([updated]);
+        props.updateStatus({...props.status, busy: false});
+
+        return;
+      }
+
+      // **** show the client subscription information ****
+
+      let updated: SingleRequestData = {...props.data[0],
+        responseData: JSON.stringify(response.value, null, 2),
+        responseDataType: RenderDataAsTypes.FHIR,
+        };
+
+      props.setData([updated]);
+      props.updateStatus({...props.status, busy:false});
+
+      // **** done ****
+
+      return;
+    } catch (err) {
+      // **** show the client subscription information ****
+
+      let updated: SingleRequestData = {
+        name: 'Create Subscription',
+        id: 'create_subscription',
+        requestUrl: url, 
+        responseData: `Request for Subscription (${url}) failed:\n${err}`,
+        responseDataType: RenderDataAsTypes.Error
+        };
+
+      props.setData([updated]);
+      props.updateStatus({...props.status, busy: false});
     }
   }
 
@@ -353,6 +415,8 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       data={props.data}
       paneProps={props.paneProps}
       status={props.status}
+      tabButtonText='Get Status'
+      tabButtonHandler={refreshSubscription}
       >
       <FormGroup
         label='Topic'
@@ -380,6 +444,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
           onChange={handleEndpointChange}
           value={endpointIndex}
           >
+          {/* <option key='_websocket'>WebSocket</option> */}
           { Object.values(props.endpoints).map((value, index) => (
             <option key={value.uid} value={index}>{value.name}</option>
               ))}
