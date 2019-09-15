@@ -111,7 +111,6 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 		// **** build the url for our call ***
 
     let url: string = new URL('Subscription', props.paneProps.fhirServerInfo.url).toString();
-    let endpointUrl: string = new URL(`Endpoints/${props.endpoints[endpointIndex].uid}`, props.paneProps.clientHostInfo.url).toString();
 
     let header: string[] = (headers)
       ? headers.split(',')
@@ -120,20 +119,22 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 		// **** build our subscription channel information ****
 
 		let channel: fhir.SubscriptionChannel = {
-			endpoint: endpointUrl,
 			header: header,
 			heartbeatPeriod: 60,
-			payload: {content: payloadType, contentType: 'application/fhir+json'},
-			type: {coding: [fhir.SubscriptionChannelTypeCodes.rest_hook], text: 'REST Hook'},
+      payload: {content: payloadType, contentType: 'application/fhir+json'},
+      type: {},
     }
 
-		// // **** build our filter information ****
+    // **** determine the endpoint type ****
 
-		// let filter: fhir.SubscriptionFilterBy = {
-		// 	matchType: '=',
-		// 	name: 'patient',
-		// 	value: `Patient/${props.selectedPatientId}`	    //`Patient/${patientFilter},Patient/K123`
-		// }
+    if (endpointIndex <= 0) {
+      channel.type = {coding: [fhir.SubscriptionChannelTypeCodes.websocket], text: 'Websocket'};
+    } else {
+      channel.endpoint = new URL(`Endpoints/${props.endpoints[endpointIndex].uid}`, props.paneProps.clientHostInfo.url).toString();
+      channel.type = {coding: [fhir.SubscriptionChannelTypeCodes.rest_hook], text: 'REST Hook'};
+    }
+
+    // **** ****
 
 		var expirationTime:Date = new Date();
 		expirationTime.setHours(expirationTime.getHours() + 1);
@@ -190,6 +191,8 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         name: 'Create Subscription',
         id: 'create_subscription',
         requestUrl: url, 
+        requestData: JSON.stringify(subscription, null, 2),
+        requestDataType: RenderDataAsTypes.FHIR,
         responseData: `Request for Subscription (${url}) failed:\n` +
           `${response.statusCode} - "${response.statusText}"\n` +
           `${response.body}`,
@@ -210,6 +213,8 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         name: 'Create Subscription',
         id: 'create_subscription',
         requestUrl: url, 
+        requestData: JSON.stringify(subscription, null, 2),
+        requestDataType: RenderDataAsTypes.FHIR,
         responseData: `Request for Subscription (${url}) failed:\n${err}`,
         responseDataType: RenderDataAsTypes.Error
         };
@@ -444,7 +449,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
           onChange={handleEndpointChange}
           value={endpointIndex}
           >
-          {/* <option key='_websocket'>WebSocket</option> */}
+          <option key='-1'>WebSocket</option>
           { Object.values(props.endpoints).map((value, index) => (
             <option key={value.uid} value={index}>{value.name}</option>
               ))}
@@ -552,8 +557,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       <Button
         disabled={(!props.status.available) || 
                   (props.status.busy) || 
-                  (topicIndex < 0) || 
-                  (endpointIndex < 0)}
+                  (topicIndex < 0)}
         onClick={createSubscription}
         style={{margin: 5}}
         >

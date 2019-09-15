@@ -15,6 +15,7 @@ import NotificationPlayground from './NotificationPlayground';
 import SubscriptionPlayground from './SubscriptionPlayground';
 import { EndpointRegistration } from '../../models/EndpointRegistration';
 import EndpointPlayground from './EndpointPlayground';
+import WebsocketPlayground from './WebsocketPlayground';
 
 export default function PlaygroundPane(props: ContentPaneProps) {
 
@@ -40,6 +41,8 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 	const [subscriptionStatus, setSubscriptionStatus] = useState<DataCardStatus>(_statusAvailable);
 	const [subscriptions, setSubscriptions] = useState<fhir.Subscription[]>([]);
 
+	const [websocketData, setWebsocketData] = useState<SingleRequestData[]>([]);
+	const [websocketStatus, setWebsocketStatus] = useState<DataCardStatus>(_statusAvailable);
 
 	useEffect(() => {
 		/** Determine if the client is connected enough to proceed and update state accordingly */
@@ -94,6 +97,30 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 		let subscriptionUrl: string = '';
 
 		let bundle: fhir.Bundle;
+
+		// **** check for a ping ****
+
+		if (message.startsWith('ping')) {
+			// **** add to our display ****
+
+			let rec:SingleRequestData = {
+				id:`event_${notificationData.length}`, 
+				name: `Notification #${notificationData.length}`,
+				responseData: message,
+				responseDataType: RenderDataAsTypes.Text,
+				info: `Notification #${notificationData.length}:\n`+
+					`\t${message}`,
+			}
+
+			let data: SingleRequestData[] = notificationData.slice();
+			data.push(rec);
+
+			// **** update our state ****
+
+			setNotificationData(data);
+
+			return;
+		}
 
 		// **** resolve this message into a bundle ****
 
@@ -222,6 +249,17 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 				endpoints={endpoints}
 				topics={topics}
 				subscriptions={subscriptions}
+				/>
+
+			<WebsocketPlayground
+				key='playground_websocket'
+				paneProps={props}
+				status={websocketStatus}
+				updateStatus={setWebsocketStatus}
+				data={websocketData}
+				setData={setWebsocketData}
+				subscriptions={subscriptions}
+				handleHostMessage={handleHostMessage}
 				/>
 		</div>
 	);
