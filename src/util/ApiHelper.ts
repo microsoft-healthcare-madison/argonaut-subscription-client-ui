@@ -46,22 +46,6 @@ export class ApiHelper {
       };
     }
   }
-  
-  // static apiGet<T>(url: string): Promise<T> {
-  //   return fetch(url, {
-  //     method: 'GET',
-  //     headers: {
-  //       'Accept': 'application/json',
-  //     },
-  //     })
-  //     .then(response => {
-  //       if (!response.ok) {
-  //         throw new Error(response.statusText);
-  //       }
-  //       return response.json() as Promise<T>;
-  //     })
-  // }
-
 
   static async apiGetFhir<T>(url: string, authHeader?: string): Promise<ApiResponse<T>> {
     try {
@@ -108,22 +92,6 @@ export class ApiHelper {
     }
   }
   
-  // static apiGetFhir<T>(url: string): Promise<T> {
-  //   return fetch(url, {
-  //     method: 'GET',
-  //     headers: {
-  //       'Accept': 'application/fhir+json',
-  //     },
-  //     })
-  //     .then(response => {
-  //       if (!response.ok) {
-  //         throw new Error(response.statusText);
-  //       }
-  //       return response.json() as Promise<T>;
-  //     })
-  // }
-
-  
   static async apiPost<T>(url:string, data:T|undefined, authHeader?:string): Promise<ApiResponse<T>> {
     try {
       let headers: Headers = new Headers();
@@ -160,23 +128,6 @@ export class ApiHelper {
       };
     }
   }
-  
-  // static apiPost<T>(url: string, jsonData: string): Promise<T> {
-  //   return fetch(url, {
-  //     method: 'POST',
-  //     headers: {
-  //       'Accept': 'application/json',
-  //       'Content-Type': 'application/json',
-  //     },
-  //     body: jsonData
-  //     })
-  //     .then(response => {
-  //       if (!response.ok) {
-  //         throw new Error(response.statusText);
-  //       }
-  //       return response.json() as Promise<T>;
-  //     })
-  // }
 
   static async apiPostFhir<T>(url:string, data:T, authHeader?:string, preferHeader?:string): Promise<ApiResponse<T>> {
     try {
@@ -245,25 +196,6 @@ export class ApiHelper {
       };
     }
   }
-
-  // static apiPostFhir<T>(url: string, jsonData: string): Promise<T> {
-  //   return fetch(url, {
-  //     method: 'POST',
-  //     headers: {
-  //       'Accept': 'application/fhir+json;charset=utf-8',
-  //       'Content-Type': 'application/fhir+json;charset=utf-8',
-  //       'Prefer':'return=representation',
-  //     },
-  //     body: jsonData
-  //     })
-  //     .then(response => {
-  //       if (!response.ok) {
-  //         throw new Error(response.statusText);
-  //       }
-  //       return response.json() as Promise<T>;
-  //     })
-  // }
-
   
   static async apiPutFhir<T>(url:string, data:T, authHeader?:string, preferHeader?:string): Promise<ApiResponse<T>> {
     try {
@@ -332,25 +264,6 @@ export class ApiHelper {
       };
     }
   }
-
-  // static apiPutFhir<T>(url: string, jsonData: string): Promise<T> {
-  //   return fetch(url, {
-  //     method: 'PUT',
-  //     headers: {
-  //       'Accept': 'application/fhir+json;charset=utf-8',
-  //       'Content-Type': 'application/fhir+json;charset=utf-8',
-  //       'Prefer':'return=representation',
-  //     },
-  //     body: jsonData
-  //     })
-  //     .then(response => {
-  //       if (!response.ok) {
-  //         throw new Error(response.statusText);
-  //       }
-  //       return response.json() as Promise<T>;
-  //     })
-  // }
-
   
   static async apiPut<T>(url:string, jsonData:string, authHeader?:string): Promise<ApiResponse<T>> {
     try {
@@ -388,24 +301,6 @@ export class ApiHelper {
       };
     }
   }
-
-  // static apiPut<T>(url: string, jsonData: string): Promise<T> {
-  //   return fetch(url, {
-  //     method: 'PUT',
-  //     headers: {
-  //       'Accept': 'application/json',
-  //       'Content-Type': 'application/json',
-  //     },
-  //     body: jsonData
-  //     })
-  //     .then(response => {
-  //       if (!response.ok) {
-  //         throw new Error(response.statusText);
-  //       }
-  //       return response.json() as Promise<T>;
-  //     })
-  // }
-
   
   static async apiDelete<T>(url:string, authHeader?:string): Promise<ApiResponse<T>> {
     try {
@@ -494,25 +389,6 @@ export class ApiHelper {
       };
     }
   }
-
-  // static apiDelete(url: string): Promise<boolean> {
-  //   return fetch(url, {
-  //     method: 'DELETE',
-  //     headers: {
-  //       'Accept': 'application/json',
-  //       'Content-Type': 'application/json',
-  //     },
-  //     })
-  //     .then(response => {
-  //       if (!response.ok) {
-  //         throw new Error(response.statusText);
-  //       }
-  //       return true;
-  //     })
-  //     .catch(reason => {
-  //       return false;
-  //     })
-  // }
 
   static urlForSubscription(id:string, serverUrl:string):string {
 		return new URL(`Subscription/${encodeURIComponent(id)}`, serverUrl).toString();

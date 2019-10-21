@@ -27,7 +27,7 @@ export default function ConfigurationPane(props: ContentPaneProps) {
   const [fhirServerUrl, setFhirServerUrl] = useState<string>(props.fhirServerInfo.url);
   const [fhirServerAuth, setFhirServerAuth] = useState<string>(props.fhirServerInfo.authHeaderContent!);
   const [fhirServerPrefer, setFhirServerPrefer] = useState<string>(props.fhirServerInfo.preferHeaderContent);
-  const [fhirServerProxyUrl, setFhirServerProxyUrl] = useState<string>(props.fhirServerInfo.proxyDestinationUrl!)
+  // const [fhirServerProxyUrl, setFhirServerProxyUrl] = useState<string>(props.fhirServerInfo.proxyDestinationUrl!)
 
   const [clientHostUrl, setClientHostUrl] = useState<string>(props.clientHostInfo.url);
   
@@ -97,9 +97,9 @@ export default function ConfigurationPane(props: ContentPaneProps) {
         setFhirServerPrefer(localStorage.getItem('fhirServerPrefer')!);
       }
 
-      if (localStorage.getItem('fhirServerProxyUrl')) {
-        setFhirServerProxyUrl(localStorage.getItem('fhirServerProxyUrl')!);
-      }
+      // if (localStorage.getItem('fhirServerProxyUrl')) {
+      //   setFhirServerProxyUrl(localStorage.getItem('fhirServerProxyUrl')!);
+      // }
 
       if (localStorage.getItem('clientHostUrl')) {
         setClientHostUrl(localStorage.getItem('clientHostUrl')!);
@@ -402,7 +402,7 @@ export default function ConfigurationPane(props: ContentPaneProps) {
             </tr>
           </thead>
           <tbody>
-            {_uiLinks.map((linkInfo, index) => (
+            {_uiLinks.map((linkInfo) => (
               <tr>
                 <td>{linkInfo.description}</td>
                 <td><a

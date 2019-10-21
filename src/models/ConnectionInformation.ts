@@ -3,6 +3,7 @@ import { CapabilityStatementRestResource } from "./fhir_r4_selected";
 export interface ConnectionInformation {
   name: string;
   url: string;
+  // proxyDestinationUrl?: string;
   hint: string;
   status: string;
   showMessages: boolean;

@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 
 import {
-  HTMLSelect, Button, FormGroup, InputGroup, ControlGroup, Overlay, Classes, Card,
+  HTMLSelect, Button, FormGroup, InputGroup, ControlGroup, Overlay, Classes, Card, Switch,
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { DataCardInfo } from '../../models/DataCardInfo';
@@ -38,8 +38,20 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
     optional: false,
   };
   
+  const emailTypes:string[] = [
+    'text/html',
+    'text/html;attach=application/fhir+json',
+    'text/plain',
+    'text/plain;attach=application/fhir+json',
+  ]
+
   const [topicIndex, setTopicIndex] = useState<number>(-1);
   const [endpointIndex, setEndpointIndex] = useState<number>(-1);
+
+  const [channelType, setChannelType] = useState<string>('websocket');
+
+  const [emailAddress, setEmailAddress] = useState<string>('argonaut@mailinator.com');
+  const [emailMimeType, setEmailMimeType] = useState<string>('text/html;attach=application+json');
 
   const [payloadType, setPayloadType] = useState<string>('id-only');
   const [headers, setHeaders] = useState<string>('');
@@ -127,12 +139,30 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 
     // **** determine the endpoint type ****
 
-    if (endpointIndex <= 0) {
-      channel.type = {coding: [fhir.SubscriptionChannelTypeCodes.websocket], text: 'Websocket'};
-    } else {
-      channel.endpoint = new URL(`Endpoints/${props.endpoints[endpointIndex].uid}`, props.paneProps.clientHostInfo.url).toString();
-      channel.type = {coding: [fhir.SubscriptionChannelTypeCodes.rest_hook], text: 'REST Hook'};
+    switch (channelType) {
+      case fhir.SubscriptionChannelTypeCodes.rest_hook.code!:
+        if (props.endpoints.length === 0) {
+          props.paneProps.toaster('Invalid selection', IconNames.ERROR, 1000);
+          props.updateStatus({...props.status, busy: false});
+          return;
+        } else if (endpointIndex < 0) {
+          channel.endpoint = new URL(`Endpoints/${props.endpoints[props.endpoints.length-1].uid}`, props.paneProps.clientHostInfo.url).toString();
+          channel.type = {coding: [fhir.SubscriptionChannelTypeCodes.rest_hook], text: 'REST Hook'};
+        } else {
+          channel.endpoint = new URL(`Endpoints/${props.endpoints[endpointIndex].uid}`, props.paneProps.clientHostInfo.url).toString();
+          channel.type = {coding: [fhir.SubscriptionChannelTypeCodes.rest_hook], text: 'REST Hook'};
+        }
+        break;
+      case fhir.SubscriptionChannelTypeCodes.websocket.code!:
+        channel.type = {coding: [fhir.SubscriptionChannelTypeCodes.websocket], text: 'Websocket'};
+        break;
+      case fhir.SubscriptionChannelTypeCodes.email.code!:
+        channel.endpoint = emailAddress;
+        channel.payload = {content: payloadType, contentType: emailMimeType};
+        channel.type = {coding: [fhir.SubscriptionChannelTypeCodes.email], text: 'Email'};
+        break;
     }
+
 
     // **** ****
 
@@ -386,6 +416,12 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
   /** Process HTML events for the endpoint select box */
   function handleEndpointChange(event: React.FormEvent<HTMLSelectElement>) {
     setEndpointIndex(parseInt(event.currentTarget.value));
+
+  }
+
+  /** Process HTML events for the payload type select box */
+	function handleChannelTypeChange(event: React.FormEvent<HTMLSelectElement>) {
+		setChannelType(event.currentTarget.value);
   }
 
   /** Process HTML events for the payload type select box */
@@ -396,6 +432,16 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
   /** Process HTML events for headers (update state for managed) */
   function handleHeadersChange(event: React.ChangeEvent<HTMLInputElement>) {
     setHeaders(event.target.value);
+  }
+
+  /** Process HTML events for email address (update state for managed) */
+  function handleEmailAddressChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setEmailAddress(event.target.value);
+  }  
+
+  /** Process HTML events for the mime type select box */
+	function handleEmailMimeTypeChange(event: React.FormEvent<HTMLSelectElement>) {
+		setEmailMimeType(event.currentTarget.value);
   }
 
   /** Process HTML events for the filter by name select box */
@@ -440,21 +486,79 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         </HTMLSelect>
       </FormGroup>
       <FormGroup
-        label='Endpoint'
-        helperText='Endpoint this topic will send notifications to'
-        labelFor='endpoint'
+        label='Channel Type'
+        helperText='Type of channel to use for this subscription'
+        labelFor='channel-type'
         >
         <HTMLSelect
-          id='endpoint'
-          onChange={handleEndpointChange}
-          value={endpointIndex}
+          id='channel-type'
+          onChange={handleChannelTypeChange}
+          value={channelType}
           >
-          <option key='-1'>WebSocket</option>
-          { Object.values(props.endpoints).map((value, index) => (
-            <option key={value.uid} value={index}>{value.name}</option>
-              ))}
+          <option key='websocket' value='websocket'>Websocket</option>
+          <option key='rest-hook' value='rest-hook'>REST Hook</option>
+          <option key='email' value='email'>Email</option>
         </HTMLSelect>
       </FormGroup>
+      { (channelType === 'rest-hook') && [
+        <FormGroup
+          label='Endpoint'
+          helperText='Endpoint this topic will send notifications to'
+          labelFor='endpoint'
+          >
+          <HTMLSelect
+            id='endpoint'
+            onChange={handleEndpointChange}
+            value={endpointIndex}
+            >
+            { Object.values(props.endpoints).map((value, index) => (
+              <option key={value.uid} value={index}>{value.name}</option>
+                ))}``
+          </HTMLSelect>
+        </FormGroup>,
+        <FormGroup
+          label='Subscription Headers'
+          helperText='Comma (,) separated list of headers to include with notifications (per channel requirements)'
+          labelFor='subscription-headers'
+          >
+          <InputGroup
+            id='subscription-headers'
+            placeholder='Authorization: Bearer secret-token-abc-123'
+            value={headers}
+            onChange={handleHeadersChange}
+            />
+        </FormGroup>,
+        ]
+      }
+      { (channelType === 'email') && [
+        <FormGroup
+          label='Email Address'
+          helperText='Email Address to send notifications to'
+          labelFor='email-address'
+          >
+          <InputGroup
+            id='email-address'
+            value={emailAddress}
+            onChange={handleEmailAddressChange}
+            />
+        </FormGroup>,
+        <FormGroup
+          label='Email Type'
+          helperText='MIME Type'
+          labelFor='email-type'
+          >
+          <HTMLSelect
+            id='email-type'
+            onChange={handleEmailMimeTypeChange}
+            value={emailMimeType}
+            >
+            { emailTypes.map((value) => (
+              <option key={value}>{value}</option> 
+                ))}
+          </HTMLSelect>
+        </FormGroup>
+        ]
+      }
       <FormGroup
         label='Subscription Notification Payload Type'
         helperText='Amount of information included with subscription notifications'
@@ -469,18 +573,6 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
             <option key={value}>{value}</option> 
               ))}
         </HTMLSelect>
-      </FormGroup>
-      <FormGroup
-        label='Subscription Headers'
-        helperText='Comma (,) separated list of headers to include with notifications (per channel requirements)'
-        labelFor='subscription-headers'
-        >
-        <InputGroup
-          id='subscription-headers'
-          placeholder='Authorization: Bearer secret-token-abc-123'
-          value={headers}
-          onChange={handleHeadersChange}
-          />
       </FormGroup>
       { ((topicIndex > -1) && (props.topics[topicIndex].canFilterBy)) &&
         <FormGroup

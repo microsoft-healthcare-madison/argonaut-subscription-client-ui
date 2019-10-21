@@ -339,10 +339,10 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 					status = element.valueString!;
 				} else if (element.url.endsWith('subscriptionTopicUrl') ||
 									 element.url.endsWith('subscription-topic-url')) {
-					topicUrl = element.valueString!;
+					topicUrl = element.valueUrl!;
 				} else if (element.url.endsWith('subscriptionUrl') ||
 									 element.url.endsWith('subscription-url')) {
-					subscriptionUrl = element.valueString!;
+					subscriptionUrl = element.valueUrl!;
 				}
 			});
 		}

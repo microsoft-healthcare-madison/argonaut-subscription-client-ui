@@ -57,6 +57,7 @@ export default function MainPage() {
       name: 'FHIR Server',
       hint: 'URL for an R4 FHIR Server with Subscription and Topic support',
       url: window._env.Server_Public_Url,
+      // proxyDestinationUrl: '',
       status: '',
       showMessages: false,
       logMessages: false,
@@ -103,6 +104,10 @@ export default function MainPage() {
         if (localStorage.getItem('fhirServerPrefer')) {
           serverInfo.preferHeaderContent = localStorage.getItem('fhirServerPrefer')!;
         }
+
+        // if (localStorage.getItem('fhirServerProxyUrl')) {
+        //   serverInfo.proxyDestinationUrl = localStorage.getItem('fhirServerProxyUrl')!;
+        // }
         
         setFhirServerInfo(serverInfo);
 
