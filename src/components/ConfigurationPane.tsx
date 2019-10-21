@@ -27,6 +27,8 @@ export default function ConfigurationPane(props: ContentPaneProps) {
   const [fhirServerUrl, setFhirServerUrl] = useState<string>(props.fhirServerInfo.url);
   const [fhirServerAuth, setFhirServerAuth] = useState<string>(props.fhirServerInfo.authHeaderContent!);
   const [fhirServerPrefer, setFhirServerPrefer] = useState<string>(props.fhirServerInfo.preferHeaderContent);
+  const [fhirServerProxyUrl, setFhirServerProxyUrl] = useState<string>(props.fhirServerInfo.proxyDestinationUrl!)
+
   const [clientHostUrl, setClientHostUrl] = useState<string>(props.clientHostInfo.url);
   
   const [requestConnectionToggle, setRequestConnectionToggle] = useState<boolean>(false);
@@ -34,6 +36,49 @@ export default function ConfigurationPane(props: ContentPaneProps) {
   const [busy, setBusy] = useState<boolean>(false);
 
   const connected = (props.clientHostInfo.status === 'ok');
+
+  const _uiLinks = [
+    {
+      short: 'forms.office.com',
+      description: 'We want your feedback!',
+      link:'https://forms.office.com/Pages/ResponsePage.aspx?id=v4j5cvGGr0GRqy180BHbR3_dnSdVFHxEtcOYzItm0qRURVVQT0lKUjMzMzNSVlcwUVZLWFI2NFoxNC4u'
+    },
+    {
+      short: 'build.fhir.org', 
+      description: 'Current FHIR R5 Build branch (Subscription, Topic, etc.)', 
+      link:'http://build.fhir.org/'
+    },
+    {
+      short: 'github.com',
+      description: 'Argonaut Subscription Reference Client UI (this software)',
+      link:'https://github.com/microsoft-healthcare-madison/argonaut-subscription-client-ui'
+    },
+    {
+      short: 'github.com',
+      description: 'Argonaut Subscription Reference Client Host (manage REST endpoints)',
+      link:'https://github.com/microsoft-healthcare-madison/argonaut-subscription-client'
+    },
+    {
+      short: 'github.com',
+      description: 'Argonaut Subscription Reference Server Proxy (intercept and process Subscription/Topic)',
+      link:'https://github.com/microsoft-healthcare-madison/argonaut-subscription-server-proxy'
+    },
+    {
+      short: 'github.com',
+      description: 'September 2019 Connectathon - Argonaut Subscription Scenarios',
+      link:'http://aka.ms/argo-sub-connectathon-2019-09'
+    },
+    {
+      short: 'confluence.hl7.org',
+      description: 'September 2019 Connectathon - Subscription Track',
+      link:'https://confluence.hl7.org/display/FHIR/2019-09+Subscription'
+    },
+    // {
+    //   short: '',
+    //   description: '',
+    //   link:''
+    // },
+  ]
 
   useEffect(() => {
     if (initialLoadRef.current) {
@@ -50,6 +95,10 @@ export default function ConfigurationPane(props: ContentPaneProps) {
 
       if (localStorage.getItem('fhirServerPrefer')) {
         setFhirServerPrefer(localStorage.getItem('fhirServerPrefer')!);
+      }
+
+      if (localStorage.getItem('fhirServerProxyUrl')) {
+        setFhirServerProxyUrl(localStorage.getItem('fhirServerProxyUrl')!);
       }
 
       if (localStorage.getItem('clientHostUrl')) {
@@ -213,6 +262,13 @@ export default function ConfigurationPane(props: ContentPaneProps) {
     }
   }
 
+  function handleFhirServerProxyUrlChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setFhirServerPrefer(event.target.value);
+
+    if (StorageHelper.isLocalStorageAvailable) {
+      localStorage.setItem('fhirServerProxyUrl', event.target.value);
+    }
+  }
 
 	/** Process HTML events for the Client Host URL text box (update state for managed) */
   function handleClientHostUrlChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -238,6 +294,18 @@ export default function ConfigurationPane(props: ContentPaneProps) {
           disabled={connected}
           />
       </FormGroup>
+      {/* <FormGroup
+        label = 'FHIR Server Proxy Destination URL'
+        helperText = 'ONLY use if using the provided Server-Proxy; sets the destination we are proxying to'
+        labelFor='fhir-server-proxy'
+        >
+        <InputGroup 
+          id='fhir-server-proxy'
+          value={fhirServerProxyUrl}
+          onChange={handleFhirServerProxyUrlChange}
+          disabled={connected}
+          />
+      </FormGroup> */}
       <FormGroup
         label = 'FHIR Server Authorization Header'
         helperText = 'CONTENT of the authorization header the server requires, if any'
@@ -334,60 +402,17 @@ export default function ConfigurationPane(props: ContentPaneProps) {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>FHIR Build branch of current changes (Subscription, Topic, etc.)</td>
-              <td><a
-                href='http://build.fhir.org/' 
-                target='_blank'
-                rel="noopener noreferrer"
-                >build.fhir.org</a>
-              </td>
-            </tr>
-            <tr>
-              <td>Argonaut Subscription Connectathon Scenarios</td>
-              <td><a
-                href='http://aka.ms/argo-sub-connectathon-2019-09' 
-                target='_blank'
-                rel="noopener noreferrer"
-                >github.com</a>
-              </td>
-            </tr>
-            <tr>
-              <td>September 2019 Subscription Connectathon Track</td>
-              <td><a
-                href='https://confluence.hl7.org/display/FHIR/2019-09+Subscription' 
-                target='_blank'
-                rel="noopener noreferrer"
-                >confluence.hl7.org</a>
-              </td>
-            </tr>
-            <tr>
-              <td>Argonaut Subscription Reference Client UI (this software)</td>
-              <td><a
-                href='https://github.com/microsoft-healthcare-madison/argonaut-subscription-client-ui' 
-                target='_blank'
-                rel="noopener noreferrer"
-                >github.com</a>
-              </td>
-            </tr>
-            <tr>
-              <td>Argonaut Subscription Reference Client Host (manage REST endpoints)</td>
-              <td><a
-                href='https://github.com/microsoft-healthcare-madison/argonaut-subscription-client' 
-                target='_blank'
-                rel="noopener noreferrer"
-                >github.com</a>
-              </td>
-            </tr>
-            <tr>
-              <td>Argonaut Subscription Reference Server Proxy (intercept and process Subscription/Topic)</td>
-              <td><a
-                href='https://github.com/microsoft-healthcare-madison/argonaut-subscription-server-proxy' 
-                target='_blank'
-                rel="noopener noreferrer"
-                >github.com</a>
-              </td>
-            </tr>
+            {_uiLinks.map((linkInfo, index) => (
+              <tr>
+                <td>{linkInfo.description}</td>
+                <td><a
+                  href={linkInfo.link} 
+                  target='_blank'
+                  rel="noopener noreferrer"
+                  >{linkInfo.short}</a>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </HTMLTable>
       </Text>
