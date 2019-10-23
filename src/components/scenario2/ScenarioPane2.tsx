@@ -279,7 +279,7 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 		setSubscriptionStatus(_statusAvailable);
   }
 
-	/** Register a patient id as active in this scenario */
+	/** Register a group id as active in this scenario */
 	function registerSelectedGroupId(id: string, patientIds: string[]) {
 		// **** disable subsequent steps ****
 
@@ -294,7 +294,6 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 
     setGroupStatus(_statusComplete);
     setEndpointStatus(_statusAvailable);
-
 
 		// **** if there was a clean-up performed, reset the data (no longer clean) ****
 

@@ -26,6 +26,8 @@ export interface SubscriptionPlaygroundProps {
   endpoints: EndpointRegistration[],
   topics: fhir.Topic[],
   subscriptions: fhir.Subscription[],
+  registerPatientId: ((value: string) => void),
+  registerGroupId: ((value: string) => void),
 }
 
 /** Component representing the Playground Subscription Card */
@@ -432,14 +434,32 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         return;
     }
 
-    // **** add this filter ****
+    // **** create the filter object ****
 
-    let updated: fhir.SubscriptionFilterBy[] = filters.slice();
-    updated.push({
+    let rec:fhir.SubscriptionFilterBy = {
       name: props.topics[topicIndex].canFilterBy![filterByIndex].name!,
       matchType: props.topics[topicIndex].canFilterBy![filterByIndex].matchType![filterByMatchTypeIndex],
       value: filterByValue,
-    });
+    };
+
+    // **** add this filter ****
+
+    let updated: fhir.SubscriptionFilterBy[] = filters.slice();
+    updated.push(rec);
+
+    // **** figure out patient IDs to list for encounters ****
+
+    if ((rec.name === 'patient') && (rec.matchType === '=')) {
+      // **** register this patient ID ****
+
+      props.registerPatientId(rec.value);
+    }
+
+    if ((rec.name === 'patient') && (rec.matchType === 'in')) {
+      // **** register this group ID ****
+
+      props.registerGroupId(rec.value);
+    }
 
     // **** update state ****
 

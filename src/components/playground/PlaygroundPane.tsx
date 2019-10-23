@@ -16,6 +16,9 @@ import SubscriptionPlayground from './SubscriptionPlayground';
 import { EndpointRegistration } from '../../models/EndpointRegistration';
 import EndpointPlayground from './EndpointPlayground';
 import WebsocketPlayground from './WebsocketPlayground';
+import { ApiResponse, ApiHelper } from '../../util/ApiHelper';
+import { KeySelectionInfo } from '../../models/KeySelectionInfo';
+import EncountersPlayground from './EncountersPlayground';
 
 export default function PlaygroundPane(props: ContentPaneProps) {
 
@@ -40,6 +43,10 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 	const [subscriptionData, setSubscriptionData] = useState<SingleRequestData[]>([]);
 	const [subscriptionStatus, setSubscriptionStatus] = useState<DataCardStatus>(_statusAvailable);
 	const [subscriptions, setSubscriptions] = useState<fhir.Subscription[]>([]);
+
+	const [encounterData, setEncounterData] = useState<SingleRequestData[]>([]);
+	const [encounterStatus, setEncounterStatus] = useState<DataCardStatus>(_statusAvailable);
+	const [patientIds, setPatientIds] = useState<string[]>([]);
 
 	const [websocketData, setWebsocketData] = useState<SingleRequestData[]>([]);
 	const [websocketStatus, setWebsocketStatus] = useState<DataCardStatus>(_statusAvailable);
@@ -195,6 +202,73 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 		setNotificationStatus(_statusBusy);
 	}
 
+	function registerPatientId(value: string) {
+		if (!(value in patientIds)) {
+			let ids = patientIds.slice();
+			ids.push(value);
+			setPatientIds(ids);
+		}
+	}
+
+	async function registerGroupId(value: string) {
+		// **** get the id's for this group ****
+
+		let groupPatientIds: string[] = await getGroupPatientIds(value);
+
+		let idsToAdd:string[] = [];
+		// **** add each patient ID as necessary ****
+
+		groupPatientIds.forEach((id) => {
+			if (!(id in patientIds)) {
+				idsToAdd.push(id);
+			}
+		});
+
+		if (idsToAdd.length !== 0) {
+			let ids = patientIds.slice();
+			ids.push(...idsToAdd);
+			setPatientIds(ids);
+		}
+	}
+
+	async function getGroupPatientIds(groupId: string):Promise<string[]> {
+    // **** construct the search url ****
+
+		var url: string = new URL(groupId, props.fhirServerInfo.url).toString();
+
+    try {
+      let response:ApiResponse<fhir.Group> = await ApiHelper.apiGetFhir<fhir.Group>(
+        url,
+        props.fhirServerInfo.authHeaderContent
+      );
+
+      // **** check for no values ****
+
+      if (!response.value) {
+        return [];
+			}
+			
+			const group:fhir.Group = response.value! as fhir.Group;
+
+			if (!group.actual) return [];
+
+			let memberCount = group.quantity ? group.quantity : (group.member ? group.member!.length : 0);
+			let ids: string[] = [];
+
+			if (group.member) {
+				group.member!.forEach((member: fhir.GroupMember) => {
+					if ((member.entity) && (member.entity.reference)) {
+						ids.push(member.entity.reference);
+					}
+				})
+			}
+			
+			return ids;
+		} catch (err) {
+			return [];
+		}
+	}
+
 	// **** if we are connected, render scenario content ****
 	return (
 		<div id='mainContent'>
@@ -249,6 +323,8 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 				endpoints={endpoints}
 				topics={topics}
 				subscriptions={subscriptions}
+				registerPatientId={registerPatientId}
+				registerGroupId={registerGroupId}
 				/>
 
 			<WebsocketPlayground
@@ -260,6 +336,16 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 				setData={setWebsocketData}
 				subscriptions={subscriptions}
 				handleHostMessage={handleHostMessage}
+				/>
+
+			<EncountersPlayground
+				key='playground_encounters'
+				paneProps={props}
+				status={encounterStatus}
+				updateStatus={setEncounterStatus}
+				data={encounterData}
+				setData={setEncounterData}
+				patientIds={patientIds}
 				/>
 		</div>
 	);
