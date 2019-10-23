@@ -50,8 +50,8 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 
   const [channelType, setChannelType] = useState<string>('websocket');
 
-  const [emailAddress, setEmailAddress] = useState<string>('argonaut@mailinator.com');
-  const [emailMimeType, setEmailMimeType] = useState<string>('text/html;attach=application+json');
+  const [emailAddress, setEmailAddress] = useState<string>('');
+  const [emailMimeType, setEmailMimeType] = useState<string>(emailTypes[0]);
 
   const [payloadType, setPayloadType] = useState<string>('id-only');
   const [headers, setHeaders] = useState<string>('');
@@ -163,7 +163,6 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         break;
     }
 
-
     // **** ****
 
 		var expirationTime:Date = new Date();
@@ -195,7 +194,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         // **** show the client subscription information ****
 
         let updated: SingleRequestData = {
-          name: 'Create Subscription',
+          name: `Subscription #${props.data.length}`,
           id: 'create_subscription',
           requestUrl: url, 
           requestData: JSON.stringify(subscription, null, 2),
@@ -204,8 +203,10 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
           responseDataType: response.value ? RenderDataAsTypes.FHIR : RenderDataAsTypes.Text,
           outcome: response.outcome ? JSON.stringify(response.outcome, null, 2) : undefined,
           };
-
-        props.setData([updated]);
+        
+        let updatedData: SingleRequestData[] = props.data.slice();
+        updatedData.push(updated);
+        props.setData(updatedData);
         
         // **** register this subscription (updates status) ****
 
@@ -218,7 +219,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       // **** show the client subscription information ****
 
       let updated: SingleRequestData = {
-        name: 'Create Subscription',
+        name: `Subscription #${props.data.length}`,
         id: 'create_subscription',
         requestUrl: url, 
         requestData: JSON.stringify(subscription, null, 2),
@@ -230,7 +231,10 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         outcome: response.outcome ? JSON.stringify(response.outcome, null, 2) : undefined,
         };
 
-      props.setData([updated]);
+      let updatedData: SingleRequestData[] = props.data.slice();
+      updatedData.push(updated);
+      props.setData(updatedData);
+      
       props.updateStatus({...props.status, busy: false});
 
       // **** done ****
@@ -240,7 +244,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       // **** show the client subscription information ****
 
       let updated: SingleRequestData = {
-        name: 'Create Subscription',
+        name: `Subscription #${props.data.length}`,
         id: 'create_subscription',
         requestUrl: url, 
         requestData: JSON.stringify(subscription, null, 2),
@@ -249,7 +253,10 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         responseDataType: RenderDataAsTypes.Error
         };
 
-      props.setData([updated]);
+      let updatedData: SingleRequestData[] = props.data.slice();
+      updatedData.push(updated);
+      props.setData(updatedData);
+
       props.updateStatus({...props.status, busy: false});
 
       // **** done ****
@@ -297,7 +304,10 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         responseDataType: RenderDataAsTypes.FHIR,
         };
 
-      props.setData([updated]);
+      let updatedData: SingleRequestData[] = props.data.slice();
+      updatedData.splice(dataRowIndex, 1, updated);
+      props.setData(updatedData);
+      
       props.updateStatus({...props.status, busy:false});
 
       // **** done ****
@@ -307,14 +317,53 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       // **** show the client subscription information ****
 
       let updated: SingleRequestData = {
-        name: 'Create Subscription',
+        name: `Subscription #${dataRowIndex}`,
         id: 'create_subscription',
         requestUrl: url, 
         responseData: `Request for Subscription (${url}) failed:\n${err}`,
         responseDataType: RenderDataAsTypes.Error
         };
 
-      props.setData([updated]);
+      let updatedData: SingleRequestData[] = props.data.slice();
+      updatedData.splice(dataRowIndex, 1, updated);
+      props.setData(updatedData);
+      props.updateStatus({...props.status, busy: false});
+    }
+  }
+
+  async function deleteSubscription(dataRowIndex: number) {
+    props.updateStatus({...props.status, busy: true});
+
+		// **** build the url for our call ***
+
+    let url: string = new URL(`Subscription/${props.subscriptions[dataRowIndex].id!}`, props.paneProps.fhirServerInfo.url).toString();
+
+    // **** update the status on this subscription ****
+    
+    try {
+      let response: ApiResponse<fhir.Subscription> = await ApiHelper.apiDelete<fhir.Subscription>(
+        url,
+        props.paneProps.fhirServerInfo.authHeaderContent,
+        );
+
+      // **** remove this subscription ****
+
+      let updatedData: SingleRequestData[] = props.data.slice();
+      updatedData.splice(dataRowIndex, 1);
+      props.setData(updatedData);
+
+      props.updateStatus({...props.status, busy:false});
+
+      // **** done ****
+
+      return;
+    } catch (err) {
+      // **** remove this subscription anyway ****
+
+      let updatedData: SingleRequestData[] = props.data.slice();
+      updatedData.splice(dataRowIndex, 1);
+      props.setData(updatedData);
+
       props.updateStatus({...props.status, busy: false});
     }
   }
@@ -468,6 +517,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       status={props.status}
       tabButtonText='Get Status'
       tabButtonHandler={refreshSubscription}
+      processRowDelete={deleteSubscription}
       >
       <FormGroup
         label='Topic'
@@ -533,7 +583,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       { (channelType === 'email') && [
         <FormGroup
           label='Email Address'
-          helperText='Email Address to send notifications to'
+          helperText='Email Address to send notifications.  Note that @mailinator.com email does NOT work, try https://getnada.com (which allows attachments).  Emails come from: subscriptions-at-ginoc-dot-org'
           labelFor='email-address'
           >
           <InputGroup
