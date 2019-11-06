@@ -135,7 +135,8 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 			if (subscription) {
 				ApiHelper.deleteSubscription(
 					subscription.id!,
-					props.fhirServerInfo.url
+					props.fhirServerInfo.url,
+					props.useBackportToR4
 					);
 			}
 			setSubscription(null);
@@ -228,7 +229,8 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 			if (subscription) {
 				ApiHelper.deleteSubscription(
 					subscription.id!,
-					props.fhirServerInfo.url
+					props.fhirServerInfo.url,
+					props.useBackportToR4
 				);
 				setSubscription(null);
 			}

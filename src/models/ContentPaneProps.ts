@@ -19,4 +19,6 @@ export interface ContentPaneProps {
   codePaneDark: boolean;
   toggleCodePaneColors: ((useSetState: boolean) => void);
   copyToClipboard: ((message: string, toast?: string) => void);
+  useBackportToR4: boolean;
+  toggleUseBackportToR4: ((useSetState: boolean) => void);
 }

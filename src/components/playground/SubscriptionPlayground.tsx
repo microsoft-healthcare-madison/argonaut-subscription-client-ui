@@ -124,7 +124,9 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 
 		// **** build the url for our call ***
 
-    let url: string = new URL('Subscription', props.paneProps.fhirServerInfo.url).toString();
+    let url: string = props.paneProps.useBackportToR4
+      ? new URL('Basic', props.paneProps.fhirServerInfo.url).toString()
+      : new URL('Subscription', props.paneProps.fhirServerInfo.url).toString();
 
     let header: string[] = (headers)
       ? headers.split(',')
@@ -170,6 +172,10 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 		var expirationTime:Date = new Date();
 		expirationTime.setHours(expirationTime.getHours() + 1);
 
+    let topicResource: string = props.paneProps.useBackportToR4
+      ? 'Basic'
+      : 'Topic';
+      
 		// **** build the subscription object ****
 
 		let subscription: fhir.Subscription = {
@@ -177,7 +183,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 			channel: channel,
 			filterBy: filters,
 			end: getInstantFromDate(expirationTime),
-			topic: {reference:  `Topic/${props.topics[topicIndex].id!}`},
+			topic: {reference:  `${topicResource}/${props.topics[topicIndex].id!}`},
 			reason: 'Client Testing',
 			status: 'requested',
 		}
@@ -185,12 +191,40 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
     // **** try to create the subscription ****
 
     try {
-      let response: ApiResponse<fhir.Subscription> = await ApiHelper.apiPostFhir(
-        url,
-        subscription,
-        props.paneProps.fhirServerInfo.authHeaderContent,
-        props.paneProps.fhirServerInfo.preferHeaderContent
-        );
+      var response: ApiResponse<fhir.Subscription> | ApiResponse<fhir.Basic>;
+
+      if (props.paneProps.useBackportToR4) {
+        // **** wrap in basic ****
+
+        let basic:fhir.Basic = {
+          resourceType: 'Basic',
+          code: {
+            coding: [{
+              code: 'R5Subscription',
+              display: 'Backported R5 Subscription',
+              system: 'http://hl7.org/fhir/resource-types',
+            }]
+          },
+          extension: [{
+            url: 'http://hl7.org/fhir/StructureDefinition/json-embedded-resource',
+            valueString: JSON.stringify(subscription)
+          }]
+        }
+
+        response = await ApiHelper.apiPostFhir<fhir.Basic>(
+          url,
+          basic,
+          props.paneProps.fhirServerInfo.authHeaderContent,
+          props.paneProps.fhirServerInfo.preferHeaderContent
+          );
+      } else {
+        response = await ApiHelper.apiPostFhir<fhir.Subscription>(
+          url,
+          subscription,
+          props.paneProps.fhirServerInfo.authHeaderContent,
+          props.paneProps.fhirServerInfo.preferHeaderContent
+          );
+      }
       
       if (response.value) {
         // **** show the client subscription information ****
@@ -212,7 +246,11 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         
         // **** register this subscription (updates status) ****
 
-        props.registerSubscription(response.value!);
+        if (props.paneProps.useBackportToR4) {
+          props.registerSubscription(JSON.parse((response.value! as fhir.Basic).extension![0].valueString!));
+        } else {
+          props.registerSubscription(response.value! as fhir.Subscription);
+        }
 
         // **** done ****
         return;
@@ -272,15 +310,26 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 
 		// **** build the url for our call ***
 
-    let url: string = new URL(`Subscription/${props.subscriptions[dataRowIndex].id!}`, props.paneProps.fhirServerInfo.url).toString();
+    let url: string = props.paneProps.useBackportToR4
+      ? new URL(`Basic/${props.subscriptions[dataRowIndex].id!}`, props.paneProps.fhirServerInfo.url).toString()
+      : new URL(`Subscription/${props.subscriptions[dataRowIndex].id!}`, props.paneProps.fhirServerInfo.url).toString();
 
     // **** update the status on this subscription ****
     
     try {
-      let response: ApiResponse<fhir.Subscription> = await ApiHelper.apiGet<fhir.Subscription>(
-        url,
-        props.paneProps.fhirServerInfo.authHeaderContent,
-        );
+      var response: ApiResponse<fhir.Subscription> | ApiResponse<fhir.Basic>;
+
+      if (props.paneProps.useBackportToR4) {
+        response = await ApiHelper.apiGet<fhir.Basic>(
+          url,
+          props.paneProps.fhirServerInfo.authHeaderContent,
+          );
+      } else {
+        response = await ApiHelper.apiGet<fhir.Subscription>(
+          url,
+          props.paneProps.fhirServerInfo.authHeaderContent,
+          );
+      }
       
       if (!response.value) {
         // **** show the client error information ****
@@ -338,15 +387,26 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 
 		// **** build the url for our call ***
 
-    let url: string = new URL(`Subscription/${props.subscriptions[dataRowIndex].id!}`, props.paneProps.fhirServerInfo.url).toString();
+    let url: string = props.paneProps.useBackportToR4
+      ? new URL(`Basic/${props.subscriptions[dataRowIndex].id!}`, props.paneProps.fhirServerInfo.url).toString()
+      : new URL(`Subscription/${props.subscriptions[dataRowIndex].id!}`, props.paneProps.fhirServerInfo.url).toString();
 
     // **** update the status on this subscription ****
     
     try {
-      let response: ApiResponse<fhir.Subscription> = await ApiHelper.apiDelete<fhir.Subscription>(
-        url,
-        props.paneProps.fhirServerInfo.authHeaderContent,
-        );
+      var response: ApiResponse<fhir.Subscription> | ApiResponse<fhir.Basic>;
+
+      if (props.paneProps.useBackportToR4) {
+        response = await ApiHelper.apiDelete<fhir.Basic>(
+          url,
+          props.paneProps.fhirServerInfo.authHeaderContent,
+          );
+      } else {
+        response = await ApiHelper.apiDelete<fhir.Subscription>(
+          url,
+          props.paneProps.fhirServerInfo.authHeaderContent,
+          );
+      }
 
       // **** remove this subscription ****
 

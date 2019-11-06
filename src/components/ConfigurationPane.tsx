@@ -104,7 +104,7 @@ export default function ConfigurationPane(props: ContentPaneProps) {
       if (localStorage.getItem('clientHostUrl')) {
         setClientHostUrl(localStorage.getItem('clientHostUrl')!);
       }
-
+      
       // **** check for requesting a connection ****
 
       if ((StorageHelper.isLocalStorageAvailable) &&
@@ -354,6 +354,11 @@ export default function ConfigurationPane(props: ContentPaneProps) {
         >
         {connected ? 'Disconnect' : 'Connect'}
       </Button>
+      <Switch
+        checked={props.useBackportToR4}
+        label='Use Backport To R4 (Basic Resource)'
+        onChange={() => props.toggleUseBackportToR4(true)}
+        />
       <Switch
         checked={props.clientHostInfo.showMessages}
         label='Display Client Host Messages'

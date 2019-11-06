@@ -78,6 +78,7 @@ export default function MainPage() {
     });
   const [uiDark, setUiDark] = useState<boolean>(false);
   const [codePaneDark, setCodePaneDark] = useState<boolean>(false);
+  const [useBackportToR4, setUseBackportToR4] = useState<boolean>(false);
 
   // **** handle lifecycle changes ****
 
@@ -133,6 +134,10 @@ export default function MainPage() {
 
         if (localStorage.getItem('codePaneDark') === 'true') {
           setCodePaneDark(true);
+        }
+
+        if (localStorage.getItem('useBackportToR4') === 'true') {
+          setUseBackportToR4(true);
         }
       }
 
@@ -194,6 +199,15 @@ export default function MainPage() {
       localStorage.setItem('codePaneDark', (codePaneDark).toString());
     }
   }, [codePaneDark]);
+
+  function toggleUseBackportToR4() {
+    setUseBackportToR4(!useBackportToR4);
+  };
+  useEffect(() => {
+    if (StorageHelper.isLocalStorageAvailable) {
+      localStorage.setItem('useBackportToR4', (useBackportToR4).toString());
+    }
+  }, [useBackportToR4]);
 
   /** Disconnect from all connected servers */
   function disconnect() {
@@ -555,6 +569,8 @@ export default function MainPage() {
           codePaneDark: codePaneDark,
           toggleCodePaneColors:toggleCodePaneColors,
           copyToClipboard: copyToClipboard,
+          useBackportToR4: useBackportToR4,
+          toggleUseBackportToR4: toggleUseBackportToR4,
         }) }
       {/* </div> */}
     </div>

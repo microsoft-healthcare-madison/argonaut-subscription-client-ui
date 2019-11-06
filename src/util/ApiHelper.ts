@@ -390,8 +390,10 @@ export class ApiHelper {
     }
   }
 
-  static urlForSubscription(id:string, serverUrl:string):string {
-		return new URL(`Subscription/${encodeURIComponent(id)}`, serverUrl).toString();
+  static urlForSubscription(id:string, serverUrl:string, useBasic: boolean):string {
+    return useBasic
+      ? new URL(`Basic/${encodeURIComponent(id)}`, serverUrl).toString()
+      : new URL(`Subscription/${encodeURIComponent(id)}`, serverUrl).toString();
   }
 
   static urlForEndpoint(clientRegistration:string, id:string, clientHostUrl:string):string {
@@ -401,13 +403,15 @@ export class ApiHelper {
       ).toString();
   }
 
-  static deleteSubscription(id: string, serverUrl: string) {
+  static deleteSubscription(id: string, serverUrl: string, useBasic: boolean) {
     if (!(id) || (id === '')) { return; }
     if (!(serverUrl) || (serverUrl === '')) { return; }
 
 		// **** build url to remove the subscription ****
 
-		let url:string = new URL(`Subscription/${encodeURIComponent(id)}`, serverUrl).toString();
+    let url:string = useBasic
+      ? new URL(`Basic/${encodeURIComponent(id)}`, serverUrl).toString()
+      : new URL(`Subscription/${encodeURIComponent(id)}`, serverUrl).toString();
 
 		// **** ask for this subscription to be deleted ****
 

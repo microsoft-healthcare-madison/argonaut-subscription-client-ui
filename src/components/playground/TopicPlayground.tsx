@@ -38,7 +38,9 @@ export default function TopicPlayground(props: TopicPlaygroundProps) {
 
     // **** construct the registration REST url ****
 
-    let url: string = new URL('Topic', props.paneProps.fhirServerInfo.url).toString();
+    let url: string = props.paneProps.useBackportToR4
+      ? new URL('Basic?code=R5Topic', props.paneProps.fhirServerInfo.url).toString()
+      : new URL('Topic', props.paneProps.fhirServerInfo.url).toString();
 
     // **** attempt to get the list of Topics ****
 
@@ -77,12 +79,17 @@ export default function TopicPlayground(props: TopicPlaygroundProps) {
       if (response.value.entry) {
         response.value.entry.forEach((entry: fhir.BundleEntry) => {
           if (!entry.resource) return;
-          topics.push(entry.resource! as fhir.Topic);
+
+          let topic:fhir.Topic = props.paneProps.useBackportToR4
+            ? JSON.parse((entry.resource as fhir.Basic).extension![0].valueString!)
+            : entry.resource as fhir.Topic;
+
+          topics.push(topic);
           topicInfo = topicInfo + 
-            `- Topic/${entry.resource.id}\n` +
-            `\tURL:         ${(entry.resource as fhir.Topic).url}\n` +
-            `\tTitle:       ${(entry.resource as fhir.Topic).title}\n` +
-            `\tDescription: ${(entry.resource as fhir.Topic).description}\n`;
+            `- Topic/${topic.id}\n` +
+            `\tURL:         ${topic.url}\n` +
+            `\tTitle:       ${topic.title}\n` +
+            `\tDescription: ${topic.description}\n`;
         });
       }
 
@@ -99,7 +106,6 @@ export default function TopicPlayground(props: TopicPlaygroundProps) {
           info: topicInfo,
         }
       ];
-
 
       // **** update data ****
 

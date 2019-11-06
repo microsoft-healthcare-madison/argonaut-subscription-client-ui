@@ -39,7 +39,9 @@ export default function TopicS1(props: TopicS1Props) {
 
     // **** construct the registration REST url ****
 
-    let url: string = new URL('Topic', props.paneProps.fhirServerInfo.url).toString();
+    let url: string = props.paneProps.useBackportToR4
+      ? new URL('Basic?code=R5Topic', props.paneProps.fhirServerInfo.url).toString()
+      : new URL('Topic', props.paneProps.fhirServerInfo.url).toString();
 
     // **** attempt to get the list of Topics ****
 
@@ -78,15 +80,19 @@ export default function TopicS1(props: TopicS1Props) {
       if (response.value.entry) {
         response.value.entry.forEach((entry) => {
           if (!entry.resource) return;
-          // if (topic.title === 'admission') {
-          if ((entry.resource as fhir.Topic).url === 'http://argonautproject.org/subscription-ig/Topic/admission') {
-            admissionTopic = (entry.resource as fhir.Topic);
-            props.setTopic(entry.resource as fhir.Topic);
+
+          let topic:fhir.Topic = props.paneProps.useBackportToR4
+            ? JSON.parse((entry.resource as fhir.Basic).extension![0].valueString!)
+            : entry.resource as fhir.Topic;
+
+          if (topic.url === 'http://argonautproject.org/subscription-ig/Topic/admission') {
+            admissionTopic = topic;
+            props.setTopic(topic);
             topicInfo = topicInfo + 
-              `- Topic/${entry.resource.id}\n` +
-              `\tURL:         ${(entry.resource as fhir.Topic).url}\n` +
-              `\tTitle:       ${(entry.resource as fhir.Topic).title}\n` +
-              `\tDescription: ${(entry.resource as fhir.Topic).description}\n`;
+              `- Topic/${topic.id}\n` +
+              `\tURL:         ${topic.url}\n` +
+              `\tTitle:       ${topic.title}\n` +
+              `\tDescription: ${topic.description}\n`;
           }
         });
       }
