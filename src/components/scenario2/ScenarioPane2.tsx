@@ -335,7 +335,7 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 			bundle.meta.extension.forEach(element => {
 				if (element.url.endsWith('subscriptionEventCount') ||
 						element.url.endsWith('subscription-event-count')) {
-					eventCount = element.valueUnsignedInt!;
+					eventCount = element.valueDecimal!;
 				} else if (element.url.endsWith('bundleEventCount') ||
 									 element.url.endsWith('bundle-event-count')) {
 					bundleEventCount = element.valueUnsignedInt!;
