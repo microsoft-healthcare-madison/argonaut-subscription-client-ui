@@ -23,6 +23,7 @@ import { ApiHelper, ApiResponse } from '../util/ApiHelper';
 import { ClientHostRegistration } from '../models/ClientHostRegistration';
 
 import * as fhir from '../models/fhir_r4_selected';
+import DevDaysPane from './devdays/DevDaysPane';
 
 /** tab configuration - MUST be in 'id' order - first tab is shown at launch */
 let _tabs: UiTabInformation[] = [
@@ -30,6 +31,7 @@ let _tabs: UiTabInformation[] = [
   {title: 'Patient+REST', tip:'Single Patient to REST-Hook', id: '1', panel: React.createFactory(ScenarioPane1)},
   {title: 'Group+REST', tip:'Patient Group to REST-Hook', id: '2', panel: React.createFactory(ScenarioPane2)},
   {title: 'Playground', tip:'Playground for testing Subscriptions', id: '3', panel: React.createFactory(PlaygroundPane)},
+  {title: 'DevDays', tip:'DevDays Amsterdam 2019', id: '4', panel: React.createFactory(DevDaysPane)},
 ]
 
 // **** extend the Window to include our _env settings ****
