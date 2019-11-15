@@ -32,14 +32,12 @@ export default function SetEndpointDevDays(props: SetEndpointDevDaysProps) {
   const [info, setInfo] = useState<DataCardInfo>(_info);
 
   useEffect(() => {
-    console.log('SetEndpointDevDays.useEffect(props.endpoints)');
     if ((props.endpoints.length > 0) && (info.optional)) {
       setInfo({...info, optional: false});
     }
   }, [props.endpoints]);
 
   useEffect(() => {
-    console.log('SetEndpointDevDays.useEffect(props.endpointCodeLineNumber,props.endpointCodeFilename)');
     if (props.endpointCodeLineNumber < 1) {
       setInfo({...info, 
         description: 'This step lets the software know you are using our public proxy - required if you created an endpoint'
