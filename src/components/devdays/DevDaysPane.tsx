@@ -50,11 +50,20 @@ export default function DevDaysPane(props: ContentPaneProps) {
   const [notificationData, setNotificationData] = useState<SingleRequestData[]>([]);
 	const [notificationStatus, setNotificationStatus] = useState<DataCardStatus>(_statusAvailable);
 
-	const _languageInfoJs: DevDaysLanguageInfo = {
+	const [showEndpointProxy, setShowEndpointProxy] = useState<boolean>(false);
+
+	const _languageInfoJsProxy: DevDaysLanguageInfo = {
 		cloneCommand: 'git clone https://github.com/microsoft-healthcare-madison/devdays-2019-subscription-node.git',
-		endpointLineFilename: 'basic-server/app.js',
+		endpointLineFilename: 'app.js',
 		endpointLineNumber: 9,
-		startCommand: 'cd basic-server\nnpm start'
+		startCommand: 'npm start'
+	};
+
+	const _languageInfoJsTunnel: DevDaysLanguageInfo = {
+		cloneCommand: 'git clone --branch tunnel https://github.com/microsoft-healthcare-madison/devdays-2019-subscription-node.git',
+		endpointLineFilename: 'app.js',
+		endpointLineNumber: 9,
+		startCommand: 'npm start'
 	};
 
 	const _languageInfoCs: DevDaysLanguageInfo = {
@@ -190,8 +199,8 @@ export default function DevDaysPane(props: ContentPaneProps) {
 	async function forwardNotificationToLocalhost(url:string, message: string) {
 		try {
       let headers: Headers = new Headers();
-      headers.append('Accept', 'application/json');
-      headers.append('Content-Type', 'application/json');
+      headers.append('Accept', 'application/fhir+json');
+      headers.append('Content-Type', 'application/fhir+json');
       let response: Response = await fetch(url, {
         method: 'POST',
         headers: headers,
@@ -202,10 +211,19 @@ export default function DevDaysPane(props: ContentPaneProps) {
     }
 	}
 
+	function getPrettyLang(lang: string) {
+		switch (lang) {
+			case 'jsp': return 'JavaScript (Node) with Proxy';
+			case 'jst': return 'JavaScript (Node) with local tunneling';
+			case 'cs': return 'C#';
+		}
+	}
+
 	/** Get the correct git clone command for the selected language */
 	function getGitCloneCommand(lang: string) {
 		switch (lang) {
-			case 'js': return _languageInfoJs.cloneCommand;
+			case 'jsp': return _languageInfoJsProxy.cloneCommand;
+			case 'jst': return _languageInfoJsTunnel.cloneCommand;
 			case 'cs': return _languageInfoCs.cloneCommand;
 		}
 		return 'No repository for this language'
@@ -216,6 +234,11 @@ export default function DevDaysPane(props: ContentPaneProps) {
 		setProgrammingLanguage(lang);
 		setLangStatus(_statusComplete);
 		
+		switch (lang) {
+			case 'jst': setShowEndpointProxy(false); break;
+			default: setShowEndpointProxy(true); break;
+		}
+
 		// **** update data for the repo step ****
 
 		let rec:SingleRequestData = {
@@ -229,7 +252,8 @@ export default function DevDaysPane(props: ContentPaneProps) {
 	
 	function getStartCommand() {
 		switch (programmingLanguage) {
-			case 'js': return _languageInfoJs.startCommand;
+			case 'jsp': return _languageInfoJsProxy.startCommand;
+			case 'jst': return _languageInfoJsTunnel.startCommand;
 			case 'cs': return _languageInfoCs.startCommand;
 		}
 
@@ -252,20 +276,28 @@ export default function DevDaysPane(props: ContentPaneProps) {
 	
 	function getEndpointCodeData(endpoint:EndpointRegistration):SingleRequestData {
 		switch (programmingLanguage) {
-			case 'js':
-				setCodeEndpointLineNumber(_languageInfoJs.endpointLineNumber);
-				setCodeEndpointFilename(_languageInfoJs.endpointLineFilename);
+			case 'jsp':
+				setCodeEndpointLineNumber(_languageInfoJsProxy.endpointLineNumber);
+				setCodeEndpointFilename(_languageInfoJsProxy.endpointLineFilename);
 				return {
 					id: 'set_endpoint_for_pl',
-					name: `Set Endpoint in Code for ${programmingLanguage}`,
+					name: `Set Endpoint in Code for ${getPrettyLang(programmingLanguage)}`,
 					info: `const publicUrl = '${props.clientHostInfo.url}Endpoints/${endpoint.uid}/';`,
 				};
-			case 'cs':
+				case 'jst':
+						setCodeEndpointLineNumber(_languageInfoJsTunnel.endpointLineNumber);
+						setCodeEndpointFilename(_languageInfoJsTunnel.endpointLineFilename);
+						return {
+							id: 'set_endpoint_for_pl',
+							name: `Set Endpoint in Code for ${getPrettyLang(programmingLanguage)}`,
+							info: `const publicUrl = '${props.clientHostInfo.url}Endpoints/${endpoint.uid}/';`,
+						};
+				case 'cs':
 					setCodeEndpointLineNumber(_languageInfoCs.endpointLineNumber);
 					setCodeEndpointFilename(_languageInfoCs.endpointLineFilename);
 					return {
 						id: 'set_endpoint_for_pl',
-						name: `Set Endpoint in Code for ${programmingLanguage}`,
+						name: `Set Endpoint in Code for ${getPrettyLang(programmingLanguage)}`,
 						info: `const publicUrl = '${props.clientHostInfo.url}Endpoints/${endpoint.uid}/';`,
 					};
 		}
@@ -325,28 +357,31 @@ export default function DevDaysPane(props: ContentPaneProps) {
         registerCloned={registerCloned}
         />
 
-			<EndpointDevDays
-				key='devdays_endpoint'
-				paneProps={props}
-				status={endpointStatus}
-				updateStatus={setEndpointStatus}
-				data={endpointData}
-				setData={setEndpointData}
-				endpoints={endpoints}
-				setEndpoints={registerEndpoints}
-				/>
+			{ showEndpointProxy &&
+				<>
+					<EndpointDevDays
+						key='devdays_endpoint'
+						paneProps={props}
+						status={endpointStatus}
+						updateStatus={setEndpointStatus}
+						data={endpointData}
+						setData={setEndpointData}
+						endpoints={endpoints}
+						setEndpoints={registerEndpoints}
+						/>
+					<SetEndpointDevDays
+						key='devdays_set_endpoint'
+						paneProps={props}
+						status={codeEndpointStatus}
+						data={codeEndpointData}
+						endpointCodeLineNumber={codeEndpointLineNumber}
+						endpointCodeFilename={codeEndpointFilaname}
+						endpoints={endpoints}
+						registerEndpointSet={registerEndpointSet}
+						/>
+				</>
+			}
 
-			<SetEndpointDevDays
-				key='devdays_set_endpoint'
-				paneProps={props}
-				status={codeEndpointStatus}
-				data={codeEndpointData}
-				endpointCodeLineNumber={codeEndpointLineNumber}
-				endpointCodeFilename={codeEndpointFilaname}
-				endpoints={endpoints}
-				registerEndpointSet={registerEndpointSet}
-				/>
-			
 			<StartLocalDevDays
 				key='devdays_start_local'
 				paneProps={props}
@@ -356,12 +391,14 @@ export default function DevDaysPane(props: ContentPaneProps) {
 				registerStarted={registerStarted}
 				/>
 
+		{ showEndpointProxy &&
 			<NotificationDevDays
 				key='devdays_notification'
 				paneProps={props}
 				status={notificationStatus}
 				data={notificationData}
 				/>
+			}
 
 		</div>
 	);
