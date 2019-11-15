@@ -61,6 +61,7 @@ export default function SetEndpointDevDays(props: SetEndpointDevDaysProps) {
       data={props.data}
       paneProps={props.paneProps}
       status={props.status}
+      renderChildrenAfter={true}
       >
       <Button
         onClick={handleDone}

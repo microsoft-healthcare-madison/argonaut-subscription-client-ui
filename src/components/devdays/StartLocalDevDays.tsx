@@ -37,6 +37,7 @@ export default function StartLocalDevDays(props: StartLocalDevDaysProps) {
       data={props.data}
       paneProps={props.paneProps}
       status={props.status}
+      renderChildrenAfter={true}
       >
       <Button
         onClick={handleDone}

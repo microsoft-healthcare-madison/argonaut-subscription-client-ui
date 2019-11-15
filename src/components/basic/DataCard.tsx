@@ -27,6 +27,7 @@ export interface DataCardProps {
   processRowToggle?: ((index: number) => void),
   tabButtonText?: string,
   tabButtonHandler?: ((index: number) => void),
+  renderChildrenAfter?: boolean,
 }
 
 export default function DataCard(props: DataCardProps) {
@@ -94,10 +95,10 @@ export default function DataCard(props: DataCardProps) {
           { (props.info.description !== '') &&
             <H6>{props.info.description}</H6>
           }
-          { (props.children !== undefined) &&
+          { ((props.renderChildrenAfter !== true) && (props.children !== undefined)) &&
             props.children
           }
-          { (props.children !== undefined) &&
+          { ((props.renderChildrenAfter === true) || (props.children !== undefined)) &&
             <br />
           }
           <RequestDataPanel
@@ -110,6 +111,12 @@ export default function DataCard(props: DataCardProps) {
             tabButtonText={props.tabButtonText}
             tabButtonHandler={props.tabButtonHandler}
             />
+          { ((props.renderChildrenAfter === true) && (props.children !== undefined)) &&
+            <>
+              <br />
+              {props.children}
+            </>
+          }
         </div>
       }
     </Card>
