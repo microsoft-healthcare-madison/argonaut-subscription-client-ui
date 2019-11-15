@@ -23,10 +23,11 @@ export interface EndpointDevDaysProps {
 export default function EndpointDevDays(props: EndpointDevDaysProps) {
 
   const info: DataCardInfo = {
-    id: 'playground_endpoint',
-    heading: 'Client / Host - REST Endpoint Interactions',
-    description: '',
-    optional: false,
+    id: 'devdays_endpoint',
+    heading: 'Public REST Endpoint Proxying',
+    description: 'Use this if you need public proxying for your endpoint (e.g., you cannot expose a port to the internet)',
+    stepNumber: 3,
+    optional: true,
   };
 
   const endpointCountRef = useRef<number>(0);
@@ -251,7 +252,7 @@ export default function EndpointDevDays(props: EndpointDevDaysProps) {
       >
       <Button
         onClick={createEndpoint}
-        disabled={props.endpoints.length > 0}
+        disabled={(!props.status.available) || (props.endpoints.length > 0)}
         >
         Create New REST Endpoint
       </Button>
