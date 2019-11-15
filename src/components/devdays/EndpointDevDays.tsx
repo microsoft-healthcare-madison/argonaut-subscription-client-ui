@@ -26,8 +26,8 @@ export default function EndpointDevDays(props: EndpointDevDaysProps) {
     id: 'devdays_endpoint',
     heading: 'Public REST Endpoint Proxying',
     description: 'Use this if you need public proxying for your endpoint (e.g., you cannot expose a port to the internet)',
-    stepNumber: 3,
-    optional: true,
+    stepNumber: 5,
+    optional: false,
   };
 
   const endpointCountRef = useRef<number>(0);

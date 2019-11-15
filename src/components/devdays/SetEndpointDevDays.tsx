@@ -12,7 +12,7 @@ export interface SetEndpointDevDaysProps {
   paneProps: ContentPaneProps,
   status: DataCardStatus,
   data: SingleRequestData[],
-  registerEndpointSet: (() => void),
+  registerDone: (() => void),
   endpoints: EndpointRegistration[],
   endpointCodeLineNumber: number,
   endpointCodeFilename: string,
@@ -24,9 +24,9 @@ export default function SetEndpointDevDays(props: SetEndpointDevDaysProps) {
   const _info: DataCardInfo = {
     id: 'devdays_set_endpoint',
     heading: 'Set the endpoint in the sample code',
-    stepNumber: 4,
+    stepNumber: 6,
     description: 'This step lets the software know you are using our public proxy - required if you created an endpoint',
-    optional: true,
+    optional: false,
   };
 
   const [info, setInfo] = useState<DataCardInfo>(_info);
@@ -51,7 +51,7 @@ export default function SetEndpointDevDays(props: SetEndpointDevDaysProps) {
   }, [props.endpointCodeLineNumber, props.endpointCodeFilename]);
 
   function handleDone() {
-    props.registerEndpointSet();
+    props.registerDone();
   }
 
   /** Return this component */

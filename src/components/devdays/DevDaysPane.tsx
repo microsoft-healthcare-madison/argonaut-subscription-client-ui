@@ -18,6 +18,8 @@ import CloneRepoDevDays from './CloneRepoDevDays';
 import SetEndpointDevDays from './SetEndpointDevDays';
 import { DevDaysLanguageInfo } from '../../models/DevDaysLanguageInfo';
 import StartLocalDevDays from './StartLocalDevDays';
+import NpmInstallDevDays from './NpmInstallDevDays';
+import ChangeDirectoryDevDays from './ChangeDirectory';
 
 export default function DevDaysPane(props: ContentPaneProps) {
 
@@ -33,7 +35,13 @@ export default function DevDaysPane(props: ContentPaneProps) {
   const [programmingLanguage, setProgrammingLanguage] = useState<string>('');
 
   const [repoData, setRepoData] = useState<SingleRequestData[]>([]);
-  const [repoStatus, setRepoStatus] = useState<DataCardStatus>(_statusNotAvailable);
+	const [repoStatus, setRepoStatus] = useState<DataCardStatus>(_statusNotAvailable);
+	
+	const [changeDirectoryData, setChangeDirectoryData] = useState<SingleRequestData[]>([]);
+	const [changeDirectoryStatus, setChangeDirectoryStatus] = useState<DataCardStatus>(_statusNotAvailable);
+
+	const [npmInstallData, setNpmInstallData] = useState<SingleRequestData[]>([]);
+	const [npmInstallStatus, setNpmInstallStatus] = useState<DataCardStatus>(_statusNotAvailable);
 
 	const [endpointData, setEndpointData] = useState<SingleRequestData[]>([]);
 	const [endpointStatus, setEndpointStatus] = useState<DataCardStatus>(_statusNotAvailable);
@@ -54,6 +62,7 @@ export default function DevDaysPane(props: ContentPaneProps) {
 
 	const _languageInfoJsProxy: DevDaysLanguageInfo = {
 		cloneCommand: 'git clone https://github.com/microsoft-healthcare-madison/devdays-2019-subscription-node.git',
+		directoryName: 'devdays-2019-subscription-node',
 		endpointLineFilename: 'app.js',
 		endpointLineNumber: 9,
 		startCommand: 'npm start'
@@ -61,6 +70,7 @@ export default function DevDaysPane(props: ContentPaneProps) {
 
 	const _languageInfoJsTunnel: DevDaysLanguageInfo = {
 		cloneCommand: 'git clone --branch tunnel https://github.com/microsoft-healthcare-madison/devdays-2019-subscription-node.git',
+		directoryName: 'devdays-2019-subscription-node',
 		endpointLineFilename: 'app.js',
 		endpointLineNumber: 9,
 		startCommand: 'npm start'
@@ -68,6 +78,7 @@ export default function DevDaysPane(props: ContentPaneProps) {
 
 	const _languageInfoCs: DevDaysLanguageInfo = {
 		cloneCommand: 'git clone https://github.com/microsoft-healthcare-madison/devdays-2019-subscription-cs.git',
+		directoryName: 'devdays-2019-subscription-cs',
 		endpointLineFilename: 'program.cs',
 		endpointLineNumber: -1,
 		startCommand: 'dotnet devdays-2019-subscription-cs.dll'
@@ -219,14 +230,13 @@ export default function DevDaysPane(props: ContentPaneProps) {
 		}
 	}
 
-	/** Get the correct git clone command for the selected language */
-	function getGitCloneCommand(lang: string) {
+	function getLanObj(lang: string):DevDaysLanguageInfo {
 		switch (lang) {
-			case 'jsp': return _languageInfoJsProxy.cloneCommand;
-			case 'jst': return _languageInfoJsTunnel.cloneCommand;
-			case 'cs': return _languageInfoCs.cloneCommand;
+			case 'jsp': return _languageInfoJsProxy;
+			case 'jst': return _languageInfoJsTunnel;
+			case 'cs': return _languageInfoCs;
 		}
-		return 'No repository for this language'
+		return {cloneCommand:'', endpointLineFilename:'', endpointLineNumber:0, startCommand:'', directoryName:''};
 	}
 
 	/** Set the current programming language (based on user selection) */
@@ -244,36 +254,68 @@ export default function DevDaysPane(props: ContentPaneProps) {
 		let rec:SingleRequestData = {
 			id: 'repo_for_pl',
 			name: `Clone Repository for ${lang}`,
-			info: getGitCloneCommand(lang),
+			info: getLanObj(lang).cloneCommand,
 		}
 		setRepoData([rec]);
-    setRepoStatus(_statusAvailable);
+		setRepoStatus(_statusAvailable);
 	}
 	
-	function getStartCommand() {
-		switch (programmingLanguage) {
-			case 'jsp': return _languageInfoJsProxy.startCommand;
-			case 'jst': return _languageInfoJsTunnel.startCommand;
-			case 'cs': return _languageInfoCs.startCommand;
+	function enableStartLocal() {
+		let rec:SingleRequestData = {
+			id: 'start_local',
+			name: 'Start the local hosting process',
+			info: getLanObj(programmingLanguage).startCommand,
 		}
+		setStartLocalData([rec]);
+		setStartLocalStatus(_statusAvailable);
+	}
 
-		return `Unsupported language: ${programmingLanguage}`;
+	function enableNpmInstall() {
+		let rec:SingleRequestData = {
+			id: 'install dependencies',
+			name: 'Install node module dependencies',
+			info: 'npm install',
+		}
+		setNpmInstallData([rec]);
+		setNpmInstallStatus(_statusAvailable);
+	}
+
+	function enableChangeDirectory() {
+		let rec:SingleRequestData = {
+			id: 'change directory',
+			name: 'Move into the cloned repo',
+			info: `cd ${getLanObj(programmingLanguage).directoryName}`,
+		}
+		setChangeDirectoryData([rec]);
+		setChangeDirectoryStatus(_statusAvailable);
 	}
 
 	/** Process the user saying they cloned the repository */
   function registerCloned() {
-    setRepoStatus(_statusComplete);
-		setEndpointStatus(_statusAvailable);
-		
-		let startRec:SingleRequestData = {
-			id: 'start_local',
-			name: `Start the local hosting process`,
-			info: getStartCommand(),
+		setRepoStatus(_statusComplete);
+		enableChangeDirectory();
+	}
+
+	function registerDirectoryChanged() {
+		setChangeDirectoryStatus(_statusComplete);
+
+		if (programmingLanguage.startsWith('js')) {
+			enableNpmInstall();
+		} else {
+			enableStartLocal();
 		}
-		setStartLocalData([startRec]);
-		setStartLocalStatus(_statusAvailable);
 	}
 	
+	function registerInstalled() {
+		setNpmInstallStatus(_statusComplete);
+
+		if (showEndpointProxy) {
+			setEndpointStatus(_statusAvailable);
+		} else {
+			enableStartLocal();
+		}
+	}
+
 	function getEndpointCodeData(endpoint:EndpointRegistration):SingleRequestData {
 		switch (programmingLanguage) {
 			case 'jsp':
@@ -323,6 +365,7 @@ export default function DevDaysPane(props: ContentPaneProps) {
 		// **** update data for the set endpoint step ****
 
 		setCodeEndpointStatus(_statusComplete);
+		enableStartLocal();
 	}
 
 	function registerStarted() {
@@ -354,8 +397,26 @@ export default function DevDaysPane(props: ContentPaneProps) {
         status={repoStatus}
         data={repoData}
         language={programmingLanguage}
-        registerCloned={registerCloned}
+        registerDone={registerCloned}
         />
+
+			<ChangeDirectoryDevDays
+        key='devdays_change_directory'
+        paneProps={props}
+        status={changeDirectoryStatus}
+        data={changeDirectoryData}
+        registerDone={registerDirectoryChanged}
+        />
+			
+			{ (programmingLanguage.startsWith('js')) &&
+				<NpmInstallDevDays
+					key='devdays_npm_install'
+					paneProps={props}
+					status={npmInstallStatus}
+					data={npmInstallData}
+					registerDone={registerInstalled}
+					/>
+			}
 
 			{ showEndpointProxy &&
 				<>
@@ -377,7 +438,7 @@ export default function DevDaysPane(props: ContentPaneProps) {
 						endpointCodeLineNumber={codeEndpointLineNumber}
 						endpointCodeFilename={codeEndpointFilaname}
 						endpoints={endpoints}
-						registerEndpointSet={registerEndpointSet}
+						registerDone={registerEndpointSet}
 						/>
 				</>
 			}
@@ -388,7 +449,7 @@ export default function DevDaysPane(props: ContentPaneProps) {
 				status={startLocalStatus}
 				data={startLocalData}
 				language={programmingLanguage}
-				registerStarted={registerStarted}
+				registerDone={registerStarted}
 				/>
 
 		{ showEndpointProxy &&

@@ -12,7 +12,7 @@ export interface StartLocalDevDaysProps {
   status: DataCardStatus,
   data: SingleRequestData[],
   language: string,
-  registerStarted: (() => void),
+  registerDone: (() => void),
 }
 
 /** Component representing the DevDays start local Card */
@@ -21,13 +21,13 @@ export default function StartLocalDevDays(props: StartLocalDevDaysProps) {
   const info: DataCardInfo = {
     id: 'devdays_start_local',
     heading: 'Start the local server',
-    stepNumber: 5,
+    stepNumber: 7,
     description: '',
     optional: false,
   };
 
   function handleDone() {
-    props.registerStarted();
+    props.registerDone();
   }
 
   /** Return this component */

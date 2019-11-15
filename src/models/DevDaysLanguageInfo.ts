@@ -3,4 +3,5 @@ export interface DevDaysLanguageInfo {
   endpointLineNumber: number;
   endpointLineFilename: string;
   startCommand: string;
+  directoryName: string;
 }

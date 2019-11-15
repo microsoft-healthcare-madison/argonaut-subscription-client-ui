@@ -7,21 +7,20 @@ import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import { Button } from '@blueprintjs/core';
 
-export interface CloneRepoDevDaysProps {
+export interface NpmInstallDevDaysProps {
   paneProps: ContentPaneProps,
   status: DataCardStatus,
   data: SingleRequestData[],
-  language: string,
   registerDone: (() => void),
 }
 
-/** Component representing the DevDays clone repo Card */
-export default function CloneRepoDevDays(props: CloneRepoDevDaysProps) {
+/** Component representing the DevDays npm install Card */
+export default function NpmInstallDevDays(props: NpmInstallDevDaysProps) {
 
   const info: DataCardInfo = {
-    id: 'devdays_clone_repo',
-    heading: 'Clone the GitHub repo onto your local machine',
-    stepNumber: 2,
+    id: 'devdays_npm_install',
+    heading: 'Install node module dependencies',
+    stepNumber: 4,
     description: '',
     optional: false,
   };
