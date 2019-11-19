@@ -76,12 +76,12 @@ export default function DevDaysPane(props: ContentPaneProps) {
 		startCommand: 'npm start'
 	};
 
-	const _languageInfoCs: DevDaysLanguageInfo = {
+	const _languageInfoCsProxy: DevDaysLanguageInfo = {
 		cloneCommand: 'git clone https://github.com/microsoft-healthcare-madison/devdays-2019-subscription-cs.git',
 		directoryName: 'devdays-2019-subscription-cs',
-		endpointLineFilename: 'program.cs',
-		endpointLineNumber: -1,
-		startCommand: 'dotnet devdays-2019-subscription-cs.dll'
+		endpointLineFilename: 'appsettings.json',
+		endpointLineNumber: 3,
+		startCommand: 'dotnet run --project devdays-2019-subscription-cs\\devdays-2019-subscription-cs.csproj'
 	};
 
 	useEffect(() => {
@@ -164,20 +164,15 @@ export default function DevDaysPane(props: ContentPaneProps) {
 				(bundle.meta.extension))
 		{
 			bundle.meta.extension.forEach(element => {
-				if (element.url.endsWith('subscriptionEventCount') ||
-						element.url.endsWith('subscription-event-count')) {
+				if (element.url.endsWith('subscription-event-count')) {
 					eventCount = element.valueUnsignedInt!;
-				} else if (element.url.endsWith('bundleEventCount') ||
-									 element.url.endsWith('bundle-event-count')) {
+				} else if (element.url.endsWith('bundle-event-count')) {
 					bundleEventCount = element.valueUnsignedInt!;
-				} else if (element.url.endsWith('subscriptionStatus') ||
-									 element.url.endsWith('subscription-status')) {
+				} else if (element.url.endsWith('subscription-status')) {
 					status = element.valueString!;
-				} else if (element.url.endsWith('subscriptionTopicUrl') ||
-									 element.url.endsWith('subscription-topic-url')) {
+				} else if (element.url.endsWith('subscription-topic-url')) {
 					topicUrl = element.valueUrl!;
-				} else if (element.url.endsWith('subscriptionUrl') ||
-									 element.url.endsWith('subscription-url')) {
+				} else if (element.url.endsWith('subscription-url')) {
 					subscriptionUrl = element.valueUrl!;
 				}
 			});
@@ -226,7 +221,7 @@ export default function DevDaysPane(props: ContentPaneProps) {
 		switch (lang) {
 			case 'jsp': return 'JavaScript (Node) with Proxy';
 			case 'jst': return 'JavaScript (Node) with local tunneling';
-			case 'cs': return 'C#';
+			case 'csp': return 'C# (Kestrel) with Proxy';
 		}
 	}
 
@@ -234,7 +229,7 @@ export default function DevDaysPane(props: ContentPaneProps) {
 		switch (lang) {
 			case 'jsp': return _languageInfoJsProxy;
 			case 'jst': return _languageInfoJsTunnel;
-			case 'cs': return _languageInfoCs;
+			case 'csp': return _languageInfoCsProxy;
 		}
 		return {cloneCommand:'', endpointLineFilename:'', endpointLineNumber:0, startCommand:'', directoryName:''};
 	}
@@ -301,6 +296,8 @@ export default function DevDaysPane(props: ContentPaneProps) {
 
 		if (programmingLanguage.startsWith('js')) {
 			enableNpmInstall();
+		} else if (showEndpointProxy) {
+			setEndpointStatus(_statusAvailable);
 		} else {
 			enableStartLocal();
 		}
@@ -334,13 +331,13 @@ export default function DevDaysPane(props: ContentPaneProps) {
 							name: `Set Endpoint in Code for ${getPrettyLang(programmingLanguage)}`,
 							info: `const publicUrl = '${props.clientHostInfo.url}Endpoints/${endpoint.uid}/';`,
 						};
-				case 'cs':
-					setCodeEndpointLineNumber(_languageInfoCs.endpointLineNumber);
-					setCodeEndpointFilename(_languageInfoCs.endpointLineFilename);
+				case 'csp':
+					setCodeEndpointLineNumber(_languageInfoCsProxy.endpointLineNumber);
+					setCodeEndpointFilename(_languageInfoCsProxy.endpointLineFilename);
 					return {
 						id: 'set_endpoint_for_pl',
 						name: `Set Endpoint in Code for ${getPrettyLang(programmingLanguage)}`,
-						info: `const publicUrl = '${props.clientHostInfo.url}Endpoints/${endpoint.uid}/';`,
+						info: `  "Basic_Public_Url": "${props.clientHostInfo.url}Endpoints/${endpoint.uid}/",`,
 					};
 		}
 		return {
