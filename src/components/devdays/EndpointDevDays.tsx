@@ -25,7 +25,7 @@ export default function EndpointDevDays(props: EndpointDevDaysProps) {
   const info: DataCardInfo = {
     id: 'devdays_endpoint',
     heading: 'Public REST Endpoint Proxying',
-    description: 'Use this if you need public proxying for your endpoint (e.g., you cannot expose a port to the internet)',
+    description: 'Use this if you need public proxying for your endpoint (e.g., you cannot expose a port to the internet).  Forwards fhir+json notifications to http://localhost:32019/notification',
     stepNumber: 5,
     optional: false,
   };
