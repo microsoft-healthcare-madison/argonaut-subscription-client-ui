@@ -59,7 +59,7 @@ export default function SubscriptionFilters(props: SubscriptionFiltersProps) {
                   onClick={() => props.removeFilter(index)}
                   />
               </td>
-              <td>{filter.name}</td>
+              <td>{filter.searchParamName}</td>
               <td>{filter.matchType}</td>
               <td>{expandValue(filter.value)}</td>
             </tr>

@@ -24,7 +24,7 @@ export interface SubscriptionPlaygroundProps {
   setData: ((data: SingleRequestData[]) => void),
   selectedPatientId: string,
   endpoints: EndpointRegistration[],
-  topics: fhir.Topic[],
+  topics: fhir.SubscriptionTopic[],
   subscriptions: fhir.Subscription[],
   registerPatientId: ((value: string) => void),
   registerGroupId: ((value: string) => void),
@@ -91,7 +91,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
     }
 
     if (topicIndex > -1) {
-      let topic: fhir.Topic = props.topics[topicIndex];
+      let topic: fhir.SubscriptionTopic = props.topics[topicIndex];
       if ((!topic.canFilterBy) || (filterByIndex >= topic.canFilterBy!.length)) {
         setFilterByIndex(-1);
       }
@@ -101,7 +101,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         setFilterByIndex(0);
       }
       if (filterByIndex > -1) {
-        let filterBy: fhir.TopicCanFilterBy = topic.canFilterBy![filterByIndex];
+        let filterBy: fhir.SubscriptionTopicCanFilterBy = topic.canFilterBy![filterByIndex];
         if ((!filterBy.matchType) || (filterByMatchTypeIndex >= filterBy.matchType!.length)) {
           setFilterByMatchTypeIndex(-1);
         }
@@ -174,7 +174,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 
     let topicResource: string = props.paneProps.useBackportToR4
       ? 'Basic'
-      : 'Topic';
+      : 'SubscriptionTopic';
       
 		// **** build the subscription object ****
 
@@ -458,17 +458,17 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         return;
       }
 
-      if ((props.topics[topicIndex].canFilterBy![filterByIndex].name === 'patient') &&
+      if ((props.topics[topicIndex].canFilterBy![filterByIndex].searchParamName === 'patient') &&
           (props.topics[topicIndex].canFilterBy![filterByIndex].matchType![filterByMatchTypeIndex] === '=')) {
         name = 'Patient';
       }
 
-      if ((props.topics[topicIndex].canFilterBy![filterByIndex].name === 'patient') &&
+      if ((props.topics[topicIndex].canFilterBy![filterByIndex].searchParamName === 'patient') &&
           (props.topics[topicIndex].canFilterBy![filterByIndex].matchType![filterByMatchTypeIndex] === 'in')) {
         name = 'Group';
       }
 
-      if ((props.topics[topicIndex].canFilterBy![filterByIndex].name === 'patient') &&
+      if ((props.topics[topicIndex].canFilterBy![filterByIndex].searchParamName === 'patient') &&
           (props.topics[topicIndex].canFilterBy![filterByIndex].matchType![filterByMatchTypeIndex] === 'not-in')) {
         name = 'Group';
       }
@@ -497,7 +497,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
     // **** create the filter object ****
 
     let rec:fhir.SubscriptionFilterBy = {
-      name: props.topics[topicIndex].canFilterBy![filterByIndex].name!,
+      searchParamName: props.topics[topicIndex].canFilterBy![filterByIndex].searchParamName!,
       matchType: props.topics[topicIndex].canFilterBy![filterByIndex].matchType![filterByMatchTypeIndex],
       value: filterByValue,
     };
@@ -509,13 +509,13 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 
     // **** figure out patient IDs to list for encounters ****
 
-    if ((rec.name === 'patient') && (rec.matchType === '=')) {
+    if ((rec.searchParamName === 'patient') && (rec.matchType === '=')) {
       // **** register this patient ID ****
 
       props.registerPatientId(rec.value);
     }
 
-    if ((rec.name === 'patient') && (rec.matchType === 'in')) {
+    if ((rec.searchParamName === 'patient') && (rec.matchType === 'in')) {
       // **** register this group ID ****
 
       props.registerGroupId(rec.value);
@@ -600,18 +600,18 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       processRowDelete={deleteSubscription}
       >
       <FormGroup
-        label='Topic'
-        helperText='Topic this Subscription will generate notifications for'
-        labelFor='topic'
-        labelInfo={props.topics.length === 0 ? '(Requires Topic list from Topic Interaction Card)' : ''}
+        label='SubscriptionTopic'
+        helperText='SubscriptionTopic this Subscription will generate notifications for'
+        labelFor='subscriptiontopic'
+        labelInfo={props.topics.length === 0 ? '(Requires SubscriptionTopic list from Topic Interaction Card)' : ''}
         >
         <HTMLSelect
-          id='topic'
+          id='subscriptiontopic'
           onChange={handleTopicNameChange}
           value={topicIndex}
           >
           { Object.values(props.topics).map((value, index) => (
-            <option key={value.title!} value={index}>Topic/{value.id!} ({value.title!})</option>
+            <option key={value.title!} value={index}>SubscriptionTopic/{value.id!} ({value.title!})</option>
               ))}
         </HTMLSelect>
       </FormGroup>
@@ -633,7 +633,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       { (channelType === 'rest-hook') && [
         <FormGroup
           label='Endpoint'
-          helperText='Endpoint this topic will send notifications to'
+          helperText='Endpoint this Subscription will send notifications to'
           labelFor='endpoint'
           >
           <HTMLSelect
@@ -707,7 +707,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       { ((topicIndex > -1) && (props.topics[topicIndex].canFilterBy)) &&
         <FormGroup
           label='Filter by'
-          helperText={'Filter based on the available Topic Filters (Search Parameters).' +
+          helperText={'Filter based on the available SubscriptionTopic Filters (Search Parameters).' +
             ' Leave blank for no filter.' +
             ' Multiple VALUES can be entered comma separated for OR joining.' +
             ' Multiple FILTERS are joined with AND.'
@@ -722,7 +722,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
               value={filterByIndex}
               >
               { Object.values(props.topics[topicIndex].canFilterBy!).map((value, index) => (
-                <option key={value.name} value={index}>{value.name}</option>
+                <option key={value.searchParamName} value={index}>{value.searchParamName}</option>
               )) }
             </HTMLSelect>
             <HTMLSelect

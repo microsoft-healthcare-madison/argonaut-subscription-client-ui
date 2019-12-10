@@ -20,7 +20,7 @@ export interface SubscriptionS1Props {
   data: SingleRequestData[],
   setData: ((data: SingleRequestData[]) => void),
   selectedPatientId: string,
-  topic: fhir.Topic|null,
+  topic: fhir.SubscriptionTopic|null,
   subscription: fhir.Subscription,
   endpoint: EndpointRegistration,
 }
@@ -72,7 +72,7 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
 
 		let filter: fhir.SubscriptionFilterBy = {
 			matchType: '=',
-			name: 'patient',
+			searchParamName: 'patient',
 			value: `Patient/${props.selectedPatientId}`	    //`Patient/${patientFilter},Patient/K123`
 		}
 
@@ -81,7 +81,7 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
 
     let topicResource: string = props.paneProps.useBackportToR4
       ? 'Basic'
-      : 'Topic';
+      : 'SubscriptionTopic';
 
     let topicUrl:string = props.topic 
       ? new URL(`${topicResource}/${props.topic!.id!}`, props.paneProps.fhirServerInfo.url).toString()

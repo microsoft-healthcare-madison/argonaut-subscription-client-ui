@@ -20,7 +20,7 @@ export interface SubscriptionS2Props {
   data: SingleRequestData[],
   setData: ((data: SingleRequestData[]) => void),
   selectedGroupId: string,
-  topic: fhir.Topic|null,
+  topic: fhir.SubscriptionTopic|null,
   subscription: fhir.Subscription,
   endpoint: EndpointRegistration,
 }
@@ -72,7 +72,7 @@ export default function SubscriptionS2(props: SubscriptionS2Props) {
 
 		let filter: fhir.SubscriptionFilterBy = {
 			matchType: 'in',
-			name: 'patient',
+			searchParamName: 'patient',
 			value: `Group/${props.selectedGroupId}`
 		}
 
@@ -81,7 +81,7 @@ export default function SubscriptionS2(props: SubscriptionS2Props) {
 
     let topicResource: string = props.paneProps.useBackportToR4
       ? 'Basic'
-      : 'Topic';
+      : 'SubscriptionTopic';
 
     let topicUrl:string = props.topic 
       ? new URL(`${topicResource}/${props.topic!.id!}`, props.paneProps.fhirServerInfo.url).toString()

@@ -45,7 +45,7 @@ export default function ConfigurationPane(props: ContentPaneProps) {
     },
     {
       short: 'build.fhir.org', 
-      description: 'Current FHIR R5 Build branch (Subscription, Topic, etc.)', 
+      description: 'Current FHIR R5 Build branch (Subscription, SubscriptionTopic, etc.)', 
       link:'http://build.fhir.org/'
     },
     {
@@ -60,8 +60,18 @@ export default function ConfigurationPane(props: ContentPaneProps) {
     },
     {
       short: 'github.com',
-      description: 'Argonaut Subscription Reference Server Proxy (intercept and process Subscription/Topic)',
+      description: 'Argonaut Subscription Reference Server Proxy (intercept and process Subscription/SubscriptionTopic)',
       link:'https://github.com/microsoft-healthcare-madison/argonaut-subscription-server-proxy'
+    },
+    {
+      short: 'confluence.hl7.org',
+      description: 'January 2020 CMS Connectathon (#1) - Subscriptions',
+      link:'https://confluence.hl7.org/display/FHIR/2020-01+Subscriptions'
+    },
+    {
+      short: 'confluence.hl7.org',
+      description: 'February 2020 Connectathon (#23) - Subscription Track',
+      link:'https://confluence.hl7.org/display/FHIR/2020-02+Subscriptions+Track'
     },
     {
       short: 'github.com',
@@ -70,7 +80,7 @@ export default function ConfigurationPane(props: ContentPaneProps) {
     },
     {
       short: 'confluence.hl7.org',
-      description: 'September 2019 Connectathon - Subscription Track',
+      description: 'September 2019 Connectathon (#22) - Subscription Track',
       link:'https://confluence.hl7.org/display/FHIR/2019-09+Subscription'
     },
     // {

@@ -165,7 +165,8 @@ export default function DevDaysPane(props: ContentPaneProps) {
 		{
 			bundle.meta.extension.forEach(element => {
 				if (element.url.endsWith('subscription-event-count')) {
-					eventCount = element.valueUnsignedInt!;
+					// TODO: need to correctly handle 64-bit int values
+					eventCount = Number(element.valueInteger64);
 				} else if (element.url.endsWith('bundle-event-count')) {
 					bundleEventCount = element.valueUnsignedInt!;
 				} else if (element.url.endsWith('subscription-status')) {
@@ -186,11 +187,11 @@ export default function DevDaysPane(props: ContentPaneProps) {
 			responseData: JSON.stringify(bundle, null, 2),
 			responseDataType: RenderDataAsTypes.FHIR,
 			info: `${(eventCount === 0) ? 'Handshake' : 'Notification'} #${notificationData.length}:\n`+
-				`\tTopic:         ${topicUrl}\n` +
-				`\tSubscription:  ${subscriptionUrl}\n` +
-				`\tStatus:        ${status}\n` +
-				`\tBundle Events: ${bundleEventCount}\n`+
-				`\tTotal Events:  ${eventCount}`,
+				`\tSubscriptionTopic: ${topicUrl}\n` +
+				`\tSubscription:      ${subscriptionUrl}\n` +
+				`\tStatus:            ${status}\n` +
+				`\tBundle Events:     ${bundleEventCount}\n`+
+				`\tTotal Events:      ${eventCount}`,
 		}
 
 		let data: SingleRequestData[] = notificationData.slice();

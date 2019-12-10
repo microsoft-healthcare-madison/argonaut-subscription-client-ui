@@ -17,7 +17,7 @@ export interface TopicS1Props {
   updateStatus: ((status: DataCardStatus) => void),
   data: SingleRequestData[],
   setData: ((data: SingleRequestData[]) => void),
-  setTopic: ((value: fhir.Topic) => void),
+  setTopic: ((value: fhir.SubscriptionTopic) => void),
 }
 
 /** Component representing the Scenario 1 Topic Card */
@@ -26,7 +26,7 @@ export default function TopicS1(props: TopicS1Props) {
   const info: DataCardInfo = {
     id: 's1_topic',
     stepNumber: 1,
-    heading: 'Get Topic list from FHIR Server',
+    heading: 'Get SubscriptionTopic list from FHIR Server',
     description: '',
     optional: true,
   };
@@ -40,8 +40,8 @@ export default function TopicS1(props: TopicS1Props) {
     // **** construct the registration REST url ****
 
     let url: string = props.paneProps.useBackportToR4
-      ? new URL('Basic?code=R5Topic', props.paneProps.fhirServerInfo.url).toString()
-      : new URL('Topic', props.paneProps.fhirServerInfo.url).toString();
+      ? new URL('Basic?code=R5SubscriptionTopic', props.paneProps.fhirServerInfo.url).toString()
+      : new URL('SubscriptionTopic', props.paneProps.fhirServerInfo.url).toString();
 
     // **** attempt to get the list of Topics ****
 
@@ -56,8 +56,8 @@ export default function TopicS1(props: TopicS1Props) {
 
         let data: SingleRequestData[] = [
           {
-            name: 'Topic Search',
-            id: 'topic_search', 
+            name: 'SubscriptionTopic Search',
+            id: 'subscriptiontopic_search', 
             requestUrl: url,
             responseData: `Request for Topic (${url}) failed:\n` +
             `${response.statusCode} - "${response.statusText}"\n` +
@@ -74,22 +74,22 @@ export default function TopicS1(props: TopicS1Props) {
 
       // **** find the 'admission' topic ****
 
-      let admissionTopic:fhir.Topic|undefined = undefined;
+      let admissionTopic:fhir.SubscriptionTopic|undefined = undefined;
       let topicInfo: string = '';
 
       if (response.value.entry) {
         response.value.entry.forEach((entry) => {
           if (!entry.resource) return;
 
-          let topic:fhir.Topic = props.paneProps.useBackportToR4
+          let topic:fhir.SubscriptionTopic = props.paneProps.useBackportToR4
             ? JSON.parse((entry.resource as fhir.Basic).extension![0].valueString!)
-            : entry.resource as fhir.Topic;
+            : entry.resource as fhir.SubscriptionTopic;
 
-          if (topic.url === 'http://argonautproject.org/subscription-ig/Topic/admission') {
+          if (topic.url === 'http://argonautproject.org/subscription-ig/SubscriptionTopic/admission') {
             admissionTopic = topic;
             props.setTopic(topic);
             topicInfo = topicInfo + 
-              `- Topic/${topic.id}\n` +
+              `- SubscriptionTopic/${topic.id}\n` +
               `\tURL:         ${topic.url}\n` +
               `\tTitle:       ${topic.title}\n` +
               `\tDescription: ${topic.description}\n`;
@@ -101,8 +101,8 @@ export default function TopicS1(props: TopicS1Props) {
 
       let data: SingleRequestData[] = [
         {
-          name: 'Topic Search',
-          id: 'topic_search', 
+          name: 'SubscriptionTopic Search',
+          id: 'subscriptiontopic_search', 
           requestUrl: url,
           responseData: JSON.stringify(response.value, null, 2),
           responseDataType: RenderDataAsTypes.FHIR,
@@ -124,8 +124,8 @@ export default function TopicS1(props: TopicS1Props) {
 
       let data: SingleRequestData[] = [
         {
-          name: 'Topic Search',
-          id: 'topic_search', 
+          name: 'SubscriptionTopic Search',
+          id: 'subscriptiontopic_search', 
           requestUrl: url,
           responseData: `Failed to get topic list from: ${url}:\n${err}`,
           responseDataType: RenderDataAsTypes.Error

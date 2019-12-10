@@ -17,7 +17,7 @@ export interface TopicPlaygroundProps {
   updateStatus: ((status: DataCardStatus) => void),
   data: SingleRequestData[],
   setData: ((data: SingleRequestData[]) => void),
-  setTopics: ((topics: fhir.Topic[]) => void),
+  setTopics: ((topics: fhir.SubscriptionTopic[]) => void),
 }
 
 /** Component representing the Playground Topic Card */
@@ -25,7 +25,7 @@ export default function TopicPlayground(props: TopicPlaygroundProps) {
 
   const info: DataCardInfo = {
     id: 'playground_topic',
-    heading: 'FHIR Server - Topic interactions',
+    heading: 'FHIR Server - SubscriptionTopic interactions',
     description: '',
     optional: false,
   };
@@ -39,8 +39,8 @@ export default function TopicPlayground(props: TopicPlaygroundProps) {
     // **** construct the registration REST url ****
 
     let url: string = props.paneProps.useBackportToR4
-      ? new URL('Basic?code=R5Topic', props.paneProps.fhirServerInfo.url).toString()
-      : new URL('Topic', props.paneProps.fhirServerInfo.url).toString();
+      ? new URL('Basic?code=R5SubscriptionTopic', props.paneProps.fhirServerInfo.url).toString()
+      : new URL('SubscriptionTopic', props.paneProps.fhirServerInfo.url).toString();
 
     // **** attempt to get the list of Topics ****
 
@@ -55,10 +55,10 @@ export default function TopicPlayground(props: TopicPlaygroundProps) {
 
         let data: SingleRequestData[] = [
           {
-            name: 'Topic Search',
-            id: 'topic_search', 
+            name: 'SubscriptionTopic Search',
+            id: 'subscriptiontopic_search', 
             requestUrl: url,
-            responseData: `Request for Topic (${url}) failed:\n` +
+            responseData: `Request for SubscriptionTopic (${url}) failed:\n` +
               `${response.statusCode} - "${response.statusText}"\n` +
               `${response.body}`,
             responseDataType: RenderDataAsTypes.Error,
@@ -73,20 +73,20 @@ export default function TopicPlayground(props: TopicPlaygroundProps) {
 
       // **** traverse the bundle looking for topics ****
 
-      let topics:fhir.Topic[] = [];
+      let topics:fhir.SubscriptionTopic[] = [];
       let topicInfo: string = '';
 
       if (response.value.entry) {
         response.value.entry.forEach((entry: fhir.BundleEntry) => {
           if (!entry.resource) return;
 
-          let topic:fhir.Topic = props.paneProps.useBackportToR4
+          let topic:fhir.SubscriptionTopic = props.paneProps.useBackportToR4
             ? JSON.parse((entry.resource as fhir.Basic).extension![0].valueString!)
-            : entry.resource as fhir.Topic;
+            : entry.resource as fhir.SubscriptionTopic;
 
           topics.push(topic);
           topicInfo = topicInfo + 
-            `- Topic/${topic.id}\n` +
+            `- SubscriptionTopic/${topic.id}\n` +
             `\tURL:         ${topic.url}\n` +
             `\tTitle:       ${topic.title}\n` +
             `\tDescription: ${topic.description}\n`;
@@ -97,8 +97,8 @@ export default function TopicPlayground(props: TopicPlaygroundProps) {
 
       let data: SingleRequestData[] = [
         {
-          name: 'Topic Search',
-          id: 'topic_search', 
+          name: 'SubscriptionTopic Search',
+          id: 'subscriptiontopic_search', 
           requestUrl: url,
           responseData: JSON.stringify(response.value, null, 2),
           responseDataType: RenderDataAsTypes.FHIR,
@@ -121,8 +121,8 @@ export default function TopicPlayground(props: TopicPlaygroundProps) {
 
       let data: SingleRequestData[] = [
         {
-          name: 'Topic Search',
-          id: 'topic_search', 
+          name: 'SubscriptionTopic Search',
+          id: 'subscriptiontopic_search', 
           requestUrl: url,
           responseData: `Failed to get topic list from: ${url}:\n${err}`,
           responseDataType: RenderDataAsTypes.Error

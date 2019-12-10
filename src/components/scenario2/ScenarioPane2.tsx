@@ -37,7 +37,7 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 	
 	const [topicData, setTopicData] = useState<SingleRequestData[]>([]);
 	const [topicStatus, setTopicStatus] = useState<DataCardStatus>(_statusAvailable);
-	const [selectedTopic, setSelectedTopic] = useState<fhir.Topic|null>(null); 
+	const [selectedTopic, setSelectedTopic] = useState<fhir.SubscriptionTopic|null>(null); 
 	
 	const [groupData, setGroupData] = useState<SingleRequestData[]>([]);
 	const [groupStatus, setGroupStatus] = useState<DataCardStatus>(_statusAvailable);
@@ -333,20 +333,16 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 				(bundle.meta.extension))
 		{
 			bundle.meta.extension.forEach(element => {
-				if (element.url.endsWith('subscriptionEventCount') ||
-						element.url.endsWith('subscription-event-count')) {
-					eventCount = element.valueUnsignedInt!;
-				} else if (element.url.endsWith('bundleEventCount') ||
-									 element.url.endsWith('bundle-event-count')) {
+				if (element.url.endsWith('subscription-event-count')) {
+					// TODO: need to correctly handle 64-bit int values
+					eventCount = Number(element.valueInteger64);
+				} else if (element.url.endsWith('bundle-event-count')) {
 					bundleEventCount = element.valueUnsignedInt!;
-				} else if (element.url.endsWith('subscriptionStatus') ||
-									 element.url.endsWith('subscription-status')) {
+				} else if (element.url.endsWith('subscription-status')) {
 					status = element.valueString!;
-				} else if (element.url.endsWith('subscriptionTopicUrl') ||
-									 element.url.endsWith('subscription-topic-url')) {
+				} else if (element.url.endsWith('subscription-topic-url')) {
 					topicUrl = element.valueUrl!;
-				} else if (element.url.endsWith('subscriptionUrl') ||
-									 element.url.endsWith('subscription-url')) {
+				} else if (element.url.endsWith('subscription-url')) {
 					subscriptionUrl = element.valueUrl!;
 				}
 			});
@@ -363,9 +359,9 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 				responseData: JSON.stringify(bundle, null, 2),
 				responseDataType: RenderDataAsTypes.FHIR,
 				info: `Handshake:\n`+
-					`\tTopic:        ${topicUrl}\n` +
-					`\tSubscription: ${subscriptionUrl}\n` +
-					`\tStatus:       ${status}`,
+					`\tSubscriptionTopic: ${topicUrl}\n` +
+					`\tSubscription:      ${subscriptionUrl}\n` +
+					`\tStatus:            ${status}`,
 			}
 
 			// **** update our state ****
@@ -391,11 +387,11 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 				responseData: JSON.stringify(bundle, null, 2),
 				responseDataType: RenderDataAsTypes.FHIR,
 				info: `Notification #${notificationData.length}:\n`+
-					`\tTopic:         ${topicUrl}\n` +
-					`\tSubscription:  ${subscriptionUrl}\n` +
-					`\tStatus:        ${status}\n` +
-					`\tBundle Events: ${bundleEventCount}\n`+
-					`\tTotal Events:  ${eventCount}`,
+					`\tSubscriptionTopic: ${topicUrl}\n` +
+					`\tSubscription:      ${subscriptionUrl}\n` +
+					`\tStatus:            ${status}\n` +
+					`\tBundle Events:     ${bundleEventCount}\n`+
+					`\tTotal Events:      ${eventCount}`,
 			}
 
 			let data: SingleRequestData[] = notificationData.slice();

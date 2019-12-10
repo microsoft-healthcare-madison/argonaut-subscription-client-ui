@@ -57,7 +57,7 @@ export default function MainPage() {
   const [selectedNavbarTabId, setSelectedNavbarTabId] = useState<string>(_tabs[0].id);
   const [fhirServerInfo, setFhirServerInfo] = useState<ConnectionInformation>({
       name: 'FHIR Server',
-      hint: 'URL for an R4 FHIR Server with Subscription and Topic support',
+      hint: 'URL for an R4 FHIR Server with Subscription and SubscriptionTopic support',
       url: window._env.Server_Public_Url,
       // proxyDestinationUrl: '',
       status: '',
