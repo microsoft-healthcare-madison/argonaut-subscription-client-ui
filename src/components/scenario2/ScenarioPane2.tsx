@@ -334,8 +334,14 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 		{
 			bundle.meta.extension.forEach(element => {
 				if (element.url.endsWith('subscription-event-count')) {
-					// TODO: need to correctly handle 64-bit int values
-					eventCount = Number(element.valueInteger64);
+					if (element.valueUnsignedInt) {
+						eventCount = element.valueUnsignedInt!;
+					} else if (element.valueInteger64) {
+						// TODO: need to correctly handle 64-bit int values
+						eventCount = Number(element.valueInteger64!);
+					} else {
+						eventCount = 0;
+					}
 				} else if (element.url.endsWith('bundle-event-count')) {
 					bundleEventCount = element.valueUnsignedInt!;
 				} else if (element.url.endsWith('subscription-status')) {
