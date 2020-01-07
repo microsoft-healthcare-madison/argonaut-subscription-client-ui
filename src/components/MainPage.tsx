@@ -57,7 +57,7 @@ export default function MainPage() {
   const [selectedNavbarTabId, setSelectedNavbarTabId] = useState<string>(_tabs[0].id);
   const [fhirServerInfo, setFhirServerInfo] = useState<ConnectionInformation>({
       name: 'FHIR Server',
-      hint: 'URL for an R4 FHIR Server with Subscription and SubscriptionTopic support',
+      hint: `URL for an R4 FHIR Server with Subscription and SubscriptionTopic support. Default URL is: ${window._env.Server_Public_Url}`,
       url: window._env.Server_Public_Url,
       // proxyDestinationUrl: '',
       status: '',
@@ -69,7 +69,7 @@ export default function MainPage() {
     });
   const [clientHostInfo, setClientHostInfo] = useState<ConnectionInformation>({
       name: 'Client Host',
-      hint: 'URL for a running argonaut-client-host service - creates endpoints and forwards notifications to this UI',
+      hint: `URL for a running argonaut-client-host service - creates endpoints and forwards notifications to this UI.  Default URL is: ${window._env.Client_Public_Url}`,
       url: window._env.Client_Public_Url,
       status: '',
       showMessages: false,
