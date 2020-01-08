@@ -389,6 +389,11 @@ export default function ConfigurationPane(props: ContentPaneProps) {
         label='Use Dark Theme for Code Pane'
         onChange={() => props.toggleCodePaneColors(true)}
         />
+      <Switch
+        checked={props.skipCapabilitiesCheck}
+        label='Skip FHIR Server Capabilities Check'
+        onChange={() => props.toggleSkipCapabilitesCheck(true)}
+        />
     </Card>
     <Card elevation={Elevation.TWO} key='info_card'>
       <Text>

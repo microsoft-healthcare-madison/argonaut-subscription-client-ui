@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 
 import {
-  Button, Card, H6, HTMLSelect, InputGroup, Spinner, FormGroup,
+  Button, Card, H6, HTMLSelect, InputGroup, Spinner, FormGroup, Switch,
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
@@ -25,6 +25,8 @@ export default function PatientCreateCard(props: PatientCreateProps) {
   const [birthDate, setBirthDate] = useState<Date>(new Date());
 
   const [busy, setBusy] = useState<boolean>(false);
+
+  const [usePost, setUsePost] = useState<boolean>(false);
 
   useEffect(() => {
     // **** check for having data ****
@@ -103,6 +105,110 @@ export default function PatientCreateCard(props: PatientCreateProps) {
   
   /** Function to handle a user request to create a patient */
   async function handleCreatePatientClick() {
+    if (usePost) {
+      postPatient();
+    } else {
+      putPatient();
+    }
+  }
+
+  
+  async function postPatient() {
+    // **** flag we are busy ****
+    
+    setBusy(true);
+		
+		// **** create a new patient ****
+
+		var patient: fhir.Patient = {
+			resourceType: 'Patient',
+			name: [{
+				family: familyName,
+				given: [givenName],
+				use: 'official'
+			}],
+			gender: gender,
+			birthDate: getFhirDateFromDate(birthDate),
+		}
+
+		// **** POST this on the server ****
+
+		let url: string = new URL(`Patient/?_format=json`, props.paneProps.fhirServerInfo.url).toString();
+
+    try {
+      let response:ApiResponse<fhir.Patient> = await ApiHelper.apiPostFhir<fhir.Patient>(
+        url,
+        patient,
+        props.paneProps.fhirServerInfo.authHeaderContent,
+        props.paneProps.fhirServerInfo.preferHeaderContent
+        );
+      
+      if (!response.value) {
+        // **** show the client error information ****
+
+        let updated: SingleRequestData = {
+          name: 'Patient Create',
+          id: 'patient_create', 
+          requestUrl: url, 
+          requestData: JSON.stringify(patient, null, 2),
+          requestDataType: RenderDataAsTypes.FHIR,
+          responseData: `Request for Patient (${url}) failed:\n` +
+            `${response.statusCode} - "${response.statusText}"\n` +
+            `${response.body}`,
+          responseDataType: RenderDataAsTypes.Error,
+          };
+
+        props.setData([updated]);
+        setBusy(false);
+
+        return;
+      }
+
+      setPatientId(patient.id!);
+
+      // **** build data for display ****
+
+      let data: SingleRequestData = {
+        name: 'Patient Create',
+        id: 'patient_create', 
+        requestUrl: url,
+        requestData: JSON.stringify(patient, null, 2),
+        requestDataType: RenderDataAsTypes.FHIR,
+        responseData: JSON.stringify(response.value, null, 2),
+        responseDataType: RenderDataAsTypes.FHIR,
+        outcome: response.outcome ? JSON.stringify(response.outcome) : undefined,
+      };
+
+      // **** update our state ****
+
+      setBusy(false);
+      props.setData([data]);
+
+      // **** flag this patient has been selected ****
+
+      props.registerSelectedPatient(response.value!.id!);
+    } catch (err) {
+      // **** build data for display ****
+
+      let data: SingleRequestData = {
+        name: 'Patient Create',
+        id: 'patient_create', 
+        requestUrl: url,
+        requestData: JSON.stringify(patient, null, 2),
+        requestDataType: RenderDataAsTypes.FHIR,
+        responseData: `Failed to PUT Patient to: ${url}:\n${err}`,
+        responseDataType: RenderDataAsTypes.Error
+      };
+
+      // **** update our state ****
+
+      setBusy(false);
+      props.setData([data]);
+    }
+  }
+
+
+  async function putPatient() {
     // **** flag we are busy ****
     
     setBusy(true);
@@ -198,7 +304,13 @@ export default function PatientCreateCard(props: PatientCreateProps) {
   /** Return this component */
   return(
     <Card>
-      <H6>Create and PUT a new Patient</H6>
+      <H6>Create a new Patient</H6>
+      <Switch
+        checked={usePost}
+        label='Toggle PUT (off) or POST (on)'
+        onChange={() => setUsePost(!usePost)}
+        />
+
       <FormGroup
         label = 'Patient Given Name'
         helperText = 'Given Name for the new Patient'
@@ -223,13 +335,14 @@ export default function PatientCreateCard(props: PatientCreateProps) {
       </FormGroup>
       <FormGroup
         label='Patient ID'
-        helperText='ID for the new Patient (must contain at least one letter)'
+        helperText='ID for the new Patient (must contain at least one letter) - only available if using PUT'
         labelFor='patient-id'
         >
         <InputGroup
           id='patient-id'
           value={patientId}
           onChange={handlePatientIdChange}
+          disabled={usePost}
           />
       </FormGroup>
       <FormGroup
