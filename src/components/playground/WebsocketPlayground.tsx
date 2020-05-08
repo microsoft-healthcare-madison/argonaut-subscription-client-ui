@@ -6,7 +6,7 @@ import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import { Button, FormGroup, InputGroup, HTMLSelect } from '@blueprintjs/core';
-import { Subscription, SubscriptionChannelPayloadContentCodes } from '../../models/fhir_r4_selected';
+import { Subscription, SubscriptionContentCodes } from '../../models/fhir_r4_selected';
 import { IconNames } from '@blueprintjs/icons';
 
 export interface WebsocketPlaygroundProps {
@@ -242,7 +242,7 @@ export default function WebsocketPlayground(props: WebsocketPlaygroundProps) {
             value={payloadType}
               >
             <option key={'r4'}>R4</option>
-            { Object.values(SubscriptionChannelPayloadContentCodes).map((value) => (
+            { Object.values(SubscriptionContentCodes).map((value) => (
             <option key={value}>{value}</option> 
               ))}
           </HTMLSelect>

@@ -20,7 +20,7 @@ export interface SubscriptionS2Props {
   data: SingleRequestData[],
   setData: ((data: SingleRequestData[]) => void),
   selectedGroupId: string,
-  topic: fhir.Topic|null,
+  topic: fhir.SubscriptionTopic|null,
   subscription: fhir.Subscription,
   endpoint: EndpointRegistration,
 }
@@ -58,21 +58,11 @@ export default function SubscriptionS2(props: SubscriptionS2Props) {
     
     let endpointUrl: string = new URL(`Endpoints/${props.endpoint.uid!}`, props.paneProps.clientHostInfo.url).toString();
 
-		// **** build our subscription channel information ****
-
-		let channel: fhir.SubscriptionChannel = {
-			endpoint: endpointUrl,
-			header: [],
-			heartbeatPeriod: 60,
-			payload: {content: payloadType, contentType: 'application/fhir+json'},
-			type: {coding: [fhir.SubscriptionChannelTypeCodes.rest_hook], text: 'REST Hook'},
-		}
-
 		// **** build our filter information ****
 
 		let filter: fhir.SubscriptionFilterBy = {
-			matchType: 'in',
-			name: 'patient',
+			searchModifier: 'in',
+			searchParamName: 'patient',
 			value: `Group/${props.selectedGroupId}`
 		}
 
@@ -81,17 +71,22 @@ export default function SubscriptionS2(props: SubscriptionS2Props) {
 
     let topicResource: string = props.paneProps.useBackportToR4
       ? 'Basic'
-      : 'Topic';
+      : 'SubscriptionTopic';
 
     let topicUrl:string = props.topic 
       ? new URL(`${topicResource}/${props.topic!.id!}`, props.paneProps.fhirServerInfo.url).toString()
-      : new URL(`${topicResource}/admission`, props.paneProps.fhirServerInfo.url).toString();
+      : new URL(`${topicResource}/encounter-start`, props.paneProps.fhirServerInfo.url).toString();
 
 		// **** build the subscription object ****
 
 		let subscription: fhir.Subscription = {
-			resourceType: 'Subscription',
-			channel: channel,
+      resourceType: 'Subscription',
+      endpoint: endpointUrl,
+      channelType: fhir.SubscriptionChannelType.rest_hook,
+      header: [],
+      heartbeatPeriod: 60,
+      content: payloadType,
+      contentType: 'application/fhir+json',
 			filterBy: [filter],
 			end: getInstantFromDate(expirationTime),
 			topic: {reference:  topicUrl},
@@ -292,7 +287,7 @@ export default function SubscriptionS2(props: SubscriptionS2Props) {
           onChange={handlePayloadTypeChange}
           value={payloadType}
           >
-          { Object.values(fhir.SubscriptionChannelPayloadContentCodes).map((value) => (
+          { Object.values(fhir.SubscriptionContentCodes).map((value) => (
             <option key={value}>{value}</option> 
               ))}
         </HTMLSelect>

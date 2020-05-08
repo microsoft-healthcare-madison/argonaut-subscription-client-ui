@@ -45,7 +45,7 @@ export default function ConfigurationPane(props: ContentPaneProps) {
     },
     {
       short: 'build.fhir.org', 
-      description: 'Current FHIR R5 Build branch (Subscription, Topic, etc.)', 
+      description: 'Current FHIR R5 Build branch (Subscription, SubscriptionTopic, etc.)', 
       link:'http://build.fhir.org/'
     },
     {
@@ -60,7 +60,7 @@ export default function ConfigurationPane(props: ContentPaneProps) {
     },
     {
       short: 'github.com',
-      description: 'Argonaut Subscription Reference Server Proxy (intercept and process Subscription/Topic)',
+      description: 'Argonaut Subscription Reference Server Proxy (intercept and process Subscription/SubscriptionTopic)',
       link:'https://github.com/microsoft-healthcare-madison/argonaut-subscription-server-proxy'
     },
     {

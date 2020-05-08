@@ -24,7 +24,7 @@ export interface SubscriptionPlaygroundProps {
   setData: ((data: SingleRequestData[]) => void),
   selectedPatientId: string,
   endpoints: EndpointRegistration[],
-  topics: fhir.Topic[],
+  topics: fhir.SubscriptionTopic[],
   subscriptions: fhir.Subscription[],
   registerPatientId: ((value: string) => void),
   registerGroupId: ((value: string) => void),
@@ -91,7 +91,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
     }
 
     if (topicIndex > -1) {
-      let topic: fhir.Topic = props.topics[topicIndex];
+      let topic: fhir.SubscriptionTopic = props.topics[topicIndex];
       if ((!topic.canFilterBy) || (filterByIndex >= topic.canFilterBy!.length)) {
         setFilterByIndex(-1);
       }
@@ -101,13 +101,13 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         setFilterByIndex(0);
       }
       if (filterByIndex > -1) {
-        let filterBy: fhir.TopicCanFilterBy = topic.canFilterBy![filterByIndex];
-        if ((!filterBy.matchType) || (filterByMatchTypeIndex >= filterBy.matchType!.length)) {
+        let filterBy: fhir.SubscriptionTopicCanFilterBy = topic.canFilterBy![filterByIndex];
+        if ((!filterBy.searchModifier) || (filterByMatchTypeIndex >= filterBy.searchModifier!.length)) {
           setFilterByMatchTypeIndex(-1);
         }
         if ((filterByMatchTypeIndex < 0) &&
-            (filterBy.matchType) && 
-            (filterBy.matchType!.length > 0)) {
+            (filterBy.searchModifier) && 
+            (filterBy.searchModifier!.length > 0)) {
           setFilterByMatchTypeIndex(0);
         }
       }
@@ -132,55 +132,58 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       ? headers.split(',')
       : [];
 
-		// **** build our subscription channel information ****
-
-		let channel: fhir.SubscriptionChannel = {
-			header: header,
-			heartbeatPeriod: 60,
-      payload: {content: payloadType, contentType: 'application/fhir+json'},
-      type: {},
-    }
-
-    // **** determine the endpoint type ****
-
-    switch (channelType) {
-      case fhir.SubscriptionChannelTypeCodes.rest_hook.code!:
-        if (props.endpoints.length === 0) {
-          props.paneProps.toaster('Invalid selection', IconNames.ERROR, 1000);
-          props.updateStatus({...props.status, busy: false});
-          return;
-        } else if (endpointIndex < 0) {
-          channel.endpoint = new URL(`Endpoints/${props.endpoints[props.endpoints.length-1].uid}`, props.paneProps.clientHostInfo.url).toString();
-          channel.type = {coding: [fhir.SubscriptionChannelTypeCodes.rest_hook], text: 'REST Hook'};
-        } else {
-          channel.endpoint = new URL(`Endpoints/${props.endpoints[endpointIndex].uid}`, props.paneProps.clientHostInfo.url).toString();
-          channel.type = {coding: [fhir.SubscriptionChannelTypeCodes.rest_hook], text: 'REST Hook'};
-        }
-        break;
-      case fhir.SubscriptionChannelTypeCodes.websocket.code!:
-        channel.type = {coding: [fhir.SubscriptionChannelTypeCodes.websocket], text: 'Websocket'};
-        break;
-      case fhir.SubscriptionChannelTypeCodes.email.code!:
-        channel.endpoint = emailAddress;
-        channel.payload = {content: payloadType, contentType: emailMimeType};
-        channel.type = {coding: [fhir.SubscriptionChannelTypeCodes.email], text: 'Email'};
-        break;
-    }
-
-    // **** ****
-
 		var expirationTime:Date = new Date();
 		expirationTime.setHours(expirationTime.getHours() + 1);
 
     let topicResource: string = props.paneProps.useBackportToR4
       ? 'Basic'
-      : 'Topic';
+      : 'SubscriptionTopic';
+
+    let endpoint:string;
+    let channelCoding:fhir.Coding;
+    let contentType:string = 'application/fhir+json';
+
+    // **** determine the endpoint type ****
+
+    switch (channelType) {
+      case fhir.SubscriptionChannelTypeValues.rest_hook.code!:
+        if (props.endpoints.length === 0) {
+          props.paneProps.toaster('Invalid selection', IconNames.ERROR, 1000);
+          props.updateStatus({...props.status, busy: false});
+          return;
+        } else if (endpointIndex < 0) {
+          endpoint = new URL(`Endpoints/${props.endpoints[props.endpoints.length-1].uid}`, props.paneProps.clientHostInfo.url).toString();
+          channelCoding = fhir.SubscriptionChannelType.rest_hook;
+        } else {
+          endpoint = new URL(`Endpoints/${props.endpoints[endpointIndex].uid}`, props.paneProps.clientHostInfo.url).toString();
+          channelCoding = fhir.SubscriptionChannelType.rest_hook;
+        }
+        break;
+      case fhir.SubscriptionChannelTypeValues.websocket.code!:
+        endpoint = '';
+        channelCoding = fhir.SubscriptionChannelType.websocket;
+        break;
+      case fhir.SubscriptionChannelTypeValues.email.code!:
+        endpoint = emailAddress;
+        contentType = emailMimeType;
+        channelCoding = fhir.SubscriptionChannelType.email;
+        break;
+      default:
+        endpoint = '';
+        channelCoding = {};
+        break;
+    }
       
 		// **** build the subscription object ****
 
 		let subscription: fhir.Subscription = {
-			resourceType: 'Subscription',
-			channel: channel,
+      resourceType: 'Subscription',
+      endpoint: endpoint,
+      channelType: channelCoding,
+      header: header,
+      heartbeatPeriod: 60,
+      content: payloadType,
+      contentType: contentType,
 			filterBy: filters,
 			end: getInstantFromDate(expirationTime),
 			topic: {reference:  `${topicResource}/${props.topics[topicIndex].id!}`},
@@ -453,23 +456,23 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       }
 
       if ((filterByMatchTypeIndex < 0) || 
-          (filterByMatchTypeIndex >= props.topics[topicIndex].canFilterBy![filterByIndex].matchType!.length)) {
+          (filterByMatchTypeIndex >= props.topics[topicIndex].canFilterBy![filterByIndex].searchModifier!.length)) {
         props.paneProps.toaster('Please select a match type before searching for filter values.', IconNames.WARNING_SIGN);
         return;
       }
 
-      if ((props.topics[topicIndex].canFilterBy![filterByIndex].name === 'patient') &&
-          (props.topics[topicIndex].canFilterBy![filterByIndex].matchType![filterByMatchTypeIndex] === '=')) {
+      if ((props.topics[topicIndex].canFilterBy![filterByIndex].searchParamName === 'patient') &&
+          (props.topics[topicIndex].canFilterBy![filterByIndex].searchModifier![filterByMatchTypeIndex] === '=')) {
         name = 'Patient';
       }
 
-      if ((props.topics[topicIndex].canFilterBy![filterByIndex].name === 'patient') &&
-          (props.topics[topicIndex].canFilterBy![filterByIndex].matchType![filterByMatchTypeIndex] === 'in')) {
+      if ((props.topics[topicIndex].canFilterBy![filterByIndex].searchParamName === 'patient') &&
+          (props.topics[topicIndex].canFilterBy![filterByIndex].searchModifier![filterByMatchTypeIndex] === 'in')) {
         name = 'Group';
       }
 
-      if ((props.topics[topicIndex].canFilterBy![filterByIndex].name === 'patient') &&
-          (props.topics[topicIndex].canFilterBy![filterByIndex].matchType![filterByMatchTypeIndex] === 'not-in')) {
+      if ((props.topics[topicIndex].canFilterBy![filterByIndex].searchParamName === 'patient') &&
+          (props.topics[topicIndex].canFilterBy![filterByIndex].searchModifier![filterByMatchTypeIndex] === 'not-in')) {
         name = 'Group';
       }
 
@@ -497,8 +500,8 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
     // **** create the filter object ****
 
     let rec:fhir.SubscriptionFilterBy = {
-      name: props.topics[topicIndex].canFilterBy![filterByIndex].name!,
-      matchType: props.topics[topicIndex].canFilterBy![filterByIndex].matchType![filterByMatchTypeIndex],
+      searchParamName: props.topics[topicIndex].canFilterBy![filterByIndex].searchParamName!,
+      searchModifier: props.topics[topicIndex].canFilterBy![filterByIndex].searchModifier![filterByMatchTypeIndex],
       value: filterByValue,
     };
 
@@ -509,13 +512,13 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 
     // **** figure out patient IDs to list for encounters ****
 
-    if ((rec.name === 'patient') && (rec.matchType === '=')) {
+    if ((rec.searchParamName === 'patient') && (rec.searchModifier === '=')) {
       // **** register this patient ID ****
 
       props.registerPatientId(rec.value);
     }
 
-    if ((rec.name === 'patient') && (rec.matchType === 'in')) {
+    if ((rec.searchParamName === 'patient') && (rec.searchModifier === 'in')) {
       // **** register this group ID ****
 
       props.registerGroupId(rec.value);
@@ -699,7 +702,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
           onChange={handlePayloadTypeChange}
           value={payloadType}
           >
-          { Object.values(fhir.SubscriptionChannelPayloadContentCodes).map((value) => (
+          { Object.values(fhir.SubscriptionContentCodes).map((value) => (
             <option key={value}>{value}</option> 
               ))}
         </HTMLSelect>
@@ -722,7 +725,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
               value={filterByIndex}
               >
               { Object.values(props.topics[topicIndex].canFilterBy!).map((value, index) => (
-                <option key={value.name} value={index}>{value.name}</option>
+                <option key={value.searchParamName} value={index}>{value.searchParamName}</option>
               )) }
             </HTMLSelect>
             <HTMLSelect
@@ -730,7 +733,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
               value={filterByMatchTypeIndex}
               >
               { (filterByIndex > -1) && 
-                Object.values(props.topics[topicIndex].canFilterBy![filterByIndex].matchType!).map((value, index) => (
+                Object.values(props.topics[topicIndex].canFilterBy![filterByIndex].searchModifier!).map((value, index) => (
                 <option key={`opt_${index}`} value={index}>{value}</option>
               ))}
             </HTMLSelect>

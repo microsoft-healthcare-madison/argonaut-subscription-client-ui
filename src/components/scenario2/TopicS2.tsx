@@ -17,7 +17,7 @@ export interface TopicS2Props {
   updateStatus: ((status: DataCardStatus) => void),
   data: SingleRequestData[],
   setData: ((data: SingleRequestData[]) => void),
-  setTopic: ((value: fhir.Topic) => void),
+  setTopic: ((value: fhir.SubscriptionTopic) => void),
 }
 
 /** Component representing the Scenario 1 Topic Card */
@@ -40,8 +40,8 @@ export default function TopicS2(props: TopicS2Props) {
     // **** construct the registration REST url ****
 
     let url: string = props.paneProps.useBackportToR4
-      ? new URL('Basic?code=R5Topic', props.paneProps.fhirServerInfo.url).toString()
-      : new URL('Topic', props.paneProps.fhirServerInfo.url).toString();
+      ? new URL('Basic?code=R5SubscriptionTopic', props.paneProps.fhirServerInfo.url).toString()
+      : new URL('SubscriptionTopic', props.paneProps.fhirServerInfo.url).toString();
 
     // **** attempt to get the list of Topics ****
 
@@ -59,7 +59,7 @@ export default function TopicS2(props: TopicS2Props) {
             name: 'Topic Search',
             id: 'topic_search', 
             requestUrl: url,
-            responseData: `Request for Topic (${url}) failed:\n` +
+            responseData: `Request for SubscriptionTopic (${url}) failed:\n` +
             `${response.statusCode} - "${response.statusText}"\n` +
             `${response.body}`,
           responseDataType: RenderDataAsTypes.Error,
@@ -74,18 +74,18 @@ export default function TopicS2(props: TopicS2Props) {
 
       // **** find the 'admission' topic ****
 
-      let admissionTopic:fhir.Topic|undefined = undefined;
+      let admissionTopic:fhir.SubscriptionTopic|undefined = undefined;
       let topicInfo: string = '';
 
       if (response.value.entry) {
         response.value.entry.forEach((entry) => {
           if (!entry.resource) return;
 
-          let topic:fhir.Topic = props.paneProps.useBackportToR4
+          let topic:fhir.SubscriptionTopic = props.paneProps.useBackportToR4
             ? JSON.parse((entry.resource as fhir.Basic).extension![0].valueString!)
-            : entry.resource as fhir.Topic;
+            : entry.resource as fhir.SubscriptionTopic;
 
-          if (topic.url === 'http://argonautproject.org/subscription-ig/Topic/admission') {
+          if (topic.url === 'http://argonautproject.org/subscription-ig/Topic/encounter-start') {
             admissionTopic = topic;
             props.setTopic(topic);
             topicInfo = topicInfo + 

@@ -34,7 +34,7 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 
 	const [topicData, setTopicData] = useState<SingleRequestData[]>([]);
 	const [topicStatus, setTopicStatus] = useState<DataCardStatus>(_statusAvailable);
-	const [topics, setTopics] = useState<fhir.Topic[]>([]);
+	const [topics, setTopics] = useState<fhir.SubscriptionTopic[]>([]);
 
 	const [endpointData, setEndpointData] = useState<SingleRequestData[]>([]);
 	const [endpointStatus, setEndpointStatus] = useState<DataCardStatus>(_statusAvailable);
@@ -104,6 +104,7 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 		let subscriptionUrl: string = '';
 
 		let bundle: fhir.Bundle;
+		let notificationType:string = '';
 
 		// **** check for a ping ****
 
@@ -138,32 +139,72 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 			return;
 		}
 
-		// **** check for the extensions we need ****
-
-		if ((bundle) &&
-				(bundle.meta) &&
-				(bundle.meta.extension))
-		{
-			bundle.meta.extension.forEach(element => {
-				if (element.url.endsWith('subscriptionEventCount') ||
-						element.url.endsWith('subscription-event-count')) {
-					eventCount = element.valueUnsignedInt!;
-				} else if (element.url.endsWith('bundleEventCount') ||
-									 element.url.endsWith('bundle-event-count')) {
-					bundleEventCount = element.valueUnsignedInt!;
-				} else if (element.url.endsWith('subscriptionStatus') ||
-									 element.url.endsWith('subscription-status')) {
-					status = element.valueString!;
-				} else if (element.url.endsWith('subscriptionTopicUrl') ||
-									 element.url.endsWith('subscription-topic-url')) {
-					topicUrl = element.valueUrl!;
-				} else if (element.url.endsWith('subscriptionUrl') ||
-									 element.url.endsWith('subscription-url')) {
-					subscriptionUrl = element.valueUrl!;
+		switch (bundle.type) {
+			case fhir.BundleTypeCodes.HISTORY:
+				if ((bundle) &&
+						(bundle.meta) &&
+						(bundle.meta.extension))
+				{
+					bundle.meta.extension.forEach(element => {
+						if (element.url.endsWith('subscriptionEventCount') ||
+								element.url.endsWith('subscription-event-count')) {
+							eventCount = element.valueUnsignedInt!;
+						} else if (element.url.endsWith('bundleEventCount') ||
+											element.url.endsWith('bundle-event-count')) {
+							bundleEventCount = element.valueUnsignedInt!;
+						} else if (element.url.endsWith('subscriptionStatus') ||
+											element.url.endsWith('subscription-status')) {
+							status = element.valueString!;
+						} else if (element.url.endsWith('subscriptionTopicUrl') ||
+											element.url.endsWith('subscription-topic-url')) {
+							topicUrl = element.valueUrl!;
+						} else if (element.url.endsWith('subscriptionUrl') ||
+											element.url.endsWith('subscription-url')) {
+							subscriptionUrl = element.valueUrl!;
+						}
+					});
 				}
-			});
-		}
+			break;
 
+			case fhir.BundleTypeCodes.SUBSCRIPTION_NOTIFICATION:
+				if ((bundle) &&
+						(bundle.entry) &&
+						(bundle.entry[0]) &&
+						(bundle.entry[0].resource))
+				{
+					let subscriptionStatus = bundle.entry[0].resource as fhir.SubscriptionStatus;
+
+					if (subscriptionStatus.eventsSinceSubscriptionStart) {
+						eventCount = Number(subscriptionStatus.eventsSinceSubscriptionStart!);
+					}
+
+					if (subscriptionStatus.eventsInNotification) {
+						bundleEventCount = Number(subscriptionStatus.eventsInNotification!);
+					}
+
+					if (subscriptionStatus.status) {
+						status = subscriptionStatus.status!;
+					}
+
+					if ((subscriptionStatus.topic) && (subscriptionStatus.topic.reference)) {
+						topicUrl = subscriptionStatus.topic.reference!;
+					}
+
+					if (subscriptionStatus.subscription.reference) {
+						subscriptionUrl = subscriptionStatus.subscription.reference!;
+					}
+
+					notificationType = subscriptionStatus.notificationType;
+					if (notificationType === fhir.SubscriptionStatusNotificationTypeCodes.HANDSHAKE) {
+						eventCount = 0;
+						bundleEventCount = 0;
+					} else if (notificationType === fhir.SubscriptionStatusNotificationTypeCodes.HEARTBEAT) {
+						bundleEventCount = 0;
+					}
+				}
+			break;
+		}
+		
 		// **** add to our display ****
 
 		let rec:SingleRequestData = {
