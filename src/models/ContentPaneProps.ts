@@ -21,4 +21,6 @@ export interface ContentPaneProps {
   copyToClipboard: ((message: string, toast?: string) => void);
   useBackportToR4: boolean;
   toggleUseBackportToR4: ((useSetState: boolean) => void);
+  skipCapabilitiesCheck: boolean;
+  toggleSkipCapabilitesCheck: ((useSetState: boolean) => void);
 }

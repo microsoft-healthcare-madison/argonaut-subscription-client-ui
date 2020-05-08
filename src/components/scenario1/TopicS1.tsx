@@ -26,7 +26,7 @@ export default function TopicS1(props: TopicS1Props) {
   const info: DataCardInfo = {
     id: 's1_topic',
     stepNumber: 1,
-    heading: 'Get Topic list from FHIR Server',
+    heading: 'Get SubscriptionTopic list from FHIR Server',
     description: '',
     optional: true,
   };
@@ -56,8 +56,8 @@ export default function TopicS1(props: TopicS1Props) {
 
         let data: SingleRequestData[] = [
           {
-            name: 'Topic Search',
-            id: 'topic_search', 
+            name: 'SubscriptionTopic Search',
+            id: 'subscriptiontopic_search', 
             requestUrl: url,
             responseData: `Request for SubscriptionTopic (${url}) failed:\n` +
             `${response.statusCode} - "${response.statusText}"\n` +
@@ -85,11 +85,11 @@ export default function TopicS1(props: TopicS1Props) {
             ? JSON.parse((entry.resource as fhir.Basic).extension![0].valueString!)
             : entry.resource as fhir.SubscriptionTopic;
 
-          if (topic.url === 'http://argonautproject.org/subscription-ig/Topic/encounter-start') {
+          if (topic.url === 'http://argonautproject.org/encounters-ig/SubscriptionTopic/encounter-start') {
             admissionTopic = topic;
             props.setTopic(topic);
             topicInfo = topicInfo + 
-              `- Topic/${topic.id}\n` +
+              `- SubscriptionTopic/${topic.id}\n` +
               `\tURL:         ${topic.url}\n` +
               `\tTitle:       ${topic.title}\n` +
               `\tDescription: ${topic.description}\n`;
@@ -101,8 +101,8 @@ export default function TopicS1(props: TopicS1Props) {
 
       let data: SingleRequestData[] = [
         {
-          name: 'Topic Search',
-          id: 'topic_search', 
+          name: 'SubscriptionTopic Search',
+          id: 'subscriptiontopic_search', 
           requestUrl: url,
           responseData: JSON.stringify(response.value, null, 2),
           responseDataType: RenderDataAsTypes.FHIR,
@@ -124,8 +124,8 @@ export default function TopicS1(props: TopicS1Props) {
 
       let data: SingleRequestData[] = [
         {
-          name: 'Topic Search',
-          id: 'topic_search', 
+          name: 'SubscriptionTopic Search',
+          id: 'subscriptiontopic_search', 
           requestUrl: url,
           responseData: `Failed to get topic list from: ${url}:\n${err}`,
           responseDataType: RenderDataAsTypes.Error

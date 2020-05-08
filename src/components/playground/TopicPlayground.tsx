@@ -25,7 +25,7 @@ export default function TopicPlayground(props: TopicPlaygroundProps) {
 
   const info: DataCardInfo = {
     id: 'playground_topic',
-    heading: 'FHIR Server - Topic interactions',
+    heading: 'FHIR Server - SubscriptionTopic interactions',
     description: '',
     optional: false,
   };
@@ -55,8 +55,8 @@ export default function TopicPlayground(props: TopicPlaygroundProps) {
 
         let data: SingleRequestData[] = [
           {
-            name: 'Topic Search',
-            id: 'topic_search', 
+            name: 'SubscriptionTopic Search',
+            id: 'subscriptiontopic_search', 
             requestUrl: url,
             responseData: `Request for SubscriptionTopic (${url}) failed:\n` +
               `${response.statusCode} - "${response.statusText}"\n` +
@@ -86,7 +86,7 @@ export default function TopicPlayground(props: TopicPlaygroundProps) {
 
           topics.push(topic);
           topicInfo = topicInfo + 
-            `- Topic/${topic.id}\n` +
+            `- SubscriptionTopic/${topic.id}\n` +
             `\tURL:         ${topic.url}\n` +
             `\tTitle:       ${topic.title}\n` +
             `\tDescription: ${topic.description}\n`;
@@ -97,8 +97,8 @@ export default function TopicPlayground(props: TopicPlaygroundProps) {
 
       let data: SingleRequestData[] = [
         {
-          name: 'Topic Search',
-          id: 'topic_search', 
+          name: 'SubscriptionTopic Search',
+          id: 'subscriptiontopic_search', 
           requestUrl: url,
           responseData: JSON.stringify(response.value, null, 2),
           responseDataType: RenderDataAsTypes.FHIR,
@@ -121,8 +121,8 @@ export default function TopicPlayground(props: TopicPlaygroundProps) {
 
       let data: SingleRequestData[] = [
         {
-          name: 'Topic Search',
-          id: 'topic_search', 
+          name: 'SubscriptionTopic Search',
+          id: 'subscriptiontopic_search', 
           requestUrl: url,
           responseData: `Failed to get topic list from: ${url}:\n${err}`,
           responseDataType: RenderDataAsTypes.Error

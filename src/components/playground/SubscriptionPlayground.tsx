@@ -603,18 +603,18 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       processRowDelete={deleteSubscription}
       >
       <FormGroup
-        label='Topic'
-        helperText='Topic this Subscription will generate notifications for'
-        labelFor='topic'
-        labelInfo={props.topics.length === 0 ? '(Requires Topic list from Topic Interaction Card)' : ''}
+        label='SubscriptionTopic'
+        helperText='SubscriptionTopic this Subscription will generate notifications for'
+        labelFor='subscriptiontopic'
+        labelInfo={props.topics.length === 0 ? '(Requires SubscriptionTopic list from Topic Interaction Card)' : ''}
         >
         <HTMLSelect
-          id='topic'
+          id='subscriptiontopic'
           onChange={handleTopicNameChange}
           value={topicIndex}
           >
           { Object.values(props.topics).map((value, index) => (
-            <option key={value.title!} value={index}>Topic/{value.id!} ({value.title!})</option>
+            <option key={value.title!} value={index}>SubscriptionTopic/{value.id!} ({value.title!})</option>
               ))}
         </HTMLSelect>
       </FormGroup>
@@ -636,7 +636,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       { (channelType === 'rest-hook') && [
         <FormGroup
           label='Endpoint'
-          helperText='Endpoint this topic will send notifications to'
+          helperText='Endpoint this Subscription will send notifications to'
           labelFor='endpoint'
           >
           <HTMLSelect
@@ -710,7 +710,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       { ((topicIndex > -1) && (props.topics[topicIndex].canFilterBy)) &&
         <FormGroup
           label='Filter by'
-          helperText={'Filter based on the available Topic Filters (Search Parameters).' +
+          helperText={'Filter based on the available SubscriptionTopic Filters (Search Parameters).' +
             ' Leave blank for no filter.' +
             ' Multiple VALUES can be entered comma separated for OR joining.' +
             ' Multiple FILTERS are joined with AND.'

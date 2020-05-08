@@ -586,6 +586,39 @@ export enum SubscriptionTopicResourceTriggerResourceTypeCodes {
 	CANDIDATE = "Candidate",
 }
 /**
+ * Code Values for the SubscriptionTopic.status field
+ */
+export enum SubscriptionTopicStatusCodes {
+	DRAFT = "draft",
+	ACTIVE = "active",
+	RETIRED = "retired",
+	UNKNOWN = "unknown",
+}
+/**
+ * Code Values for the SubscriptionTopicCanFilterBy.matchType field
+ */
+export enum SubscriptionTopicCanFilterByMatchTypeCodes {
+	EQUALS = "=",
+	IN = "in",
+	NOT_IN = "not-in",
+	ABOVE = "above",
+	BELOW = "below",
+}
+/**
+ * Code Values for the SubscriptionTopicResourceTrigger.methodCriteria field
+ */
+export enum SubscriptionTopicResourceTriggerMethodCriteriaCodes {
+	CREATE = "create",
+	UPDATE = "update",
+	DELETE = "delete",
+}
+/**
+ * Code Values for the SubscriptionTopicResourceTrigger.resourceType field
+ */
+export enum SubscriptionTopicResourceTriggerResourceTypeCodes {
+	CANDIDATE = "Candidate",
+}
+/**
  * Code Values for the TimingRepeat.dayOfWeek field
  */
 export enum TimingRepeatDayOfWeekCodes {

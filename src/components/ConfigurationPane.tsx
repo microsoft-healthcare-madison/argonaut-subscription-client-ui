@@ -64,13 +64,23 @@ export default function ConfigurationPane(props: ContentPaneProps) {
       link:'https://github.com/microsoft-healthcare-madison/argonaut-subscription-server-proxy'
     },
     {
+      short: 'confluence.hl7.org',
+      description: 'January 2020 CMS Connectathon (#1) - Subscriptions',
+      link:'https://confluence.hl7.org/display/FHIR/2020-01+Subscriptions'
+    },
+    {
+      short: 'confluence.hl7.org',
+      description: 'February 2020 Connectathon (#23) - Subscription Track',
+      link:'https://confluence.hl7.org/display/FHIR/2020-02+Subscriptions+Track'
+    },
+    {
       short: 'github.com',
       description: 'September 2019 Connectathon - Argonaut Subscription Scenarios',
       link:'http://aka.ms/argo-sub-connectathon-2019-09'
     },
     {
       short: 'confluence.hl7.org',
-      description: 'September 2019 Connectathon - Subscription Track',
+      description: 'September 2019 Connectathon (#22) - Subscription Track',
       link:'https://confluence.hl7.org/display/FHIR/2019-09+Subscription'
     },
     // {
@@ -378,6 +388,11 @@ export default function ConfigurationPane(props: ContentPaneProps) {
         checked={props.codePaneDark}
         label='Use Dark Theme for Code Pane'
         onChange={() => props.toggleCodePaneColors(true)}
+        />
+      <Switch
+        checked={props.skipCapabilitiesCheck}
+        label='Skip FHIR Server Capabilities Check'
+        onChange={() => props.toggleSkipCapabilitesCheck(true)}
         />
     </Card>
     <Card elevation={Elevation.TWO} key='info_card'>

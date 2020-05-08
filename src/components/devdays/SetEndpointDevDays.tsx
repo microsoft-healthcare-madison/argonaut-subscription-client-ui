@@ -25,7 +25,7 @@ export default function SetEndpointDevDays(props: SetEndpointDevDaysProps) {
     id: 'devdays_set_endpoint',
     heading: 'Set the endpoint in the sample code',
     stepNumber: 6,
-    description: 'This step lets the software know you are using our public proxy - required if you created an endpoint',
+    description: 'This step lets the software know you are using our public proxy (sets the proxy URL for the subscription endpoint)',
     optional: false,
   };
 
@@ -40,7 +40,7 @@ export default function SetEndpointDevDays(props: SetEndpointDevDaysProps) {
   useEffect(() => {
     if (props.endpointCodeLineNumber < 1) {
       setInfo({...info, 
-        description: 'This step lets the software know you are using our public proxy - required if you created an endpoint'
+        description: 'This step lets the software know you are using our public proxy (sets the proxy URL for the subscription endpoint)'
       });
       return;
     }

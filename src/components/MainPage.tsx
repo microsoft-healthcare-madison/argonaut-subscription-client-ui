@@ -57,7 +57,7 @@ export default function MainPage() {
   const [selectedNavbarTabId, setSelectedNavbarTabId] = useState<string>(_tabs[0].id);
   const [fhirServerInfo, setFhirServerInfo] = useState<ConnectionInformation>({
       name: 'FHIR Server',
-      hint: 'URL for an R4 FHIR Server with Subscription and SubscriptionTopic support',
+      hint: `URL for an R4 FHIR Server with Subscription and SubscriptionTopic support. Default URL is: ${window._env.Server_Public_Url}`,
       url: window._env.Server_Public_Url,
       // proxyDestinationUrl: '',
       status: '',
@@ -69,7 +69,7 @@ export default function MainPage() {
     });
   const [clientHostInfo, setClientHostInfo] = useState<ConnectionInformation>({
       name: 'Client Host',
-      hint: 'URL for a running argonaut-client-host service - creates endpoints and forwards notifications to this UI',
+      hint: `URL for a running argonaut-client-host service - creates endpoints and forwards notifications to this UI.  Default URL is: ${window._env.Client_Public_Url}`,
       url: window._env.Client_Public_Url,
       status: '',
       showMessages: false,
@@ -81,6 +81,7 @@ export default function MainPage() {
   const [uiDark, setUiDark] = useState<boolean>(false);
   const [codePaneDark, setCodePaneDark] = useState<boolean>(false);
   const [useBackportToR4, setUseBackportToR4] = useState<boolean>(false);
+  const [skipCapabilitiesCheck, setSkipCapabilitesCheck] = useState<boolean>(false);
 
   // **** handle lifecycle changes ****
 
@@ -140,6 +141,10 @@ export default function MainPage() {
 
         if (localStorage.getItem('useBackportToR4') === 'true') {
           setUseBackportToR4(true);
+        }
+
+        if (localStorage.getItem('skipCapabilitesCheck') === 'true') {
+          setSkipCapabilitesCheck(true);
         }
       }
 
@@ -211,6 +216,16 @@ export default function MainPage() {
     }
   }, [useBackportToR4]);
 
+  function toggleSkipCapabilitiesCheck() {
+    setSkipCapabilitesCheck(!skipCapabilitiesCheck);
+  };
+  useEffect(() => {
+    if (StorageHelper.isLocalStorageAvailable) {
+      localStorage.setItem('skipCapabilitiesCheck', (skipCapabilitiesCheck).toString());
+    }
+  }, [skipCapabilitiesCheck])
+
+
   /** Disconnect from all connected servers */
   function disconnect() {
     if (_clientHostWebSocketRef.current) {
@@ -263,6 +278,20 @@ export default function MainPage() {
 
     async function connectServer(serverInfo: ConnectionInformation) {
       try {
+        // **** check for capability check bypass ****
+
+        if (skipCapabilitiesCheck) {
+          // **** still here means success ****
+
+          return {...serverInfo, 
+            status: 'ok',
+            supportsCreatePatient: true,
+            supportsCreateEncounter: true,
+            supportsCreateGroup: true,
+            capabilitiesRest: [],
+          };
+        }
+        
         // **** build a URL to the server capabilities statement ****
 
         let capabilityUrl: string = new URL('metadata', serverInfo.url).toString();
@@ -573,6 +602,8 @@ export default function MainPage() {
           copyToClipboard: copyToClipboard,
           useBackportToR4: useBackportToR4,
           toggleUseBackportToR4: toggleUseBackportToR4,
+          skipCapabilitiesCheck: skipCapabilitiesCheck,
+          toggleSkipCapabilitesCheck: toggleSkipCapabilitiesCheck,
         }) }
       {/* </div> */}
     </div>

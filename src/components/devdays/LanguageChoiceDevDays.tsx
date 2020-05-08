@@ -49,9 +49,9 @@ export default function LanguageChoiceDevDays(props: LanguageChoiceDevDaysProps)
           value={props.language}
           >
           <option value=''>None</option>
-          {/* <option value='cs'>C#</option> */}
-          <option value='jsp'>JavaScript (Node with Proxy)</option>
-          <option value='jst'>JavaScript (Node with Tunnel)</option>
+          <option value='csp'>C# (Kestrel) with Proxy</option>
+          <option value='jsp'>JavaScript (Node) with Proxy</option>
+          <option value='jst'>JavaScript (Node) with Tunnel</option>
           {/* <option value='java'>Java</option> */}
         </HTMLSelect>
       </FormGroup>
