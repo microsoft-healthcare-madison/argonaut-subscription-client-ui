@@ -98,11 +98,12 @@ export default function SubscriptionS2(props: SubscriptionS2Props) {
 
     try {
       var response: ApiResponse<fhir.Subscription> | ApiResponse<fhir.Basic>;
+      let requestResource:fhir.Basic|fhir.Subscription;
 
       if (props.paneProps.useBackportToR4) {
         // **** wrap in basic ****
 
-        let basic:fhir.Basic = {
+        requestResource = {
           resourceType: 'Basic',
           code: {
             coding: [{
@@ -119,14 +120,16 @@ export default function SubscriptionS2(props: SubscriptionS2Props) {
 
         response = await ApiHelper.apiPostFhir<fhir.Basic>(
           url,
-          basic,
+          requestResource,
           props.paneProps.fhirServerInfo.authHeaderContent,
           props.paneProps.fhirServerInfo.preferHeaderContent
           );
       } else {
+        requestResource = subscription;
+
         response = await ApiHelper.apiPostFhir<fhir.Subscription>(
           url,
-          subscription,
+          requestResource,
           props.paneProps.fhirServerInfo.authHeaderContent,
           props.paneProps.fhirServerInfo.preferHeaderContent
           );
@@ -139,7 +142,7 @@ export default function SubscriptionS2(props: SubscriptionS2Props) {
           name: 'Create Subscription',
           id: 'create_subscription',
           requestUrl: url, 
-          requestData: JSON.stringify(subscription, null, 2),
+          requestData: JSON.stringify(requestResource, null, 2),
           requestDataType: RenderDataAsTypes.FHIR,
           responseData: response.value ? JSON.stringify(response.value, null, 2) : response.body,
           responseDataType: response.value ? RenderDataAsTypes.FHIR : RenderDataAsTypes.Text,
