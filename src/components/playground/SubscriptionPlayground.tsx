@@ -180,16 +180,22 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       resourceType: 'Subscription',
       endpoint: endpoint,
       channelType: channelCoding,
-      header: header,
       heartbeatPeriod: 60,
       content: payloadType,
       contentType: contentType,
-			filterBy: filters,
 			end: getInstantFromDate(expirationTime),
 			topic: {reference:  `${topicResource}/${props.topics[topicIndex].id!}`},
 			reason: 'Client Testing',
 			status: 'requested',
-		}
+    }
+    
+    if (header.length > 0) {
+      subscription.header = header;
+    }
+
+    if (filters.length > 0) {
+      subscription.filterBy = filters;
+    }
 
     // **** try to create the subscription ****
 
@@ -653,7 +659,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
           </HTMLSelect>
         </FormGroup>,
         <FormGroup
-          label='Subscription Headers'
+          label='Subscription Notification Headers'
           helperText='Comma (,) separated list of headers to include with notifications (per channel requirements)'
           labelFor='subscription-headers'
           >

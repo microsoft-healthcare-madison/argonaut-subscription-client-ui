@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 
 import {
-  HTMLSelect, Button, FormGroup,
+  HTMLSelect, Button, FormGroup, InputGroup,
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { DataCardInfo } from '../../models/DataCardInfo';
@@ -37,6 +37,7 @@ export default function SubscriptionS2(props: SubscriptionS2Props) {
   };
   
   const [payloadType, setPayloadType] = useState<string>('id-only');
+  const [headers, setHeaders] = useState<string>('');
 
   /** Get a FHIR Instant value from a JavaScript Date */
 	function getInstantFromDate(date: Date) {
@@ -83,7 +84,6 @@ export default function SubscriptionS2(props: SubscriptionS2Props) {
       resourceType: 'Subscription',
       endpoint: endpointUrl,
       channelType: fhir.SubscriptionChannelType.rest_hook,
-      header: [],
       heartbeatPeriod: 60,
       content: payloadType,
       contentType: 'application/fhir+json',
@@ -93,7 +93,15 @@ export default function SubscriptionS2(props: SubscriptionS2Props) {
 			reason: 'Client Testing',
 			status: 'requested',
     }
+
+    let header: string[] = (headers)
+      ? headers.split(',')
+      : [];
     
+    if (header.length > 0) {
+      subscription.header = header;
+    }
+
     // **** try to create the subscription ****
 
     try {
@@ -270,6 +278,11 @@ export default function SubscriptionS2(props: SubscriptionS2Props) {
 		setPayloadType(event.currentTarget.value);
   }
 
+  /** Process HTML events for headers (update state for managed) */
+  function handleHeadersChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setHeaders(event.target.value);
+  }
+
   /** Return this component */
   return(
     <DataCard
@@ -281,7 +294,7 @@ export default function SubscriptionS2(props: SubscriptionS2Props) {
       tabButtonHandler={refreshSubscription}
       >
       <FormGroup
-        label='Subscription Notification Payload Type'
+        label='Subscription Notification Content'
         helperText='Amount of information included with subscription notifications'
         labelFor='payload-type'
         >
@@ -294,6 +307,17 @@ export default function SubscriptionS2(props: SubscriptionS2Props) {
             <option key={value}>{value}</option> 
               ))}
         </HTMLSelect>
+      </FormGroup>
+      <FormGroup
+        label='Subscription Notification Headers'
+        helperText='Comman (,) separated list of headers to include with notifications - leave blank if testing against the default client'
+        labelFor='subscription-headers'
+        >
+        <InputGroup 
+          id='subscription-headers'
+          value={headers}
+          onChange={handleHeadersChange}
+          />
       </FormGroup>
       <Button
         disabled={(!props.status.available) || (props.status.busy)}

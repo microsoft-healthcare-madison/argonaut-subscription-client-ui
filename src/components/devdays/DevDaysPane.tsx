@@ -64,7 +64,7 @@ export default function DevDaysPane(props: ContentPaneProps) {
 		cloneCommand: 'git clone https://github.com/microsoft-healthcare-madison/devdays-2019-subscription-node.git',
 		directoryName: 'devdays-2019-subscription-node',
 		endpointLineFilename: 'app.js',
-		endpointLineNumber: 9,
+		endpointLineNumber: 11,
 		startCommand: 'npm start'
 	};
 
@@ -72,7 +72,7 @@ export default function DevDaysPane(props: ContentPaneProps) {
 		cloneCommand: 'git clone --branch tunnel https://github.com/microsoft-healthcare-madison/devdays-2019-subscription-node.git',
 		directoryName: 'devdays-2019-subscription-node',
 		endpointLineFilename: 'app.js',
-		endpointLineNumber: 9,
+		endpointLineNumber: 11,
 		startCommand: 'npm start'
 	};
 
