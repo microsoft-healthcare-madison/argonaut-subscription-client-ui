@@ -455,7 +455,7 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 		<Card key='title' elevation={Elevation.TWO} style={{margin: 5}}>
 			<Text>
 				<H3>Scenario 1 - (<a 
-					href='http://aka.ms/argo-sub-connectathon-2019-09#scenario-1' 
+					href='https://github.com/argonautproject/subscriptions/tree/master/connectathon-scenarios-202005#scenario-1' 
 					target='_blank'
 					rel="noopener noreferrer"
 					>Docs</a>)</H3>

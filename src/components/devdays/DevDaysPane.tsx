@@ -416,7 +416,12 @@ export default function DevDaysPane(props: ContentPaneProps) {
 			<Card key='title' elevation={Elevation.TWO} style={{margin: 5}}>
 				<Text>
 					<H3>DevDays Walkthrough</H3>
-					Guide through a <b>basic</b> tutorial on Subscriptions
+					Guide through a <b>basic</b> tutorial on Subscriptions.<br/>
+					More information can be found in the presentations <a 
+					href='http://aka.ms/devdays-gino' 
+					target='_blank'
+					rel="noopener noreferrer"
+					>here</a>.
 				</Text>
 				</Card>
 
