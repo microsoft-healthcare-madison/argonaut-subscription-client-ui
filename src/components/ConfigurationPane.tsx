@@ -65,6 +65,11 @@ export default function ConfigurationPane(props: ContentPaneProps) {
     },
     {
       short: 'confluence.hl7.org',
+      description: 'May 2020 Connectathon (#24) - Subscriptions',
+      link:'https://confluence.hl7.org/display/FHIR/2020-05+Subscriptions+Track'
+    },
+    {
+      short: 'confluence.hl7.org',
       description: 'January 2020 CMS Connectathon (#1) - Subscriptions',
       link:'https://confluence.hl7.org/display/FHIR/2020-01+Subscriptions'
     },
