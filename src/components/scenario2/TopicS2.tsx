@@ -85,14 +85,24 @@ export default function TopicS2(props: TopicS2Props) {
             ? JSON.parse((entry.resource as fhir.Basic).extension![0].valueString!)
             : entry.resource as fhir.SubscriptionTopic;
 
-          if (topic.url === 'http://argonautproject.org/encounters-ig/SubscriptionTopic/encounter-start') {
-            admissionTopic = topic;
-            props.setTopic(topic);
-            topicInfo = topicInfo + 
-              `- SubscriptionTopic/${topic.id}\n` +
-              `\tURL:         ${topic.url}\n` +
-              `\tTitle:       ${topic.title}\n` +
-              `\tDescription: ${topic.description}\n`;
+            let isEncounterStart:Boolean = (topic.url === 'http://argonautproject.org/encounters-ig/SubscriptionTopic/encounter-start');
+
+            if ((!isEncounterStart) && (topic.derivedFromCanonical) && (topic.derivedFromCanonical.length > 0)) {
+              topic.derivedFromCanonical!.forEach((canonical) => {
+                if (canonical === 'http://argonautproject.org/encounters-ig/SubscriptionTopic/encounter-start') {
+                  isEncounterStart = true;
+                }
+              })
+            }
+  
+            if (isEncounterStart) {
+              admissionTopic = topic;
+              props.setTopic(topic);
+              topicInfo = topicInfo + 
+                `- SubscriptionTopic/${topic.id}\n` +
+                `\tURL:         ${topic.url}\n` +
+                `\tTitle:       ${topic.title}\n` +
+                `\tDescription: ${topic.description}\n`;
           }
         });
       }
