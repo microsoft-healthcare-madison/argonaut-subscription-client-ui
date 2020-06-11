@@ -6,7 +6,7 @@ import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import { Button, FormGroup, InputGroup, HTMLSelect } from '@blueprintjs/core';
-import { Subscription, SubscriptionContentCodes } from '../../models/fhir_r4_selected';
+import { Subscription, SubscriptionContentCodes } from '../../models/fhir_r5';
 import { IconNames } from '@blueprintjs/icons';
 
 export interface WebsocketPlaygroundProps {
@@ -53,42 +53,27 @@ export default function WebsocketPlayground(props: WebsocketPlaygroundProps) {
 
   async function connect() {
     try {
-      // **** construct the websocket url ****
-
+      // construct the websocket url
       let wsUrl: string = new URL(
         `${websocketUrl}?payload-type=${payloadType}`,
         props.paneProps.fhirServerInfo.url.replace('http', 'ws')
         ).toString();
 
-        // console.log('URL:', wsUrl)
-
-      // **** connect to our server ****
-
+      // connect to our server
       _webSocketRef.current = new WebSocket(wsUrl);
 
-      // **** setup our receive handler ****
-
+      // setup our receive handler
       _webSocketRef.current.onmessage = websocketMessageHandler;
 
-      // **** setup an error handler to disconnect ****
-
+      // setup an error handler to disconnect
       _webSocketRef.current.onerror = handleWebSocketError;
       _webSocketRef.current.onclose = handleWebSocketClose;
 
       setConnected(true);
       props.updateStatus({...props.status, busy: false});
-
-      // **** update our client host information ****
-
-      // return {...clientInfo, 
-      //   registration: clientHost.value!.uid,
-      //   status: 'ok',
-      // };
-
     } catch (err) {
       // return {...clientInfo, status: 'error'};
       props.updateStatus({...props.status, busy: false});
-
     }
   }
 
@@ -97,8 +82,7 @@ export default function WebsocketPlayground(props: WebsocketPlaygroundProps) {
     setConnected(false);
     setBoundSubscriptionIds([]);
 
-    // **** warn the user ****
-
+    // warn the user
     props.paneProps.toaster('Websocket disconnected from FHIR Server', IconNames.INFO_SIGN, 2000);
 
     props.updateStatus({...props.status, busy: false});
@@ -126,12 +110,10 @@ export default function WebsocketPlayground(props: WebsocketPlaygroundProps) {
 
   function toggleBinding() {
     if (isSubscriptionBound(subscriptionId)) {
-      // **** unbind ****
-
+      // unbind
       _webSocketRef.current!.send(`unbind ${subscriptionId}`)
 
-      // **** remove from list ****
-
+      // remove from list
       for (let index:number = 0; index < boundSubscriptionIds.length; index++) {
         if (boundSubscriptionIds[index] === subscriptionId) {
           let updated:string[] = boundSubscriptionIds.slice();
@@ -140,17 +122,13 @@ export default function WebsocketPlayground(props: WebsocketPlaygroundProps) {
         }
       }
 
-      // **** done ****
-
       return;
     }
 
-    // **** bind ****
-
+    // bind
     _webSocketRef.current!.send(`bind ${subscriptionId}`);
 
-    // **** add to list ****
-
+    // add to list
     let updated:string[]  = boundSubscriptionIds.slice();
     updated.push(subscriptionId);
     setBoundSubscriptionIds(updated);
@@ -160,20 +138,18 @@ export default function WebsocketPlayground(props: WebsocketPlaygroundProps) {
   /** Function to process client host messages received via the WebSocket */
   function websocketMessageHandler(event: MessageEvent) {
     console.log('Received FHIR Notification', event);
-    // **** check for keepalive message (discard) ****
-
+    // check for keepalive message (discard)
     if ((event.data) && ((event.data as string).startsWith('keepalive'))) {
       // console.log('Recevied keepalive on ClientHost WebSocket', event.data);
       return;
     }
-    // **** display to user (if desired) ****
 
+    // display to user (if desired)
     if (props.paneProps.clientHostInfo.showMessages) {
       props.paneProps.toaster(event.data, IconNames.CLOUD);
     }
 
-    // **** log to the console (if desired) ****
-
+    // log to the console (if desired)
     if (props.paneProps.clientHostInfo.logMessages) {
       console.log('FHIR Websocket:', event.data);
     }
@@ -184,8 +160,7 @@ export default function WebsocketPlayground(props: WebsocketPlaygroundProps) {
   function handleWebSocketError(event: Event) {
     _webSocketRef.current = null;
 
-    // **** warn the user ****
-
+    // warn the user
     props.paneProps.toaster('Websocket Error with FHIR Server', IconNames.ERROR, 2000);
   }
 
@@ -208,7 +183,6 @@ export default function WebsocketPlayground(props: WebsocketPlaygroundProps) {
 	function handlePayloadTypeChange(event: React.FormEvent<HTMLSelectElement>) {
 		setPayloadType(event.currentTarget.value);
   }
-
 
   /** Return this component */
   return(

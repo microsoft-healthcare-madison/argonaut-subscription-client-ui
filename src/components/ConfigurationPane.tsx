@@ -44,9 +44,19 @@ export default function ConfigurationPane(props: ContentPaneProps) {
       link:'https://forms.office.com/Pages/ResponsePage.aspx?id=v4j5cvGGr0GRqy180BHbR3_dnSdVFHxEtcOYzItm0qRURVVQT0lKUjMzMzNSVlcwUVZLWFI2NFoxNC4u'
     },
     {
+      short: 'microsoft-healthcare-madison.github.io',
+      description: 'About this software - Argonaut Subscriptions Reference Implementation',
+      link:'https://microsoft-healthcare-madison.github.io/argonaut-subscription-info/'
+    },
+    {
       short: 'build.fhir.org', 
       description: 'Current FHIR R5 Build branch (Subscription, SubscriptionTopic, etc.)', 
       link:'http://build.fhir.org/'
+    },
+    {
+      short: 'argonautproject.github.io', 
+      description: 'Draft Argonaut Subscription Backport (R5 to R4) IG', 
+      link:'https://argonautproject.github.io/subscription-backport-ig/'
     },
     {
       short: 'github.com',
@@ -371,7 +381,7 @@ export default function ConfigurationPane(props: ContentPaneProps) {
       </Button>
       <Switch
         checked={props.useBackportToR4}
-        label='Use Backport To R4 (Basic Resource)'
+        label='Use Backport To R4 (Argonaut Backport IG)'
         onChange={() => props.toggleUseBackportToR4(true)}
         />
       <Switch

@@ -1,4 +1,4 @@
-import { CapabilityStatementRestResource } from "./fhir_r4_selected";
+import { CapabilityStatementRestResource } from "./fhir_r4";
 
 export interface ConnectionInformation {
   name: string;

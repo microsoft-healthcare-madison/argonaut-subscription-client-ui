@@ -5,7 +5,7 @@ import {
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
-import * as fhir from '../../models/fhir_r4_selected';
+import * as fhir from '../../models/fhir_r4';
 import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import PatientSearchMultiCard from './PatientSearchCardMulti';
 

@@ -22,7 +22,7 @@ import ScenarioPane2 from './scenario2/ScenarioPane2';
 import { ApiHelper, ApiResponse } from '../util/ApiHelper';
 import { ClientHostRegistration } from '../models/ClientHostRegistration';
 
-import * as fhir from '../models/fhir_r4_selected';
+import * as fhir from '../models/fhir_r4';
 import DevDaysPane from './devdays/DevDaysPane';
 
 /** tab configuration - MUST be in 'id' order - first tab is shown at launch */

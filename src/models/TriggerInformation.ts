@@ -1,5 +1,5 @@
 import { TriggerRequest } from "./TriggerRequest";
-import * as fhir from './fhir_r4_selected';
+import * as fhir from './fhir_r4';
 
 // export enum TriggerStatuses {
 //   Unknown = 0,

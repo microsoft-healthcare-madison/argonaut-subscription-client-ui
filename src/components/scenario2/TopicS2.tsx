@@ -5,11 +5,11 @@ import {
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { DataCardInfo } from '../../models/DataCardInfo';
-import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
-import * as fhir from '../../models/fhir_r4_selected';
-import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
+import * as fhir from '../../models/fhir_r5';
+import { SingleRequestData } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
+import { TopicHelper, TopicReturn } from '../../util/TopicHelper';
 
 export interface TopicS2Props {
   paneProps: ContentPaneProps,
@@ -33,118 +33,54 @@ export default function TopicS2(props: TopicS2Props) {
 
   /** Handle user requests to get a topic list */
   async function handleGetTopicListClick() {
-    // **** update our state to show we are busy ****
-
+    // update our state to show we are busy
     props.updateStatus({...props.status, busy: true});
 
-    // **** construct the registration REST url ****
+    let topicReturn:TopicReturn = await TopicHelper.GetTopics(
+      props.paneProps.useBackportToR4,
+      props.paneProps.fhirServerInfo
+    );
 
-    let url: string = props.paneProps.useBackportToR4
-      ? new URL('Basic?code=R5SubscriptionTopic', props.paneProps.fhirServerInfo.url).toString()
-      : new URL('SubscriptionTopic', props.paneProps.fhirServerInfo.url).toString();
-
-    // **** attempt to get the list of Topics ****
-
-    try {
-      let response:ApiResponse<fhir.Bundle> = await ApiHelper.apiGetFhir(
-        url,
-        props.paneProps.fhirServerInfo.authHeaderContent
-      );
-
-      if (!response.value) {
-        // **** build data for display ****
-
-        let data: SingleRequestData[] = [
-          {
-            name: 'SubscriptionTopic Search',
-            id: 'subscriptiontopic_search', 
-            requestUrl: url,
-            responseData: `Request for SubscriptionTopic (${url}) failed:\n` +
-            `${response.statusCode} - "${response.statusText}"\n` +
-            `${response.body}`,
-          responseDataType: RenderDataAsTypes.Error,
-          outcome: response.outcome ? JSON.stringify(response.outcome, null, 2) : undefined,
-          }
-        ];
-
-        props.setData(data);
-        props.updateStatus({available: true, complete: false, busy: false});
-        return;
-      }
-
-      // **** find the 'admission' topic ****
-
-      let admissionTopic:fhir.SubscriptionTopic|undefined = undefined;
+    if (topicReturn.success) {
+      // find the 'encounter-start' topic
       let topicInfo: string = '';
 
-      if (response.value.entry) {
-        response.value.entry.forEach((entry) => {
-          if (!entry.resource) return;
+      topicReturn.topics!.forEach((topic) => {
+        let isEncounterStart:Boolean = (topic.url === 'http://argonautproject.org/encounters-ig/SubscriptionTopic/encounter-start');
 
-          let topic:fhir.SubscriptionTopic = props.paneProps.useBackportToR4
-            ? JSON.parse((entry.resource as fhir.Basic).extension![0].valueString!)
-            : entry.resource as fhir.SubscriptionTopic;
-
-            let isEncounterStart:Boolean = (topic.url === 'http://argonautproject.org/encounters-ig/SubscriptionTopic/encounter-start');
-
-            if ((!isEncounterStart) && (topic.derivedFromCanonical) && (topic.derivedFromCanonical.length > 0)) {
-              topic.derivedFromCanonical!.forEach((canonical) => {
-                if (canonical === 'http://argonautproject.org/encounters-ig/SubscriptionTopic/encounter-start') {
-                  isEncounterStart = true;
-                }
-              })
+        // TODO: May2020 build still has `derivedFromCanonical` instead of `derivedFrom`
+        if ((!isEncounterStart) && (topic.derivedFromCanonical) && (topic.derivedFromCanonical.length > 0)) {
+          topic.derivedFromCanonical!.forEach((canonical) => {
+            if (canonical === 'http://argonautproject.org/encounters-ig/SubscriptionTopic/encounter-start') {
+              isEncounterStart = true;
             }
-  
-            if (isEncounterStart) {
-              admissionTopic = topic;
-              props.setTopic(topic);
-              topicInfo = topicInfo + 
-                `- SubscriptionTopic/${topic.id}\n` +
-                `\tURL:         ${topic.url}\n` +
-                `\tTitle:       ${topic.title}\n` +
-                `\tDescription: ${topic.description}\n`;
-          }
-        });
-      }
-
-      // **** build data for display ****
-
-      let data: SingleRequestData[] = [
-        {
-          name: 'SubscriptionTopic Search',
-          id: 'subscriptiontopic_search', 
-          requestUrl: url,
-          responseData: JSON.stringify(response.value, null, 2),
-          responseDataType: RenderDataAsTypes.FHIR,
-          outcome: response.outcome ? JSON.stringify(response.outcome, null, 2) : undefined,
-          info: admissionTopic ? topicInfo : undefined,
+          })
         }
-      ];
 
-      // **** update data ****
+        if (isEncounterStart) {
+          props.setTopic(topic);
+          topicInfo = topicInfo + 
+            `- Encounter-Start found!\n`+
+            `\tId:          SubscriptionTopic/${topic.id}\n` +
+            `\tURL:         ${topic.url}\n` +
+            `\tTitle:       ${topic.title}\n` +
+            `\tDescription: ${topic.description}\n`;
+        }
+      });
 
-      props.setData(data);
+      topicReturn.data.info = topicInfo;
 
-      // **** update our step (completed) ****
+      // update data
+      props.setData([topicReturn.data]);
 
+      // update our step (completed)
       props.updateStatus({available: true, complete: true, busy: false});
 
-    } catch (err) {
-      // **** build data for display ****
-
-      let data: SingleRequestData[] = [
-        {
-          name: 'SubscriptionTopic Search',
-          id: 'subscriptiontopic_search', 
-          requestUrl: url,
-          responseData: `Failed to get SubscriptionTopic list from: ${url}:\n${err}`,
-          responseDataType: RenderDataAsTypes.Error
-        }
-      ];
-
-      props.setData(data);
-      props.updateStatus({available: true, complete: false, busy: false});
+      return;
     }
+
+    props.setData([topicReturn.data]);
+    props.updateStatus({available: true, complete: false, busy: false});
   }
 
   /** Return this component */

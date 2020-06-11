@@ -5,7 +5,7 @@ import {
   Elevation, NonIdealState, H3, Text,
 } from '@blueprintjs/core';
 
-import * as fhir from '../../models/fhir_r4_selected';
+import * as fhir from '../../models/fhir_r5';
 import {IconNames} from "@blueprintjs/icons";
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { DataCardStatus } from '../../models/DataCardStatus';
@@ -20,6 +20,7 @@ import { DevDaysLanguageInfo } from '../../models/DevDaysLanguageInfo';
 import StartLocalDevDays from './StartLocalDevDays';
 import NpmInstallDevDays from './NpmInstallDevDays';
 import ChangeDirectoryDevDays from './ChangeDirectory';
+import { NotificationHelper, NotificationReturn } from '../../util/NotificationHelper';
 
 export default function DevDaysPane(props: ContentPaneProps) {
 
@@ -128,117 +129,41 @@ export default function DevDaysPane(props: ContentPaneProps) {
 
 	/** Callback function to process ClientHost messages */
 	function handleHostMessage(message: string) {
-		// **** vars we want ****
-
-		let eventCount: number = NaN;
-		let bundleEventCount: number = NaN;
-		let status: string = '';
-		let topicUrl: string = '' ;
-		let subscriptionUrl: string = '';
-
-		let bundle: fhir.Bundle;
-		let notificationType:string = '';
-		
-		// **** check for a ping ****
-
+		// check for an R4-Websocket ping
 		if (message.startsWith('ping')) {
 			return;
 		}
 
-		// **** resolve this message into a bundle ****
+		// attempt to parse into a bundle
+		let notificationReturn:NotificationReturn = NotificationHelper.ParseNotificationMessage(
+			props.useBackportToR4,
+			message
+		);
 
-		try {
-			bundle = JSON.parse(message);
-		} catch(error) {
-			// **** assume non-bundle message got through ****
+		if (!notificationReturn.success) {
+			// ignore
 			return;
 		}
 
-		// **** attempt to forward this to a local client ****
-
+		// attempt to forward this to a local client
 		forwardNotificationToLocalhost('http://localhost:32019/notification', message);
-
-		switch (bundle.type) {
-			case fhir.BundleTypeCodes.HISTORY:
-				if ((bundle) &&
-						(bundle.meta) &&
-						(bundle.meta.extension))
-				{
-					bundle.meta.extension.forEach(element => {
-						if (element.url.endsWith('subscription-event-count')) {
-							eventCount = element.valueUnsignedInt!;
-						} else if (element.url.endsWith('bundle-event-count')) {
-							bundleEventCount = element.valueUnsignedInt!;
-						} else if (element.url.endsWith('subscription-status')) {
-							status = element.valueString!;
-						} else if (element.url.endsWith('subscription-topic-url')) {
-							topicUrl = element.valueUrl!;
-						} else if (element.url.endsWith('subscription-url')) {
-							subscriptionUrl = element.valueUrl!;
-						}
-					});
-				}
-			break;
-
-			case fhir.BundleTypeCodes.SUBSCRIPTION_NOTIFICATION:
-				if ((bundle) &&
-						(bundle.entry) &&
-						(bundle.entry[0]) &&
-						(bundle.entry[0].resource))
-				{
-					let subscriptionStatus = bundle.entry[0].resource as fhir.SubscriptionStatus;
-
-					if (subscriptionStatus.eventsSinceSubscriptionStart) {
-						eventCount = Number(subscriptionStatus.eventsSinceSubscriptionStart!);
-					}
-
-					if (subscriptionStatus.eventsInNotification) {
-						bundleEventCount = Number(subscriptionStatus.eventsInNotification!);
-					}
-
-					if (subscriptionStatus.status) {
-						status = subscriptionStatus.status!;
-					}
-
-					if ((subscriptionStatus.topic) && (subscriptionStatus.topic.reference)) {
-						topicUrl = subscriptionStatus.topic.reference!;
-					}
-
-					if (subscriptionStatus.subscription.reference) {
-						subscriptionUrl = subscriptionStatus.subscription.reference!;
-					}
-
-					notificationType = subscriptionStatus.notificationType;
-					if (notificationType === fhir.SubscriptionStatusNotificationTypeCodes.HANDSHAKE) {
-						eventCount = 0;
-						bundleEventCount = 0;
-					} else if (notificationType === fhir.SubscriptionStatusNotificationTypeCodes.HEARTBEAT) {
-						bundleEventCount = 0;
-					}
-				}
-			break;
-		}
-
-		// **** add to our display ****
 
 		let rec:SingleRequestData = {
 			id:`event_${notificationData.length}`, 
 			name: `Notification #${notificationData.length}`,
-			responseData: JSON.stringify(bundle, null, 2),
+			responseData: JSON.stringify(notificationReturn.bundle, null, 2),
 			responseDataType: RenderDataAsTypes.FHIR,
-			info: `${(eventCount === 0) ? 'Handshake' : 'Notification'} #${notificationData.length}:\n`+
-				`\tSubscriptionTopic: ${topicUrl}\n` +
-				`\tSubscription:      ${subscriptionUrl}\n` +
-				`\tStatus:            ${status}\n` +
-				`\tBundle Events:     ${bundleEventCount}\n`+
-				`\tTotal Events:      ${eventCount}`,
+			info: `Notification #${notificationData.length}:\n`+
+				`\tSubscription:      ${notificationReturn.subscriptionUrl}\n` +
+				`\tSubscriptionTopic: ${notificationReturn.topicUrl}\n` +
+				`\tType:              ${notificationReturn.notificationType}\n` +
+				`\tStatus:            ${notificationReturn.status}\n` +
+				`\tBundle Events:     ${notificationReturn.bundleEventCount}\n`+
+				`\tTotal Events:      ${notificationReturn.eventCount}`,
 		}
 
 		let data: SingleRequestData[] = notificationData.slice();
 		data.push(rec);
-
-		// **** update our state ****
-
 		setNotificationData(data);
 	}
 

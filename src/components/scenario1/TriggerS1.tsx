@@ -9,7 +9,8 @@ import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
-import * as fhir from '../../models/fhir_r4_selected';
+import * as fhir from '../../models/fhir_r5';
+import * as ValueSet from '../../models/fhir_VS';
 
 export interface TriggerS1Props {
   paneProps: ContentPaneProps,
@@ -164,7 +165,7 @@ export default function TriggerS1(props: TriggerS1Props) {
           onChange={handleEncounterClassChange}
           value={encounterClass}
           >
-          { Object.values(fhir.v3_ActEncounterCode).map((value) => (
+          { Object.values(ValueSet.v3_ActEncounterCode).map((value) => (
             <option key={value.code} value={value.code}>{value.display}</option>
               ))}
         </HTMLSelect>

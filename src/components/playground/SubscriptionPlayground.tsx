@@ -10,10 +10,12 @@ import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import { EndpointRegistration } from '../../models/EndpointRegistration';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
-import * as fhir from '../../models/fhir_r4_selected';
+import * as fhir from '../../models/fhir_r5';
+import * as ValueSet from '../../models/fhir_VS';
 import SubscriptionFilters from './SubscriptionFilters';
 import { IconNames } from '@blueprintjs/icons';
 import ResourceSearchMultiCard from '../common/ResourceSarchCardMulti';
+import { SubscriptionHelper, SubscriptionReturn } from '../../util/SubscriptionHelper';
 
 export interface SubscriptionPlaygroundProps {
   paneProps: ContentPaneProps,
@@ -122,12 +124,6 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
   async function createSubscription() {
     props.updateStatus({...props.status, busy: true});
 
-		// **** build the url for our call ***
-
-    let url: string = props.paneProps.useBackportToR4
-      ? new URL('Basic', props.paneProps.fhirServerInfo.url).toString()
-      : new URL('Subscription', props.paneProps.fhirServerInfo.url).toString();
-
     let header: string[] = (headers)
       ? headers.split(',')
       : [];
@@ -135,38 +131,33 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 		var expirationTime:Date = new Date();
 		expirationTime.setHours(expirationTime.getHours() + 1);
 
-    let topicResource: string = props.paneProps.useBackportToR4
-      ? 'Basic'
-      : 'SubscriptionTopic';
-
     let endpoint:string;
     let channelCoding:fhir.Coding;
     let contentType:string = 'application/fhir+json';
 
-    // **** determine the endpoint type ****
-
+    // determine the endpoint type
     switch (channelType) {
-      case fhir.SubscriptionChannelTypeValues.rest_hook.code!:
+      case 'rest-hook':
         if (props.endpoints.length === 0) {
           props.paneProps.toaster('Invalid selection', IconNames.ERROR, 1000);
           props.updateStatus({...props.status, busy: false});
           return;
         } else if (endpointIndex < 0) {
           endpoint = new URL(`Endpoints/${props.endpoints[props.endpoints.length-1].uid}`, props.paneProps.clientHostInfo.url).toString();
-          channelCoding = fhir.SubscriptionChannelType.rest_hook;
+          channelCoding = ValueSet.SubscriptionChannelType.rest_hook;
         } else {
           endpoint = new URL(`Endpoints/${props.endpoints[endpointIndex].uid}`, props.paneProps.clientHostInfo.url).toString();
-          channelCoding = fhir.SubscriptionChannelType.rest_hook;
+          channelCoding = ValueSet.SubscriptionChannelType.rest_hook;
         }
         break;
-      case fhir.SubscriptionChannelTypeValues.websocket.code!:
+      case 'websocket':
         endpoint = '';
-        channelCoding = fhir.SubscriptionChannelType.websocket;
+        channelCoding = ValueSet.SubscriptionChannelType.websocket;
         break;
-      case fhir.SubscriptionChannelTypeValues.email.code!:
+      case 'email':
         endpoint = emailAddress;
         contentType = emailMimeType;
-        channelCoding = fhir.SubscriptionChannelType.email;
+        channelCoding = ValueSet.SubscriptionChannelType.email;
         break;
       default:
         endpoint = '';
@@ -174,8 +165,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         break;
     }
       
-		// **** build the subscription object ****
-
+		// build the subscription object
 		let subscription: fhir.Subscription = {
       resourceType: 'Subscription',
       endpoint: endpoint,
@@ -184,7 +174,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       content: payloadType,
       contentType: contentType,
 			end: getInstantFromDate(expirationTime),
-			topic: {reference:  `${topicResource}/${props.topics[topicIndex].id!}`},
+			topic: {reference:  `${props.topics[topicIndex].url!}`},
 			reason: 'Client Testing',
 			status: 'requested',
     }
@@ -197,243 +187,71 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       subscription.filterBy = filters;
     }
 
-    // **** try to create the subscription ****
+    // try to create the subscription
+    let subscriptionReturn:SubscriptionReturn = await SubscriptionHelper.CreateSubscription(
+      props.paneProps.useBackportToR4,
+      props.paneProps.fhirServerInfo,
+      subscription,
+      props.topics[topicIndex],
+    );
 
-    try {
-      var response: ApiResponse<fhir.Subscription> | ApiResponse<fhir.Basic>;
-      let requestResource:fhir.Basic|fhir.Subscription;
+    // fix the subscription record name
+    let updated: SingleRequestData = {...subscriptionReturn.data,
+      name: `Subscription #${props.data.length}`,
+    };
+    
+    let updatedData: SingleRequestData[] = props.data.slice();
+    updatedData.push(updated);
+    props.setData(updatedData);
 
-      if (props.paneProps.useBackportToR4) {
-        // **** wrap in basic ****
-
-        requestResource = {
-          resourceType: 'Basic',
-          code: {
-            coding: [{
-              code: 'R5Subscription',
-              display: 'Backported R5 Subscription',
-              system: 'http://hl7.org/fhir/resource-types',
-            }]
-          },
-          extension: [{
-            url: 'http://hl7.org/fhir/StructureDefinition/json-embedded-resource',
-            valueString: JSON.stringify(subscription)
-          }]
-        }
-
-        response = await ApiHelper.apiPostFhir<fhir.Basic>(
-          url,
-          requestResource,
-          props.paneProps.fhirServerInfo.authHeaderContent,
-          props.paneProps.fhirServerInfo.preferHeaderContent
-          );
-      } else {
-        requestResource = subscription;
-
-        response = await ApiHelper.apiPostFhir<fhir.Subscription>(
-          url,
-          requestResource,
-          props.paneProps.fhirServerInfo.authHeaderContent,
-          props.paneProps.fhirServerInfo.preferHeaderContent
-          );
-      }
-      
-      if (response.value) {
-        // **** show the client subscription information ****
-
-        let updated: SingleRequestData = {
-          name: `Subscription #${props.data.length}`,
-          id: 'create_subscription',
-          requestUrl: url, 
-          requestData: JSON.stringify(requestResource, null, 2),
-          requestDataType: RenderDataAsTypes.FHIR,
-          responseData: response.value ? JSON.stringify(response.value, null, 2) : response.body,
-          responseDataType: response.value ? RenderDataAsTypes.FHIR : RenderDataAsTypes.Text,
-          outcome: response.outcome ? JSON.stringify(response.outcome, null, 2) : undefined,
-          };
-        
-        let updatedData: SingleRequestData[] = props.data.slice();
-        updatedData.push(updated);
-        props.setData(updatedData);
-        
-        // **** register this subscription (updates status) ****
-
-        if (props.paneProps.useBackportToR4) {
-          props.registerSubscription(JSON.parse((response.value! as fhir.Basic).extension![0].valueString!));
-        } else {
-          props.registerSubscription(response.value! as fhir.Subscription);
-        }
-
-        // **** done ****
-        return;
-      }
-
-      // **** show the client subscription information ****
-
-      let updated: SingleRequestData = {
-        name: `Subscription #${props.data.length}`,
-        id: 'create_subscription',
-        requestUrl: url, 
-        requestData: JSON.stringify(subscription, null, 2),
-        requestDataType: RenderDataAsTypes.FHIR,
-        responseData: `Request for Subscription (${url}) failed:\n` +
-          `${response.statusCode} - "${response.statusText}"\n` +
-          `${response.body}`,
-        responseDataType: RenderDataAsTypes.Error,
-        outcome: response.outcome ? JSON.stringify(response.outcome, null, 2) : undefined,
-        };
-
-      let updatedData: SingleRequestData[] = props.data.slice();
-      updatedData.push(updated);
-      props.setData(updatedData);
-      
+    if (subscriptionReturn.subscription) {
+      // register this subscription (updates status)
+      props.registerSubscription(subscriptionReturn.subscription);
+    } else {
       props.updateStatus({...props.status, busy: false});
-
-      // **** done ****
-
-      return;
-    } catch (err) {
-      // **** show the client subscription information ****
-
-      let updated: SingleRequestData = {
-        name: `Subscription #${props.data.length}`,
-        id: 'create_subscription',
-        requestUrl: url, 
-        requestData: JSON.stringify(subscription, null, 2),
-        requestDataType: RenderDataAsTypes.FHIR,
-        responseData: `Request for Subscription (${url}) failed:\n${err}`,
-        responseDataType: RenderDataAsTypes.Error
-        };
-
-      let updatedData: SingleRequestData[] = props.data.slice();
-      updatedData.push(updated);
-      props.setData(updatedData);
-
-      props.updateStatus({...props.status, busy: false});
-
-      // **** done ****
-
-      return;
     }
   }
   
   async function refreshSubscription(dataRowIndex: number) {
     props.updateStatus({...props.status, busy: true});
 
-		// **** build the url for our call ***
+    let subscriptionReturn:SubscriptionReturn = await SubscriptionHelper.RefreshSubscription(
+      props.paneProps.useBackportToR4,
+      props.paneProps.fhirServerInfo,
+      props.subscriptions[dataRowIndex]);
 
-    let url: string = props.paneProps.useBackportToR4
-      ? new URL(`Basic/${props.subscriptions[dataRowIndex].id!}`, props.paneProps.fhirServerInfo.url).toString()
-      : new URL(`Subscription/${props.subscriptions[dataRowIndex].id!}`, props.paneProps.fhirServerInfo.url).toString();
+    // fix the subscription record name
+    let updated: SingleRequestData = {...subscriptionReturn.data,
+      name: `Subscription #${dataRowIndex}`,
+    };
 
-    // **** update the status on this subscription ****
-    
-    try {
-      var response: ApiResponse<fhir.Subscription> | ApiResponse<fhir.Basic>;
 
-      if (props.paneProps.useBackportToR4) {
-        response = await ApiHelper.apiGet<fhir.Basic>(
-          url,
-          props.paneProps.fhirServerInfo.authHeaderContent,
-          );
-      } else {
-        response = await ApiHelper.apiGet<fhir.Subscription>(
-          url,
-          props.paneProps.fhirServerInfo.authHeaderContent,
-          );
-      }
-      
-      if (!response.value) {
-        // **** show the client error information ****
-
-        let updated: SingleRequestData = {...props.data[0],
-          requestUrl: url, 
-          responseData: `Request for Subscription (${url}) failed:\n` +
-            `${response.statusCode} - "${response.statusText}"\n` +
-            `${response.body}`,
-          responseDataType: RenderDataAsTypes.Error,
-          };
-
-        props.setData([updated]);
-        props.updateStatus({...props.status, busy: false});
-
-        return;
-      }
-
-      // **** show the client subscription information ****
-
-      let updated: SingleRequestData = {...props.data[0],
-        responseData: JSON.stringify(response.value, null, 2),
-        responseDataType: RenderDataAsTypes.FHIR,
-        };
-
-      let updatedData: SingleRequestData[] = props.data.slice();
-      updatedData.splice(dataRowIndex, 1, updated);
-      props.setData(updatedData);
-      
-      props.updateStatus({...props.status, busy:false});
-
-      // **** done ****
-
-      return;
-    } catch (err) {
-      // **** show the client subscription information ****
-
-      let updated: SingleRequestData = {
-        name: `Subscription #${dataRowIndex}`,
-        id: 'create_subscription',
-        requestUrl: url, 
-        responseData: `Request for Subscription (${url}) failed:\n${err}`,
-        responseDataType: RenderDataAsTypes.Error
-        };
-
-      let updatedData: SingleRequestData[] = props.data.slice();
-      updatedData.splice(dataRowIndex, 1, updated);
-      props.setData(updatedData);
-      props.updateStatus({...props.status, busy: false});
-    }
+    let updatedData: SingleRequestData[] = props.data.slice();
+    updatedData.splice(dataRowIndex, 1, updated);
+    props.setData(updatedData);
+    props.updateStatus({...props.status, busy: false});
   }
 
   async function deleteSubscription(dataRowIndex: number) {
     props.updateStatus({...props.status, busy: true});
 
-		// **** build the url for our call ***
-
-    let url: string = props.paneProps.useBackportToR4
-      ? new URL(`Basic/${props.subscriptions[dataRowIndex].id!}`, props.paneProps.fhirServerInfo.url).toString()
-      : new URL(`Subscription/${props.subscriptions[dataRowIndex].id!}`, props.paneProps.fhirServerInfo.url).toString();
-
-    // **** update the status on this subscription ****
-    
     try {
-      var response: ApiResponse<fhir.Subscription> | ApiResponse<fhir.Basic>;
+      ApiHelper.deleteSubscription(
+        props.subscriptions[dataRowIndex].id!,
+        props.paneProps.fhirServerInfo.url,
+        props.paneProps.useBackportToR4
+      );
 
-      if (props.paneProps.useBackportToR4) {
-        response = await ApiHelper.apiDelete<fhir.Basic>(
-          url,
-          props.paneProps.fhirServerInfo.authHeaderContent,
-          );
-      } else {
-        response = await ApiHelper.apiDelete<fhir.Subscription>(
-          url,
-          props.paneProps.fhirServerInfo.authHeaderContent,
-          );
-      }
-
-      // **** remove this subscription ****
-
+      // remove this subscription from the UI
       let updatedData: SingleRequestData[] = props.data.slice();
       updatedData.splice(dataRowIndex, 1);
       props.setData(updatedData);
 
       props.updateStatus({...props.status, busy:false});
 
-      // **** done ****
-
       return;
     } catch (err) {
-      // **** remove this subscription anyway ****
-
+      // remove the UI record anyway
       let updatedData: SingleRequestData[] = props.data.slice();
       updatedData.splice(dataRowIndex, 1);
       props.setData(updatedData);

@@ -9,7 +9,8 @@ import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
-import * as fhir from '../../models/fhir_r4_selected';
+import * as fhir from '../../models/fhir_r5';
+import * as ValueSet from '../../models/fhir_VS';
 
 export interface TriggerS2Props {
   paneProps: ContentPaneProps,
@@ -41,17 +42,15 @@ export default function TriggerS2(props: TriggerS2Props) {
   async function sendEncounter() {
     props.updateStatus({...props.status, busy: true});
 
-		// **** build the url for our call ***
-
+		// build the url for our call
     let url: string = new URL('Encounter?_format=json', props.paneProps.fhirServerInfo.url).toString();
 
-    // **** figure out our patient reference ****
-
+    // figure out our patient reference
     let patientRef: string = '';
 
     switch (selectedPatient) {
       case '_sequential':
-          if (lastPatientIndexRef.current >= props.groupPatientIds.length) {
+          if ((lastPatientIndexRef.current + 1) >= props.groupPatientIds.length) {
             lastPatientIndexRef.current = 0;
           } else {
             lastPatientIndexRef.current = lastPatientIndexRef.current + 1;
@@ -67,8 +66,7 @@ export default function TriggerS2(props: TriggerS2Props) {
         break;
     }
     
-		// **** build our encounter ****
-
+		// build our encounter
 		let encounter: fhir.Encounter = {
 			resourceType: "Encounter",
 			class: {
@@ -211,7 +209,7 @@ export default function TriggerS2(props: TriggerS2Props) {
           onChange={handleEncounterClassChange}
           value={encounterClass}
           >
-          { Object.values(fhir.v3_ActEncounterCode).map((value) => (
+          { Object.values(ValueSet.v3_ActEncounterCode).map((value) => (
             <option key={value.code} value={value.code}>{value.display}</option>
               ))}
         </HTMLSelect>

@@ -9,7 +9,8 @@ import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
-import * as fhir from '../../models/fhir_r4_selected';
+import * as fhir from '../../models/fhir_r4';
+import * as ValueSet from '../../models/fhir_VS';
 
 export interface EncountersPlaygroundProps {
   paneProps: ContentPaneProps,
@@ -39,17 +40,15 @@ export default function EncountersPlayground(props: EncountersPlaygroundProps) {
   async function sendEncounter() {
     props.updateStatus({...props.status, busy: true});
 
-		// **** build the url for our call ***
-
+		// build the url for our call
     let url: string = new URL('Encounter?_format=json', props.paneProps.fhirServerInfo.url).toString();
 
-    // **** figure out our patient reference ****
-
+    // figure out our patient reference
     let patientRef: string = '';
 
     switch (selectedPatient) {
       case '_sequential':
-          if (lastPatientIndexRef.current >= props.patientIds.length) {
+          if ((lastPatientIndexRef.current + 1) >= props.patientIds.length) {
             lastPatientIndexRef.current = 0;
           } else {
             lastPatientIndexRef.current = lastPatientIndexRef.current + 1;
@@ -65,8 +64,7 @@ export default function EncountersPlayground(props: EncountersPlaygroundProps) {
         break;
     }
     
-		// **** build our encounter ****
-
+		// build our encounter
 		let encounter: fhir.Encounter = {
 			resourceType: "Encounter",
 			class: {
@@ -79,8 +77,7 @@ export default function EncountersPlayground(props: EncountersPlaygroundProps) {
 			}
     }
 
-    // **** ask for this encounter to be created ****
-    
+    // ask for this encounter to be created    
     try {
       let response:ApiResponse<fhir.Encounter> = await ApiHelper.apiPostFhir<fhir.Encounter>(
         url,
@@ -90,8 +87,7 @@ export default function EncountersPlayground(props: EncountersPlaygroundProps) {
       );
 
       if (!response.value) {
-        // **** show the client subscription information ****
-
+        // show the client subscription information
         let updated: SingleRequestData = {
           name: 'Create Encounter',
           id: 'create_encounter',
@@ -110,8 +106,7 @@ export default function EncountersPlayground(props: EncountersPlaygroundProps) {
         return;
       }
 
-      // **** show the client encounter information ****
-
+      // show the client encounter information
       let updated: SingleRequestData = {
         name: 'Create Encounter',
         id: 'create_encounter',
@@ -126,8 +121,7 @@ export default function EncountersPlayground(props: EncountersPlaygroundProps) {
       props.setData([updated]);
       props.updateStatus({...props.status, busy: false});
     } catch (err) {
-      // **** show the client subscription information ****
-
+      // show the client subscription information
       let updated: SingleRequestData = {
         name: 'Create Encounter',
         id: 'create_encounter',
@@ -152,9 +146,7 @@ export default function EncountersPlayground(props: EncountersPlaygroundProps) {
 		setSelectedPatient(event.currentTarget.value);
   }
 
-
-  // **** check for NOT being allowed to create encounters
-  
+  // check for NOT being allowed to create encounters
   if (!props.paneProps.fhirServerInfo.supportsCreateEncounter) {
     return (
     <DataCard
@@ -207,7 +199,7 @@ export default function EncountersPlayground(props: EncountersPlaygroundProps) {
           onChange={handleEncounterClassChange}
           value={encounterClass}
           >
-          { Object.values(fhir.v3_ActEncounterCode).map((value) => (
+          { Object.values(ValueSet.v3_ActEncounterCode).map((value) => (
             <option key={value.code} value={value.code}>{value.display}</option>
               ))}
         </HTMLSelect>

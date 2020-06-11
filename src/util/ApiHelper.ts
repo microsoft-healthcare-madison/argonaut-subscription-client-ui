@@ -1,11 +1,11 @@
-import * as fhir from "../models/fhir_r4_selected";
+import * as fhir5 from "../models/fhir_r5";
 
 export interface ApiResponse<T> {
   statusCode?: number;
   statusText?: string;
   body?: string;
   value?: T;
-  outcome?: fhir.OperationOutcome;
+  outcome?: fhir5.OperationOutcome;
   error?: any;
 }
 
@@ -26,12 +26,11 @@ export class ApiHelper {
       let body: string = await response.text();
       let typed: T|undefined = undefined;
 
-      // **** attempt Typed parse ****
-
+      // attempt Typed parse
       try {
         typed = JSON.parse(body);
       } catch (parseError) {
-        // **** ignore ****
+        // ignore
       }
       return {
         statusCode: response.status,
@@ -47,10 +46,14 @@ export class ApiHelper {
     }
   }
 
-  static async apiGetFhir<T>(url: string, authHeader?: string): Promise<ApiResponse<T>> {
+  static async apiGetFhir<T>(url: string, authHeader?: string, fhirVersion?: string): Promise<ApiResponse<T>> {
     try {
       let headers: Headers = new Headers();
-      headers.append('Accept', 'application/fhir+json');
+      if (fhirVersion) {
+        headers.append('Accept', `application/fhir+json; fhirVersion=${fhirVersion}`);
+      } else {
+        headers.append('Accept', 'application/fhir+json');
+      }
       if (authHeader) {
         headers.append('Authorization', authHeader);
       }
@@ -61,10 +64,9 @@ export class ApiHelper {
       });
       let body: string = await response.text();
       let typed: T|undefined = undefined;
-      let outcome: fhir.OperationOutcome|undefined = undefined;
+      let outcome: fhir5.OperationOutcome|undefined = undefined;
 
-      // **** attempt typed parses ****
-
+      // attempt typed parses
       try {
         let parsed:any = JSON.parse(body);
         if ((parsed.resourceType) && (parsed.resourceType !== 'OperationOutcome')) {
@@ -74,7 +76,7 @@ export class ApiHelper {
           outcome = parsed;
         }
       } catch (parseError) {
-        // **** ignore ****
+        // ignore
       }
       
       return {
@@ -108,12 +110,11 @@ export class ApiHelper {
       let body: string = await response.text();
       let typed: T|undefined = undefined;
 
-      // **** attempt Typed parse ****
-
+      // attempt Typed parse
       try {
         typed = JSON.parse(body);
       } catch (parseError) {
-        // **** ignore ****
+        // ignore
       }
       return {
         statusCode: response.status,
@@ -129,10 +130,14 @@ export class ApiHelper {
     }
   }
 
-  static async apiPostFhir<T>(url:string, data:T, authHeader?:string, preferHeader?:string): Promise<ApiResponse<T>> {
+  static async apiPostFhir<T>(url:string, data:T, authHeader?:string, preferHeader?:string, fhirVersion?: string): Promise<ApiResponse<T>> {
     try {
       let headers: Headers = new Headers();
-      headers.append('Accept', 'application/fhir+json');
+      if (fhirVersion) {
+        headers.append('Accept', `application/fhir+json; fhirVersion=${fhirVersion}`);
+      } else {
+        headers.append('Accept', 'application/fhir+json');
+      }
       headers.append('Content-Type', 'application/fhir+json;charset=utf-8');
       if (authHeader) {
         headers.append('Authorization', authHeader);
@@ -151,10 +156,9 @@ export class ApiHelper {
       let location:string|null = response.headers.has('Location') ? response.headers.get('Location') : null;
       let body: string = await response.text();
       let typed: T|undefined = undefined;
-      let outcome: fhir.OperationOutcome|undefined = undefined;
+      let outcome: fhir5.OperationOutcome|undefined = undefined;
 
-      // **** attempt typed parse ****
-
+      // attempt typed parse
       try {
         let parsed:any = JSON.parse(body);
         if ((parsed) && (parsed.resourceType) && (parsed.resourceType !== 'OperationOutcome')) {
@@ -164,24 +168,21 @@ export class ApiHelper {
           outcome = parsed;
         }
       } catch (parseError) {
-        // **** ignore ****
+        // ignore
       }
 
-      // **** check for not having data and having a location header ****
-
+      // check for not having data and having a location header
       if ((!typed) && (location)) {
-        // **** perform our get ****
-
+        // perform our get
         try {
           let getResponse: ApiResponse<T> = await this.apiGetFhir<T>(location!, authHeader);
           typed = getResponse.value;
         } catch (getError) {
-          // **** ignore errors here for now ****
+          // ignore errors here for now
         }
       }
 
-      // **** return our info ****
-      
+      // return our info     
       return {
         statusCode: response.status,
         statusText: response.statusText,
@@ -217,10 +218,9 @@ export class ApiHelper {
       });
       let body: string = await response.text();
       let typed: T|undefined = undefined;
-      let outcome: fhir.OperationOutcome|undefined = undefined;
+      let outcome: fhir5.OperationOutcome|undefined = undefined;
 
-      // **** attempt typed parse ****
-
+      // attempt typed parse
       try {
         let parsed:any = JSON.parse(body);
         if ((parsed.resourceType) && (parsed.resourceType !== 'OperationOutcome')) {
@@ -230,23 +230,20 @@ export class ApiHelper {
           outcome = parsed;
         }
       } catch (parseError) {
-        // **** ignore ****
+        // ignore
       }
 
-      // **** check for not having data and having a location header ****
-
+      // check for not having data and having a location header
       if ((!typed) && (response.headers.has('Location'))) {
-        // **** grab the location ****
-
+        // grab the location
         let location: string = response.headers.get('Location')!;
 
-        // **** perform our get ****
-
+        // perform our get
         try {
           let getResponse: ApiResponse<T> = await this.apiGetFhir<T>(location, authHeader);
           typed = getResponse.value;
         } catch (getError) {
-          // **** ignore errors here for now ****
+          // ignore errors here for now
         }
       }
       
@@ -281,12 +278,11 @@ export class ApiHelper {
       let body: string = await response.text();
       let typed: T|undefined = undefined;
 
-      // **** attempt Typed parse ****
-
+      // attempt Typed parse
       try {
         typed = JSON.parse(body);
       } catch (parseError) {
-        // **** ignore ****
+        // ignore
       }
       return {
         statusCode: response.status,
@@ -317,12 +313,11 @@ export class ApiHelper {
       let body: string = await response.text();
       let typed: T|undefined = undefined;
 
-      // **** attempt Typed parse ****
-
+      // attempt Typed parse
       try {
         typed = JSON.parse(body);
       } catch (parseError) {
-        // **** ignore ****
+        // ignore
       }
 
       return {
@@ -340,10 +335,14 @@ export class ApiHelper {
   }
 
   
-  static async apiDeleteFhir<T>(url:string, authHeader?:string, preferHeader?:string): Promise<ApiResponse<T>> {
+  static async apiDeleteFhir<T>(url:string, authHeader?:string, preferHeader?:string, fhirVersion?:string): Promise<ApiResponse<T>> {
     try {
       let headers: Headers = new Headers();
-      headers.append('Accept', 'application/fhir+json');
+      if (fhirVersion) {
+        headers.append('Accept', `application/fhir+json; fhirVersion=${fhirVersion}`);
+      } else {
+        headers.append('Accept', 'application/fhir+json');
+      }
       headers.append('Content-Type', 'application/fhir+json;charset=utf-8');
       if (authHeader) {
         headers.append('Authorization', authHeader);
@@ -359,10 +358,9 @@ export class ApiHelper {
       });
       let body: string = await response.text();
       let typed: T|undefined = undefined;
-      let outcome: fhir.OperationOutcome|undefined = undefined;
+      let outcome: fhir5.OperationOutcome|undefined = undefined;
 
-      // **** attempt Typed parse ****
-
+      // attempt Typed parse
       try {
         let parsed:any = JSON.parse(body);
         if ((parsed.resourceType) && (parsed.resourceType !== 'OperationOutcome')) {
@@ -372,7 +370,7 @@ export class ApiHelper {
           outcome = parsed;
         }
       } catch (parseError) {
-        // **** ignore ****
+        // ignore
       }
 
       return {
@@ -390,10 +388,8 @@ export class ApiHelper {
     }
   }
 
-  static urlForSubscription(id:string, serverUrl:string, useBasic: boolean):string {
-    return useBasic
-      ? new URL(`Basic/${encodeURIComponent(id)}`, serverUrl).toString()
-      : new URL(`Subscription/${encodeURIComponent(id)}`, serverUrl).toString();
+  static urlForSubscription(id:string, serverUrl:string):string {
+    return new URL(`Subscription/${encodeURIComponent(id)}`, serverUrl).toString();
   }
 
   static urlForEndpoint(clientRegistration:string, id:string, clientHostUrl:string):string {
@@ -403,19 +399,19 @@ export class ApiHelper {
       ).toString();
   }
 
-  static deleteSubscription(id: string, serverUrl: string, useBasic: boolean) {
+  static deleteSubscription(id: string, serverUrl: string, useR4: boolean) {
     if (!(id) || (id === '')) { return; }
     if (!(serverUrl) || (serverUrl === '')) { return; }
 
-		// **** build url to remove the subscription ****
+		// build url to remove the subscription
+    let url:string = new URL(`Subscription/${encodeURIComponent(id)}`, serverUrl).toString();
 
-    let url:string = useBasic
-      ? new URL(`Basic/${encodeURIComponent(id)}`, serverUrl).toString()
-      : new URL(`Subscription/${encodeURIComponent(id)}`, serverUrl).toString();
-
-		// **** ask for this subscription to be deleted ****
-
-		ApiHelper.apiDelete(url);
+    // ask for this subscription to be deleted
+    if (useR4) {
+      ApiHelper.apiDeleteFhir(url, '4.0');
+    } else {
+      ApiHelper.apiDeleteFhir(url);
+    }
   }
 
   static deleteEndpoint(clientRegistration: string, id: string, clientHostUrl: string) {
@@ -423,15 +419,13 @@ export class ApiHelper {
     if (!(id) || (id === '')) { return; }
     if (!(clientHostUrl) || (clientHostUrl === '')) { return; }
 
-		// **** build the URL to delete the endpoint ****
-
+		// build the URL to delete the endpoint
 		let url: string = new URL(
 			`api/Clients/${encodeURIComponent(clientRegistration)}/Endpoints/${encodeURIComponent(id)}/`, 
 			clientHostUrl
       ).toString();
       
-    // **** ask for this endpoint to be deleted ****
-
+    // ask for this endpoint to be deleted
 		ApiHelper.apiDelete(url);
   }
 }
