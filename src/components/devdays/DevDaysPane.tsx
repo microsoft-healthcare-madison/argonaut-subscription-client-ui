@@ -70,7 +70,7 @@ export default function DevDaysPane(props: ContentPaneProps) {
 	};
 
 	const _languageInfoJsTunnel: DevDaysLanguageInfo = {
-		cloneCommand: 'git clone --branch tunnel https://github.com/microsoft-healthcare-madison/devdays-2019-subscription-node.git',
+		cloneCommand: 'git clone https://github.com/microsoft-healthcare-madison/devdays-2019-subscription-node.git',
 		directoryName: 'devdays-2019-subscription-node',
 		endpointLineFilename: 'app.js',
 		endpointLineNumber: 11,
