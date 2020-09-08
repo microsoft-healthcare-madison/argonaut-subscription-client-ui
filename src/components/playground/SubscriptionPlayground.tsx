@@ -64,6 +64,8 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
   const [filterByMatchTypeIndex, setFilterByMatchTypeIndex] = useState<number>(-1);
   const [filterByValue, setFilterByValue] = useState<string>('');
 
+  const [manualFilterValue, setManualFilterValue] = useState<string>('');
+
   const [filters, setFilters] = useState<fhir.SubscriptionFilterBy[]>([]);
 
   const [resourceName, setResourceName] = useState<string>('');
@@ -122,6 +124,12 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
   }
   
   async function createSubscription() {
+    if ((props.paneProps.useBackportToR4) && 
+        (filters.length === 0)) {
+      props.paneProps.toaster('At least one filter is REQUIRED in backport mode', IconNames.ERROR, 1000);
+      return;
+    }
+
     props.updateStatus({...props.status, busy: true});
 
     let header: string[] = (headers)
@@ -268,7 +276,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
     if (!showSearchOverlay) {
       let name: string = '';
 
-      // **** determine our resource name ****
+      // determine our resource name
 
       if ((topicIndex < 0) || 
           (topicIndex >= props.topics.length)) {
@@ -303,7 +311,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         name = 'Group';
       }
 
-      // **** if there is no known resource name, disable for now ****
+      // if there is no known resource name, disable for now
 
       if (!name) {
         props.paneProps.toaster('Search is not YET available for this combination', IconNames.WARNING_SIGN);
@@ -316,43 +324,85 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
     setShowSearchOverlay(!showSearchOverlay);
   }
 
-  function addFilter() {
-    // **** sanity checks ****
+  function addManualFilter() {
+    if (manualFilterValue === '') {
+      props.paneProps.toaster('Cannot add empty filters!', IconNames.ERROR);
+      return;
+    }
 
+    let equalsIndex:number = manualFilterValue.indexOf('=');
+    let colonIndex:number = manualFilterValue.indexOf(':');
+
+    if ((equalsIndex === -1) && (colonIndex === -1)) {
+      props.paneProps.toaster('Invalid filter format!', IconNames.ERROR);
+      return;
+    }
+
+    let searchParamName:string;
+    let searchModifier:string;
+    let value:string;
+
+    if (colonIndex !== -1) {
+      searchParamName = manualFilterValue.substr(0, colonIndex);
+      searchModifier = manualFilterValue.substr(colonIndex +1, (equalsIndex - colonIndex) - 1);
+      value = manualFilterValue.substr(equalsIndex + 1);
+    } else {
+      searchParamName = manualFilterValue.substr(0, equalsIndex);
+      searchModifier = '=';
+      value = manualFilterValue.substr(equalsIndex + 1);
+    }
+    
+    let rec:fhir.SubscriptionFilterBy = {
+      searchParamName: searchParamName,
+      searchModifier: searchModifier,
+      value: value,
+    };
+
+    let updated: fhir.SubscriptionFilterBy[] = filters.slice();
+    updated.push(rec);
+
+    // figure out patient IDs to list for encounters
+    if ((rec.searchParamName === 'patient') && (rec.searchModifier === '=')) {
+      props.registerPatientId(rec.value);
+    }
+
+    if ((rec.searchParamName === 'patient') && (rec.searchModifier === 'in')) {
+      props.registerGroupId(rec.value);
+    }
+
+    // update state
+    setFilters(updated);
+    setManualFilterValue('');
+  }
+
+  function addFilter() {
+    // sanity checks
     if (filterByValue === '') {
         props.paneProps.toaster('Cannot add empty filters!', IconNames.ERROR);
         return;
     }
 
-    // **** create the filter object ****
-
+    // create the filter object
     let rec:fhir.SubscriptionFilterBy = {
       searchParamName: props.topics[topicIndex].canFilterBy![filterByIndex].searchParamName!,
       searchModifier: props.topics[topicIndex].canFilterBy![filterByIndex].searchModifier![filterByMatchTypeIndex],
       value: filterByValue,
     };
 
-    // **** add this filter ****
-
+    // add this filter
     let updated: fhir.SubscriptionFilterBy[] = filters.slice();
     updated.push(rec);
 
-    // **** figure out patient IDs to list for encounters ****
-
+    // figure out patient IDs to list for encounters
     if ((rec.searchParamName === 'patient') && (rec.searchModifier === '=')) {
-      // **** register this patient ID ****
-
       props.registerPatientId(rec.value);
     }
 
     if ((rec.searchParamName === 'patient') && (rec.searchModifier === 'in')) {
-      // **** register this group ID ****
-
       props.registerGroupId(rec.value);
     }
 
-    // **** update state ****
-
+    // update state
     setFilters(updated);
     setFilterByValue('');
   }
@@ -416,6 +466,10 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
   /** Process HTML events for filter balue (update state for managed) */
   function handleFilterByValueChange(event: React.ChangeEvent<HTMLInputElement>) {
     setFilterByValue(event.target.value);
+  }
+
+  function handleManualFilterValueChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setManualFilterValue(event.target.value);
   }
 
   /** Return this component */
@@ -582,6 +636,32 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
           </ControlGroup>
         </FormGroup>
       }
+      { ((topicIndex > -1) && (!props.topics[topicIndex].canFilterBy)) &&
+        <FormGroup
+          label='Filter by'
+          helperText={'Enter manual filters - Topic information is not available (backport limitation).' +
+            ' At least one filter is REQUIRED (R4 Subscription.criteria).' +
+            ' Multiple VALUES can be entered comma separated for OR joining.' +
+            ' Multiple FILTERS are joined with AND.'
+            }
+          labelFor='manual-filter'
+          >
+          <ControlGroup
+            id='manual-filter'
+            >
+            <InputGroup
+              id='manual-filter-value'
+              value={manualFilterValue}
+              onChange={handleManualFilterValueChange}
+              />
+            <Button
+              onClick={addManualFilter}
+              >
+              Add Filter
+            </Button>
+          </ControlGroup>
+        </FormGroup>
+      }
       <Overlay 
         isOpen={showSearchOverlay}
         onClose={toggleSearchOverlay}
@@ -605,6 +685,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       <SubscriptionFilters
         filters={filters}
         removeFilter={removeFilter}
+        useBackportToR4={props.paneProps.useBackportToR4}
         />
       <Button
         disabled={(!props.status.available) || 

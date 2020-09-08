@@ -76,12 +76,25 @@ export class TopicHelper {
           if (parameter.name !== 'subscription-topic-canonical') return;
 
           if (parameter.valueCanonical) {
+            let filters:fhir5.SubscriptionTopicCanFilterBy[]|undefined = undefined;
+
+            if ((parameter.valueCanonical === 'http://argonautproject.org/encounters-ig/SubscriptionTopic/encounter-start') ||
+                (parameter.valueCanonical === 'http://argonautproject.org/encounters-ig/SubscriptionTopic/encounter-end')) {
+              filters = [];
+              filters.push({
+                documentation: 'Exact match to a patient resource (reference)',
+                searchParamName: 'patient',
+                searchModifier: ['=', 'in'],
+              });
+            }
+
             topicReturn!.topics!.push({
               resourceType: 'SubscriptionTopic',
               id: `backported_subscriptiontopic_${topicReturn.topics.length}`,
               url: parameter.valueCanonical,
               status: fhir5.SubscriptionTopicStatusCodes.UNKNOWN,
-              title: 'Backported SubscriptionTopic'
+              title: 'Backported SubscriptionTopic',
+              canFilterBy: filters,
             });
           }
         });
