@@ -642,7 +642,8 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
           helperText={'Enter manual filters - Topic information is not available (backport limitation).' +
             ' At least one filter is REQUIRED (R4 Subscription.criteria).' +
             ' Multiple VALUES can be entered comma separated for OR joining.' +
-            ' Multiple FILTERS are joined with AND.'
+            ' Multiple FILTERS are joined with AND.' + 
+            ' First filter REQUIRES resource (e.g., Encounter?patient=patient/123)'
             }
           labelFor='manual-filter'
           >

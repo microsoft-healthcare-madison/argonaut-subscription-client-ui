@@ -392,8 +392,8 @@ export class SubscriptionHelper {
       });
     }
 
-    if (s5.filterBy) {
-      let critiera: string = 'Encounter';
+    if ((s5.filterBy) && (s5.filterBy.length > 0)) {
+      let critiera:string;
 
       if ((t5) &&
           (t5.resourceTrigger) &&
@@ -402,12 +402,22 @@ export class SubscriptionHelper {
         critiera = t5.resourceTrigger.resourceType[0];
       }
 
+      let resourceDelim = s5.filterBy[0].searchParamName.indexOf('?');
+
+      if (resourceDelim === -1) {
+        critiera = 'Encounter';
+      } else {
+        critiera = ''
+      }
+
       s5.filterBy.forEach((filter, index) => {
         let value: string|undefined = this.CollapseFilter(filter);
 
         if (value) {
           if (index === 0) {
-            critiera += '?';
+            if (critiera) {
+              critiera += '?';
+            }
           } else {
             critiera += '&'
           }
