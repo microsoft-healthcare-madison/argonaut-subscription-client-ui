@@ -363,13 +363,13 @@ export class SubscriptionHelper {
     if (t5) {
       s4.extension = [ {
         url: ExtensionUrlTopic,
-        valueCanonical: t5.url,
+        valueUri: t5.url,
         }
       ];
     } else {
       s4.extension = [ {
         url: ExtensionUrlTopic,
-        valueCanonical: `${fhirServerUrl}SubscriptionTopic/encounter-start`,
+        valueUri: `${fhirServerUrl}SubscriptionTopic/encounter-start`,
         }
       ];
     }
@@ -512,6 +512,11 @@ export class SubscriptionHelper {
 
     if (s4.extension) {
       s4.extension.forEach((ext) => {
+        if ((ext.url === ExtensionUrlTopic) && (ext.valueUri)) {
+          s5.topic = {
+            reference: ext.valueUri,
+          }
+        }
         if ((ext.url === ExtensionUrlTopic) && (ext.valueCanonical)) {
           s5.topic = {
             reference: ext.valueCanonical,
