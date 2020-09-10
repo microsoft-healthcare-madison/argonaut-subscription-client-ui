@@ -10,10 +10,10 @@ export interface SubscriptionReturn {
   success: boolean;
 }
 
-const ExtensionUrlTopic = 'http://hl7.org/fhir/us/subscriptions-backport/StructureDefinition/backport-topic-canonical';
-const ExtensionUrlHeartbeat = 'http://hl7.org/fhir/us/subscriptions-backport/StructureDefinition/backport-heartbeat-period';
-const ExtensionUrlTimeout = 'http://hl7.org/fhir/us/subscriptions-backport/StructureDefinition/backport-timeout';
-const ExtensionUrlContent = 'http://hl7.org/fhir/us/subscriptions-backport/StructureDefinition/backport-payload-content';
+const ExtensionUrlTopic = 'http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-topic-canonical';
+const ExtensionUrlHeartbeat = 'http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-heartbeat-period';
+const ExtensionUrlTimeout = 'http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-timeout';
+const ExtensionUrlContent = 'http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-payload-content';
 const CanonicalChannelType = 'http://hl7.org/fhir/ValueSet/subscription-channel-type';
 
 export class SubscriptionHelper {
