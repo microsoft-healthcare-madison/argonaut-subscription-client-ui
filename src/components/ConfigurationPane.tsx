@@ -55,7 +55,7 @@ export default function ConfigurationPane(props: ContentPaneProps) {
     },
     {
       short: 'build.fhir.org', 
-      description: 'Draft Argonaut Subscription Backport (R5 to R4) IG', 
+      description: 'Draft FHIR-I Subscription Backport (R5 to R4) IG', 
       link:'http://build.fhir.org/ig/HL7/fhir-subscription-backport-ig/'
     },
     {
