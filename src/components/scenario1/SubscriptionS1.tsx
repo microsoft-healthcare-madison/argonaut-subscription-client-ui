@@ -165,7 +165,7 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
       </FormGroup>
       <FormGroup
         label='Subscription Notification Headers'
-        helperText='Comman (,) separated list of headers to include with notifications - leave blank if testing against the default client'
+        helperText='Comma (,) separated list of headers to include with notifications - leave blank if testing against the default client'
         labelFor='subscription-headers'
         >
         <InputGroup 
