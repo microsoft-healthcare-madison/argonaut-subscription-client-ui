@@ -54,9 +54,9 @@ export default function ConfigurationPane(props: ContentPaneProps) {
       link:'http://build.fhir.org/'
     },
     {
-      short: 'argonautproject.github.io', 
+      short: 'build.fhir.org', 
       description: 'Draft Argonaut Subscription Backport (R5 to R4) IG', 
-      link:'https://argonautproject.github.io/subscription-backport-ig/'
+      link:'http://build.fhir.org/ig/HL7/fhir-subscription-backport-ig/'
     },
     {
       short: 'github.com',
@@ -72,6 +72,16 @@ export default function ConfigurationPane(props: ContentPaneProps) {
       short: 'github.com',
       description: 'Argonaut Subscription Reference Server Proxy (intercept and process Subscription/SubscriptionTopic)',
       link:'https://github.com/microsoft-healthcare-madison/argonaut-subscription-server-proxy'
+    },
+    {
+      short: 'confluence.hl7.org',
+      description: 'January 2021 Connectathon (#26) - Subscriptions',
+      link: 'https://confluence.hl7.org/display/FHIR/2021-01+Subscriptions+Track'
+    },
+    {
+      short: 'confluence.hl7.org',
+      description: 'September 2020 Connectathon (#25) - Subscriptions',
+      link: 'https://confluence.hl7.org/display/FHIR/2020-09+Subscriptions+Track'
     },
     {
       short: 'confluence.hl7.org',

@@ -3,6 +3,7 @@ import * as fhir5 from "../models/fhir_r5";
 import { SingleRequestData, RenderDataAsTypes } from "../models/RequestData";
 import { ConnectionInformation } from "../models/ConnectionInformation";
 import { ApiHelper, ApiResponse } from "./ApiHelper";
+import { Code } from "@blueprintjs/core";
 
 export interface SubscriptionReturn {
   data: SingleRequestData;
@@ -14,6 +15,10 @@ const ExtensionUrlTopic = 'http://hl7.org/fhir/uv/subscriptions-backport/Structu
 const ExtensionUrlHeartbeat = 'http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-heartbeat-period';
 const ExtensionUrlTimeout = 'http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-timeout';
 const ExtensionUrlContent = 'http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-payload-content';
+
+const ExtensionNotificationUrlLocaltion = "http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-notification-url-location";
+const ExtensionMaxCount = "http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-max-count";
+
 const CanonicalChannelType = 'http://hl7.org/fhir/ValueSet/subscription-channel-type';
 
 export class SubscriptionHelper {
@@ -425,8 +430,24 @@ export class SubscriptionHelper {
           critiera += value;
         }
       });
-
+      
       s4.criteria = critiera;
+
+      if (!s4.channel.extension) {
+        s4.channel.extension = [];
+      }
+
+      // TODO: Need December 2020 R5 build to add NotificationUrlLocation
+      s4.channel.extension.push({
+        url: ExtensionNotificationUrlLocaltion,
+        valueCode: "full-url",
+      });
+
+      // TODO: Need December 2020 R5 build to add MaxCount
+      s4.channel.extension.push({
+        url: ExtensionMaxCount,
+        valuePositiveInt: 10,
+      });
     }
 
     return s4;
@@ -532,6 +553,12 @@ export class SubscriptionHelper {
         }
         if ((ext.url === ExtensionUrlTimeout) && (ext.valueUnsignedInt)) {
           s5.timeout = ext.valueUnsignedInt;
+        }
+        if ((ext.url === ExtensionNotificationUrlLocaltion) && (ext.valueCode)) {
+          // TODO: Need December 2020 R5 build to add NotificationUrlLocation
+        }
+        if ((ext.url === ExtensionMaxCount) && (ext.valuePositiveInt)) {
+          // TODO: Need December 2020 R5 build to add MaxCount
         }
       });
     }

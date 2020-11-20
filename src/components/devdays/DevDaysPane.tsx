@@ -154,12 +154,12 @@ export default function DevDaysPane(props: ContentPaneProps) {
 			responseData: JSON.stringify(notificationReturn.bundle, null, 2),
 			responseDataType: RenderDataAsTypes.FHIR,
 			info: `Notification #${notificationData.length}:\n`+
-				`\tSubscription:      ${notificationReturn.subscriptionUrl}\n` +
+				`\tSubscription:      ${notificationReturn.subscription}\n` +
 				`\tSubscriptionTopic: ${notificationReturn.topicUrl}\n` +
 				`\tType:              ${notificationReturn.notificationType}\n` +
 				`\tStatus:            ${notificationReturn.status}\n` +
-				`\tBundle Events:     ${notificationReturn.bundleEventCount}\n`+
-				`\tTotal Events:      ${notificationReturn.eventCount}`,
+				`\tBundle Events:     ${notificationReturn.eventsInNotification}\n`+
+				`\tTotal Events:      ${notificationReturn.eventsSinceSubscriptionStart}`,
 		}
 
 		let data: SingleRequestData[] = notificationData.slice();

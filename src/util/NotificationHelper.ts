@@ -5,11 +5,11 @@ export interface NotificationReturn {
   success: boolean;
 
   bundleType: string;
-  eventCount: number;
-  bundleEventCount: number;
+  eventsSinceSubscriptionStart: number;
+  eventsInNotification: number;
   status: string;
   topicUrl: string;
-  subscriptionUrl: string;
+  subscription: string;
   notificationType:string;
 
   bundle: fhir4.Bundle|fhir5.Bundle|undefined;
@@ -77,24 +77,26 @@ export class NotificationHelper {
       }
 
       switch (parameter.name) {
-        case 'subscription-event-count':
-          if (parameter.valueUnsignedInt) {
-            notificationReturn.eventCount = Number(parameter.valueUnsignedInt);
+        case 'events-since-subscription-start':
+            if (parameter.valueUnsignedInt) {
+            notificationReturn.eventsSinceSubscriptionStart = Number(parameter.valueUnsignedInt);
           }
           break;
-        case 'bundle-event-count':
+        case 'events-in-notification':
           if (parameter.valueUnsignedInt) {
-            notificationReturn.bundleEventCount = Number(parameter.valueUnsignedInt);
+            notificationReturn.eventsInNotification = Number(parameter.valueUnsignedInt);
           }
           break;
-        case 'subscription-topic-url':
+        case 'topic':
           if (parameter.valueUri) {
             notificationReturn.topicUrl = parameter.valueUri;
           }
           break;
-        case 'subscription-url':
-          if (parameter.valueUri) {
-            notificationReturn.subscriptionUrl = parameter.valueUri;
+        case 'subscription':
+          if (parameter.valueReference) {
+            if (parameter.valueReference.reference) {
+              notificationReturn.subscription = parameter.valueReference.reference!;
+            }
           }
           break;
         case 'type':
@@ -102,14 +104,18 @@ export class NotificationHelper {
             notificationReturn.notificationType = parameter.valueCode;
           }
           break;
+        case 'status':
+          if (parameter.valueCode) {
+            notificationReturn.status = parameter.valueCode;
+          }
       };
     });
 
     if (notificationReturn.notificationType === fhir5.SubscriptionStatusNotificationTypeCodes.HANDSHAKE) {
-      notificationReturn.eventCount = 0;
-      notificationReturn.bundleEventCount = 0;
+      notificationReturn.eventsSinceSubscriptionStart = 0;
+      notificationReturn.eventsInNotification = 0;
     } else if (notificationReturn.notificationType === fhir5.SubscriptionStatusNotificationTypeCodes.HEARTBEAT) {
-      notificationReturn.bundleEventCount = 0;
+      notificationReturn.eventsInNotification = 0;
     }
 
     // if ((bundle.entry) && (bundle.entry.length > 1)) {
@@ -159,11 +165,11 @@ export class NotificationHelper {
     }
 
     if (subscriptionStatus.eventsSinceSubscriptionStart) {
-      notificationReturn.eventCount = Number(subscriptionStatus.eventsSinceSubscriptionStart!);
+      notificationReturn.eventsSinceSubscriptionStart = Number(subscriptionStatus.eventsSinceSubscriptionStart!);
     }
 
     if (subscriptionStatus.eventsInNotification) {
-      notificationReturn.bundleEventCount = Number(subscriptionStatus.eventsInNotification!);
+      notificationReturn.eventsInNotification = Number(subscriptionStatus.eventsInNotification!);
     }
 
     if (subscriptionStatus.status) {
@@ -175,15 +181,15 @@ export class NotificationHelper {
     }
 
     if (subscriptionStatus.subscription.reference) {
-      notificationReturn.subscriptionUrl = subscriptionStatus.subscription.reference!;
+      notificationReturn.subscription = subscriptionStatus.subscription.reference!;
     }
 
     notificationReturn.notificationType = subscriptionStatus.notificationType;
     if (notificationReturn.notificationType === fhir5.SubscriptionStatusNotificationTypeCodes.HANDSHAKE) {
-      notificationReturn.eventCount = 0;
-      notificationReturn.bundleEventCount = 0;
+      notificationReturn.eventsSinceSubscriptionStart = 0;
+      notificationReturn.eventsInNotification = 0;
     } else if (notificationReturn.notificationType === fhir5.SubscriptionStatusNotificationTypeCodes.HEARTBEAT) {
-      notificationReturn.bundleEventCount = 0;
+      notificationReturn.eventsInNotification = 0;
     }
 
     // if (bundle.entry.length > 1) {
@@ -204,11 +210,11 @@ export class NotificationHelper {
     return {
       success: false,
       bundleType: '',
-      eventCount: 0,
-      bundleEventCount: 0,
+      eventsSinceSubscriptionStart: 0,
+      eventsInNotification: 0,
       status: '',
       topicUrl: '',
-      subscriptionUrl: '',
+      subscription: '',
       notificationType: '',
       bundle: undefined,
     };
