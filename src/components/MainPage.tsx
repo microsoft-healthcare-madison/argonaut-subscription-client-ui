@@ -557,25 +557,10 @@ export default function MainPage() {
 
   /** Function to display a short-lived message on the main UI */
   function showToastMessage(message: string, iconName?: IconName, timeout?: number) {
-    let toaster: IToaster = getOrCreateToaster();
-    toaster.show({message: message, icon: iconName, timeout: timeout});
-  }
-
-  /** Function to either get the current Toast (short message) object, or create a new one */
-  function getOrCreateToaster() {
     if (!_toasterRef.current) {
-      // configure our toaster display
-      var toasterProps: IToasterProps = {
-        autoFocus: false,
-        canEscapeKeyClear: true,
-        position: Position.TOP,
-      }
-
-      // static create the toaster on the DOM
-      _toasterRef.current = Toaster.create(toasterProps, document.body);
+      return;
     }
-
-    return _toasterRef.current;
+    _toasterRef.current!.show({message: message, icon: iconName, timeout: timeout});
   }
 
   /** Function to perform copying generic text to the clipboard */
