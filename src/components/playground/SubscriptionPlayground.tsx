@@ -16,6 +16,7 @@ import SubscriptionFilters from './SubscriptionFilters';
 import { IconNames } from '@blueprintjs/icons';
 import ResourceSearchMultiCard from '../common/ResourceSarchCardMulti';
 import { SubscriptionHelper, SubscriptionReturn } from '../../util/SubscriptionHelper';
+import { StorageHelper } from '../../util/StorageHelper';
 
 export interface SubscriptionPlaygroundProps {
   paneProps: ContentPaneProps,
@@ -52,7 +53,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
   const [topicIndex, setTopicIndex] = useState<number>(-1);
   const [endpointIndex, setEndpointIndex] = useState<number>(-1);
 
-  const [channelType, setChannelType] = useState<string>('websocket');
+  const [channelType, setChannelType] = useState<string>('rest-hook');
 
   const [emailAddress, setEmailAddress] = useState<string>('');
   const [emailMimeType, setEmailMimeType] = useState<string>(emailTypes[0]);
@@ -70,6 +71,17 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 
   const [resourceName, setResourceName] = useState<string>('');
   const [showSearchOverlay, setShowSearchOverlay] = useState<boolean>(false);
+
+  const [externalEndpoint, setExternalEndpoint] = useState<string>('');
+
+  useEffect(() => {
+    if (StorageHelper.isLocalStorageAvailable) {
+        // update local settings
+        if (localStorage.getItem('externalEndpoint')) {
+          setExternalEndpoint(localStorage.getItem('externalEndpoint') || '');
+        }
+    }
+  }, []);
 
   useEffect(() => {
     if (endpointIndex >= props.endpoints.length) {
@@ -156,6 +168,20 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
           channelCoding = ValueSet.SubscriptionChannelType.rest_hook;
         } else {
           endpoint = new URL(`Endpoints/${props.endpoints[endpointIndex].uid}`, props.paneProps.clientHostInfo.url).toString();
+          channelCoding = ValueSet.SubscriptionChannelType.rest_hook;
+        }
+        break;
+      case 'rest-hook-external':
+        if (externalEndpoint.length === 0) {
+          props.paneProps.toaster('Invalid selection', IconNames.ERROR, 1000);
+          props.updateStatus({...props.status, busy: false});
+          return;
+        } else if (!externalEndpoint.startsWith('http')) {
+          props.paneProps.toaster('Invalid endpoint URL', IconNames.ERROR, 1000);
+          props.updateStatus({...props.status, busy: false});
+          return;
+        } else {
+          endpoint = externalEndpoint
           channelCoding = ValueSet.SubscriptionChannelType.rest_hook;
         }
         break;
@@ -447,7 +473,10 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
   /** Process HTML events for the endpoint select box */
   function handleEndpointChange(event: React.FormEvent<HTMLSelectElement>) {
     setEndpointIndex(parseInt(event.currentTarget.value));
+  }
 
+  function handleExternalEndpointChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setExternalEndpoint(event.target.value);
   }
 
   /** Process HTML events for the payload type select box */
@@ -532,10 +561,37 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
           value={channelType}
           >
           <option key='websocket' value='websocket'>Websocket</option>
+          <option key='rest-hook-external' value='rest-hook-external'>EXTERNAL REST Hook</option>
           <option key='rest-hook' value='rest-hook'>REST Hook</option>
           <option key='email' value='email'>Email</option>
         </HTMLSelect>
       </FormGroup>
+      { (channelType === 'rest-hook-external') && [
+        <FormGroup
+          label='Endpoint'
+          helperText='Endpoint this Subscription will send notifications to'
+          labelFor='endpoint'
+          >
+          <InputGroup
+            id='external-endpoint'
+            value={externalEndpoint}
+            onChange={handleExternalEndpointChange}
+            />
+        </FormGroup>,
+        <FormGroup
+          label='Subscription Notification Headers'
+          helperText='Comma (,) separated list of headers to include with notifications (per channel requirements)'
+          labelFor='subscription-headers'
+          >
+          <InputGroup
+            id='subscription-headers'
+            placeholder='Authorization: Bearer secret-token-abc-123'
+            value={headers}
+            onChange={handleHeadersChange}
+            />
+        </FormGroup>,
+        ]
+      }
       { (channelType === 'rest-hook') && [
         <FormGroup
           label='Endpoint'

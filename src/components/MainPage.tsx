@@ -342,7 +342,7 @@ export default function MainPage() {
           throw(new Error('Could not get valid CapabilityStatement.'));
         }
 
-        let websocketUrl:string = '/websockets';
+        let websocketUrl:string = `ws://${serverInfo.url}/websockets`;
 
         let hasResourcePatient: boolean = false;
         var createPatient: boolean = false;

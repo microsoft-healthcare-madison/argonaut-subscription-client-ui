@@ -437,10 +437,8 @@ export default function ConfigurationPane(props: ContentPaneProps) {
           <option>OperationOutcome</option>
         </HTMLSelect>
       </FormGroup>
-
-
       <FormGroup
-        label = {props.clientHostInfo.name + ' URL'}
+        label = {props.clientHostInfo.name + ' URL (only change if you are hosting the Argonaut Subscription Client Host yourself)'}
         helperText = {props.clientHostInfo.hint}
         labelFor='fhir-client-url'
         >
