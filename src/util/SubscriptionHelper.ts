@@ -16,7 +16,7 @@ const ExtensionUrlHeartbeat = 'http://hl7.org/fhir/uv/subscriptions-backport/Str
 const ExtensionUrlTimeout = 'http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-timeout';
 const ExtensionUrlContent = 'http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-payload-content';
 
-const ExtensionNotificationUrlLocaltion = "http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-notification-url-location";
+const ExtensionNotificationUrlLocation = "http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-notification-url-location";
 const ExtensionMaxCount = "http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-max-count";
 
 const CanonicalChannelType = 'http://hl7.org/fhir/ValueSet/subscription-channel-type';
@@ -63,9 +63,7 @@ export class SubscriptionHelper {
       if (useR4) {
         let response: ApiResponse<fhir4.Subscription> = await ApiHelper.apiGetFhir(
           url,
-          fhirServerInfo.authHeaderContent,
-          '4.0'
-        );
+          fhirServerInfo.authHeaderContent);
 
         if (!response.value) {
           subscriptionReturn = {
@@ -159,7 +157,6 @@ export class SubscriptionHelper {
     return subscriptionReturn;
   }
 
-
   private static async CreateSubscriptionR4(
     fhirServerInfo: ConnectionInformation,
     subscription: fhir5.Subscription,
@@ -177,9 +174,7 @@ export class SubscriptionHelper {
         url,
         s4,
         fhirServerInfo.authHeaderContent,
-        fhirServerInfo.preferHeaderContent,
-        '4.0'
-      );
+        fhirServerInfo.preferHeaderContent);
 
       if (!response.value) {
         subscriptionReturn = {
@@ -439,7 +434,7 @@ export class SubscriptionHelper {
 
       // TODO: Need December 2020 R5 build to add NotificationUrlLocation
       s4.channel.extension.push({
-        url: ExtensionNotificationUrlLocaltion,
+        url: ExtensionNotificationUrlLocation,
         valueCode: "full-url",
       });
 
@@ -554,7 +549,7 @@ export class SubscriptionHelper {
         if ((ext.url === ExtensionUrlTimeout) && (ext.valueUnsignedInt)) {
           s5.timeout = ext.valueUnsignedInt;
         }
-        if ((ext.url === ExtensionNotificationUrlLocaltion) && (ext.valueCode)) {
+        if ((ext.url === ExtensionNotificationUrlLocation) && (ext.valueCode)) {
           // TODO: Need December 2020 R5 build to add NotificationUrlLocation
         }
         if ((ext.url === ExtensionMaxCount) && (ext.valuePositiveInt)) {

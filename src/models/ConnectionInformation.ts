@@ -16,4 +16,5 @@ export interface ConnectionInformation {
   authHeaderContent?: string;
   preferHeaderContent: string;
   capabilitiesRest?: CapabilityStatementRestResource[];
+  websocketUrl: string;
 }

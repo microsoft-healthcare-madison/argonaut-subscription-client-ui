@@ -63,10 +63,12 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
 		var expirationTime:Date = new Date();
 		expirationTime.setHours(expirationTime.getHours() + 1);
 
+    let baseUrl:string = props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.url : props.paneProps.fhirServerInfoR5.url;
+
     let topicResource: string = 'SubscriptionTopic';
     let topicUrl:string = props.topic 
-      ? new URL(`${topicResource}/${props.topic!.id!}`, props.paneProps.fhirServerInfo.url).toString()
-      : new URL(`${topicResource}/encounter-start`, props.paneProps.fhirServerInfo.url).toString();
+      ? new URL(`${topicResource}/${props.topic!.id!}`, baseUrl).toString()
+      : new URL(`${topicResource}/encounter-start`, baseUrl).toString();
 
 		// build the subscription object
 		let subscription: fhir.Subscription = {
@@ -94,7 +96,7 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
     // try to create the subscription
     let subscriptionReturn:SubscriptionReturn = await SubscriptionHelper.CreateSubscription(
       props.paneProps.useBackportToR4,
-      props.paneProps.fhirServerInfo,
+      props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4 : props.paneProps.fhirServerInfoR5,
       subscription,
       props.topic
     );
@@ -115,7 +117,7 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
 
     let subscriptionReturn:SubscriptionReturn = await SubscriptionHelper.RefreshSubscription(
       props.paneProps.useBackportToR4,
-      props.paneProps.fhirServerInfo,
+      props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4 : props.paneProps.fhirServerInfoR5,
       props.subscription);
 
     // update information of the create record in display

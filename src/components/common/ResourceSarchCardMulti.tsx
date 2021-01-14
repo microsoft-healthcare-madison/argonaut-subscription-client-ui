@@ -8,6 +8,7 @@ import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
 import * as fhir from '../../models/fhir_r4';
 import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import { KeySelectionInfo } from '../../models/KeySelectionInfo';
+import { ConnectionInformation } from '../../models/ConnectionInformation';
 
 export interface ResourceSearchMultiProps {
   paneProps: ContentPaneProps,
@@ -30,26 +31,27 @@ export default function ResourceSearchMultiCard(props: ResourceSearchMultiProps)
 
   useEffect(() => {
     if (initialLoadRef.current) {
-      // **** no longer first load ****
-
+      // no longer first load
       initialLoadRef.current = false;
 
-      if (!props.paneProps.fhirServerInfo.capabilitiesRest) return;
+      let serverInfo:ConnectionInformation = props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4 : props.paneProps.fhirServerInfoR5;
 
-      // **** look for this in the capabilities statement ****
+      if (!serverInfo.capabilitiesRest)
+        return;
 
-      for (let index:number = 0; index < props.paneProps.fhirServerInfo.capabilitiesRest.length; index++) {
-        if (props.paneProps.fhirServerInfo.capabilitiesRest[index].type === props.resourceName) {
-          if (props.paneProps.fhirServerInfo.capabilitiesRest[index].searchParam) {
+      // look for this in the capabilities statement
+
+      for (let index:number = 0; index < serverInfo.capabilitiesRest.length; index++) {
+        if (serverInfo.capabilitiesRest[index].type === props.resourceName) {
+          if (serverInfo.capabilitiesRest[index].searchParam) {
             let updated:string[] = [];
-            props.paneProps.fhirServerInfo.capabilitiesRest[index].searchParam!.forEach((param) => {
+            serverInfo.capabilitiesRest[index].searchParam!.forEach((param) => {
               updated.push(param.name);
             });
             setMatchTypes(updated);
           }
 
-          // **** done searching ****
-
+          // done searching
           break;
         }
       }
@@ -72,8 +74,7 @@ export default function ResourceSearchMultiCard(props: ResourceSearchMultiProps)
     updated[index].checked = !updated[index].checked;
     setRecords(updated);
 
-    // **** grab the list of selected patients ****
-
+    // grab the list of selected instances
     let selected:string[] = [];
 
     updated.forEach((keyInfo: KeySelectionInfo) => {
@@ -87,24 +88,22 @@ export default function ResourceSearchMultiCard(props: ResourceSearchMultiProps)
   
   function getString(value: any) {
     if (typeof(value) !== 'string') {
-      // **** for now, just stringify ****
-
+      // for now, just stringify
       return JSON.stringify(value);
     }
-    // **** return the string ****
 
     return value;
   }
 
   /** Function to handle user request to search a FHIR server for patients */
 	async function handleSearchClick() {
-    // **** flag we are searching ****
-    
+    // flag we are searching
     setBusy(true);
 
-    // **** construct the search url ****
-
-		var url: string = new URL(`${props.resourceName}/`, props.paneProps.fhirServerInfo.url).toString();
+    // construct the search url
+		var url: string = new URL(
+      `${props.resourceName}/`, 
+      props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.url : props.paneProps.fhirServerInfoR5.url).toString();
 		
 		if (searchFilter) {
 				url += `?${encodeURIComponent(matchType)}=${encodeURIComponent(searchFilter)}`;
@@ -113,11 +112,9 @@ export default function ResourceSearchMultiCard(props: ResourceSearchMultiProps)
     try {
       let response:ApiResponse<fhir.Bundle> = await ApiHelper.apiGetFhir<fhir.Bundle>(
         url,
-        props.paneProps.fhirServerInfo.authHeaderContent
-      );
+        props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.authHeaderContent : props.paneProps.fhirServerInfoR5.authHeaderContent);
 
-      // **** check for no values ****
-
+      // check for no values
       if ((!response.value) || (!response.value.entry)) {
         let data: SingleRequestData[] = [
           {
@@ -137,16 +134,14 @@ export default function ResourceSearchMultiCard(props: ResourceSearchMultiProps)
 
       var bundleRecords: KeySelectionInfo[] = [];
 
-      // **** loop over results ****
-
+      // loop over results
       response.value.entry!.forEach(entry => {
         if (!entry.resource) return;
         if (!entry.resource.id) return;
 
         let rec: any = entry.resource;
 
-        // **** attempt to make something readable ****
-
+        // attempt to make something readable
         let display:string = `${props.resourceName}/${rec.id}`;
 
         if (rec.name) display = display + `, Name: ${getString(rec.name)}`;
@@ -155,16 +150,14 @@ export default function ResourceSearchMultiCard(props: ResourceSearchMultiProps)
         if (rec.display) display = display + `, Display: ${getString(rec.display)}`;
         // if (rec.text) display = display + `, ${getString(rec.text)}`;
 
-        // **** add this record ****
-
+        // add this record
         bundleRecords.push({
           key: rec.id, 
           value: display,
         });
       });
       
-      // **** build data for display ****
-
+      // build data for display
       let data: SingleRequestData[] = [
         {
           name: 'Resource Search',
@@ -176,15 +169,13 @@ export default function ResourceSearchMultiCard(props: ResourceSearchMultiProps)
         }
       ]
 
-      // **** update our state ****
-
+      // update our state
       setBusy(false);
       setRecords(bundleRecords);
       props.setData(data);
       
     } catch (err) {
-      // **** build data for display ****
-
+      // build data for display
       let data: SingleRequestData[] = [
         {
           name: 'Resource Search',
@@ -195,8 +186,7 @@ export default function ResourceSearchMultiCard(props: ResourceSearchMultiProps)
         }
       ]
 
-      // **** update our state ****
-
+      // update our state
       setBusy(false);
       setRecords([]);
       props.setData(data);

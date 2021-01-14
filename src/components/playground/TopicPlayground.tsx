@@ -37,7 +37,7 @@ export default function TopicPlayground(props: TopicPlaygroundProps) {
 
     let topicReturn:TopicReturn = await TopicHelper.GetTopics(
       props.paneProps.useBackportToR4,
-      props.paneProps.fhirServerInfo
+      props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4 : props.paneProps.fhirServerInfoR5,
     );
 
     if (topicReturn.success) {

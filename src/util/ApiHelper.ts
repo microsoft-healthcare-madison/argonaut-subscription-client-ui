@@ -46,14 +46,10 @@ export class ApiHelper {
     }
   }
 
-  static async apiGetFhir<T>(url: string, authHeader?: string, fhirVersion?: string): Promise<ApiResponse<T>> {
+  static async apiGetFhir<T>(url: string, authHeader?: string): Promise<ApiResponse<T>> {
     try {
       let headers: Headers = new Headers();
-      if (fhirVersion) {
-        headers.append('Accept', `application/fhir+json; fhirVersion=${fhirVersion}`);
-      } else {
-        headers.append('Accept', 'application/fhir+json');
-      }
+      headers.append('Accept', 'application/fhir+json');
       if (authHeader) {
         headers.append('Authorization', authHeader);
       }
@@ -130,14 +126,10 @@ export class ApiHelper {
     }
   }
 
-  static async apiPostFhir<T>(url:string, data:T, authHeader?:string, preferHeader?:string, fhirVersion?: string): Promise<ApiResponse<T>> {
+  static async apiPostFhir<T>(url:string, data:T, authHeader?:string, preferHeader?:string): Promise<ApiResponse<T>> {
     try {
       let headers: Headers = new Headers();
-      if (fhirVersion) {
-        headers.append('Accept', `application/fhir+json; fhirVersion=${fhirVersion}`);
-      } else {
-        headers.append('Accept', 'application/fhir+json');
-      }
+      headers.append('Accept', 'application/fhir+json');
       headers.append('Content-Type', 'application/fhir+json;charset=utf-8');
       if (authHeader) {
         headers.append('Authorization', authHeader);
@@ -335,14 +327,10 @@ export class ApiHelper {
   }
 
   
-  static async apiDeleteFhir<T>(url:string, authHeader?:string, preferHeader?:string, fhirVersion?:string): Promise<ApiResponse<T>> {
+  static async apiDeleteFhir<T>(url:string, authHeader?:string, preferHeader?:string): Promise<ApiResponse<T>> {
     try {
       let headers: Headers = new Headers();
-      if (fhirVersion) {
-        headers.append('Accept', `application/fhir+json; fhirVersion=${fhirVersion}`);
-      } else {
-        headers.append('Accept', 'application/fhir+json');
-      }
+      headers.append('Accept', 'application/fhir+json');
       headers.append('Content-Type', 'application/fhir+json;charset=utf-8');
       if (authHeader) {
         headers.append('Authorization', authHeader);
@@ -408,7 +396,7 @@ export class ApiHelper {
 
     // ask for this subscription to be deleted
     if (useR4) {
-      ApiHelper.apiDeleteFhir(url, '4.0');
+      ApiHelper.apiDeleteFhir(url);
     } else {
       ApiHelper.apiDeleteFhir(url);
     }

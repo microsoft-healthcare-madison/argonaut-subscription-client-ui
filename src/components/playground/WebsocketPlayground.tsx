@@ -5,9 +5,10 @@ import { DataCardInfo } from '../../models/DataCardInfo';
 import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
-import { Button, FormGroup, InputGroup, HTMLSelect } from '@blueprintjs/core';
-import { Subscription, SubscriptionContentCodes } from '../../models/fhir_r5';
+import { Button, FormGroup, InputGroup, HTMLSelect, Switch } from '@blueprintjs/core';
+import { Subscription, SubscriptionContentCodes, Parameters, ParametersParameter } from '../../models/fhir_r5';
 import { IconNames } from '@blueprintjs/icons';
+import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
 
 export interface WebsocketPlaygroundProps {
   paneProps: ContentPaneProps,
@@ -30,37 +31,28 @@ export default function WebsocketPlayground(props: WebsocketPlaygroundProps) {
   };
 
   const _webSocketRef = useRef<WebSocket | null>(null);
+  const _bindingMap = useRef<Map<string,string[]>>(new Map());
 
-  const [websocketUrl, setWebsocketUrl] = useState<string>('/subscriptions/websocketurl');
-  const [boundSubscriptionIds, setBoundSubscriptionIds] = useState<string[]>([]);
-  const [payloadType, setPayloadType] = useState<string>('r4');
+  const [websocketUrl, setWebsocketUrl] = useState<string>('');
   const [connected, setConnected] = useState<boolean>(false);
 
-  const [subscriptionIndex, setSubscriptionIndex] = useState<number>(-1);
-  const [subscriptionId, setSubscriptionId] = useState<string>('');
-
+  const [selectedSubscriptionIds, setSelectedSubscriptionIds] = useState<string[]>([]);
 
   useEffect(() => {
-    if (subscriptionIndex >= props.subscriptions.length) {
-      setSubscriptionIndex(-1);
-      setSubscriptionId('')
+    if (props.paneProps.useBackportToR4) {
+      setWebsocketUrl(props.paneProps.fhirServerInfoR4.websocketUrl);
+    } else {
+      setWebsocketUrl(props.paneProps.fhirServerInfoR5.websocketUrl);
     }
-    if ((subscriptionIndex < 0) && (props.subscriptions.length > 0)) {
-      setSubscriptionIndex(0);
-      setSubscriptionId(props.subscriptions[0].id!);
-    }
-  }, [subscriptionIndex, props.subscriptions]);
+  }, [props.paneProps.useBackportToR4, props.paneProps.fhirServerInfoR4, props.paneProps.fhirServerInfoR5])
 
+  /**
+   * Connect to a FHIR server via websockets
+   */
   async function connect() {
     try {
-      // construct the websocket url
-      let wsUrl: string = new URL(
-        `${websocketUrl}?payload-type=${payloadType}`,
-        props.paneProps.fhirServerInfo.url.replace('http', 'ws')
-        ).toString();
-
       // connect to our server
-      _webSocketRef.current = new WebSocket(wsUrl);
+      _webSocketRef.current = new WebSocket(websocketUrl);
 
       // setup our receive handler
       _webSocketRef.current.onmessage = websocketMessageHandler;
@@ -80,22 +72,11 @@ export default function WebsocketPlayground(props: WebsocketPlaygroundProps) {
   function disconnect() {
     _webSocketRef.current = null;
     setConnected(false);
-    setBoundSubscriptionIds([]);
 
     // warn the user
     props.paneProps.toaster('Websocket disconnected from FHIR Server', IconNames.INFO_SIGN, 2000);
 
     props.updateStatus({...props.status, busy: false});
-
-  }
-
-  function isSubscriptionBound(subscriptionId: string): boolean {
-    for (let index:number = 0; index < boundSubscriptionIds.length; index++) {
-      if (boundSubscriptionIds[index] === subscriptionId) {
-        return true;
-      }
-    }
-    return false;
   }
 
   function toggleConnection() {
@@ -108,36 +89,78 @@ export default function WebsocketPlayground(props: WebsocketPlaygroundProps) {
     connect();
   }
 
-  function toggleBinding() {
-    if (isSubscriptionBound(subscriptionId)) {
-      // unbind
-      _webSocketRef.current!.send(`unbind ${subscriptionId}`)
-
-      // remove from list
-      for (let index:number = 0; index < boundSubscriptionIds.length; index++) {
-        if (boundSubscriptionIds[index] === subscriptionId) {
-          let updated:string[] = boundSubscriptionIds.slice();
-          updated.splice(index);
-          setBoundSubscriptionIds(updated);
-        }
-      }
-
+  async function bindToSubscriptions() {
+    if (!connected) {
       return;
     }
 
-    // bind
-    _webSocketRef.current!.send(`bind ${subscriptionId}`);
+    if (selectedSubscriptionIds.length === 0) {
+      props.paneProps.toaster('Please select at least one subscription', IconNames.ERROR);
+      return;
+    }
 
-    // add to list
-    let updated:string[]  = boundSubscriptionIds.slice();
-    updated.push(subscriptionId);
-    setBoundSubscriptionIds(updated);
+    let opParams:Parameters = {
+      resourceType: 'Parameters',
+      parameter: []
+    }
+
+    selectedSubscriptionIds.forEach((id:string) => {
+      opParams.parameter!.push({
+        name: 'ids',
+        valueId: id,
+      });
+    });
+
+    let response:ApiResponse<Parameters>;
+
+    if (props.paneProps.useBackportToR4) {
+      let url:string = new URL(
+        'Subscription/$get-ws-binding-token',
+        props.paneProps.fhirServerInfoR4.url).toString();
+  
+      response = await ApiHelper.apiPostFhir<Parameters>(
+        url,
+        opParams,
+        props.paneProps.fhirServerInfoR4.authHeaderContent,
+        props.paneProps.fhirServerInfoR4.preferHeaderContent);
+    } else {
+      let url:string = new URL(
+        'Subscription/$get-ws-binding-token',
+        props.paneProps.fhirServerInfoR5.url).toString();
+  
+      response = await ApiHelper.apiPostFhir<Parameters>(
+        url,
+        opParams,
+        props.paneProps.fhirServerInfoR5.authHeaderContent,
+        props.paneProps.fhirServerInfoR5.preferHeaderContent);
+    }
+
+    let token:string|undefined;
+    let expiration:string|undefined;
+
+    if ((response.value) && 
+        (response.value.parameter)) {
+      response.value.parameter.forEach((param:ParametersParameter) => {
+        if ((param.name === 'token') && (param.valueString)) {
+          token = param.valueString;
+        }
+        if ((param.name === 'expiration') && (param.valueDateTime)) {
+          expiration = param.valueDateTime;
+        }
+      });
+    }
+
+    if ((token) && (expiration)) {
+      _webSocketRef.current!.send(`bind-with-token ${token}`);
+      _bindingMap.current.set(token, selectedSubscriptionIds);
+    }
+
+    props.paneProps.toaster(`Bound to ${selectedSubscriptionIds.length} subscriptions!`, IconNames.THUMBS_UP);
+    setSelectedSubscriptionIds([]);
   }
-
   
   /** Function to process client host messages received via the WebSocket */
   function websocketMessageHandler(event: MessageEvent) {
-    console.log('Received FHIR Notification', event);
     // check for keepalive message (discard)
     if ((event.data) && ((event.data as string).startsWith('keepalive'))) {
       // console.log('Recevied keepalive on ClientHost WebSocket', event.data);
@@ -174,14 +197,18 @@ export default function WebsocketPlayground(props: WebsocketPlaygroundProps) {
     setWebsocketUrl(event.target.value);
   }
   
-  /** Process HTML events for the endpoint select box */
-  function handleSubscriptionChange(event: React.FormEvent<HTMLSelectElement>) {
-    setSubscriptionIndex(parseInt(event.currentTarget.value));
-  }
+  function handleToggleSubscription(id: string) {
+    let index = selectedSubscriptionIds.indexOf(id);
+    let values: string[] = selectedSubscriptionIds.slice();
 
-  /** Process HTML events for the payload type select box */
-	function handlePayloadTypeChange(event: React.FormEvent<HTMLSelectElement>) {
-		setPayloadType(event.currentTarget.value);
+    if (index >= 0) {
+      values.splice(index, 1);
+      setSelectedSubscriptionIds(values);
+      return;
+    }
+
+    values.push(id);
+    setSelectedSubscriptionIds(values);
   }
 
   /** Return this component */
@@ -205,23 +232,6 @@ export default function WebsocketPlayground(props: WebsocketPlaygroundProps) {
           />
       </FormGroup>
 
-      <FormGroup
-        label='Websocket Payload Type'
-        helperText='Payload type for Websocket notifications'
-        labelFor='websocket-payload-type'
-        >
-        <HTMLSelect
-            id='websocket-payload-type'
-            onChange={handlePayloadTypeChange}
-            value={payloadType}
-              >
-            <option key={'r4'}>R4</option>
-            { Object.values(SubscriptionContentCodes).map((value) => (
-            <option key={value}>{value}</option> 
-              ))}
-          </HTMLSelect>
-      </FormGroup>
-
       <Button
         onClick={toggleConnection}
         >
@@ -230,23 +240,23 @@ export default function WebsocketPlayground(props: WebsocketPlaygroundProps) {
       { connected && 
         <FormGroup
           label='Subscription'
-          helperText='Subscription to interact with'
+          helperText='Subscriptions to interact with'
           labelFor='subscription'
           >
-          <HTMLSelect
-            id='subscription'
-            onChange={handleSubscriptionChange}
-            value={subscriptionIndex}
-            >
-            { Object.values(props.subscriptions).map((value, index) => (
-              <option key={value.id} value={index}>Subscription #{index} - {value.id}</option>
-                ))}
-          </HTMLSelect>
+          { Object.values(props.subscriptions).map((value, index) => (
+            <Switch 
+              key={value.id} 
+              value={value.id}
+              checked={selectedSubscriptionIds.includes(value.id!)}
+              label={`Subscription #${index}: ${value.id}`}
+              onChange={() => handleToggleSubscription(value.id!)}
+              />
+              ))}
           <Button
-            onClick={toggleBinding}
+            onClick={bindToSubscriptions}
             disabled={!connected}
             >
-            { isSubscriptionBound(subscriptionId) ? 'Unbind' : 'Bind' }
+            Bind to Selected
           </Button>
         </FormGroup>
       }

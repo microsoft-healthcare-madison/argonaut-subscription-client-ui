@@ -2,8 +2,10 @@ import { ConnectionInformation } from './ConnectionInformation';
 import { IconName } from '@blueprintjs/core';
 
 export interface ContentPaneProps {
-  fhirServerInfo: ConnectionInformation;
-  updateFhirServerInfo: ((info: ConnectionInformation) => void);
+  fhirServerInfoR4: ConnectionInformation;
+  updateFhirServerInfoR4: ((info: ConnectionInformation) => void);
+  fhirServerInfoR5: ConnectionInformation;
+  updateFhirServerInfoR5: ((info: ConnectionInformation) => void);
   clientHostInfo: ConnectionInformation;
   updateClientHostInfo: ((info: ConnectionInformation) => void);
   connect: ((

@@ -23,10 +23,12 @@ export interface GroupS2Props {
 /** Component representing the Scenario 2 Group Card */
 export default function GroupS2(props: GroupS2Props) {
 
+  let supported:boolean|undefined = props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.supportsCreateGroup : props.paneProps.fhirServerInfoR5.supportsCreateGroup;
+
   const info: DataCardInfo = {
     id: 's2_group',
     stepNumber: 2,
-    heading: (props.paneProps.fhirServerInfo.supportsCreateGroup) ? 'Select or Create a Group' : 'Select a Group',
+    heading: supported ? 'Select or Create a Group' : 'Select a Group',
     description: '',
     optional: false,
   };
@@ -41,7 +43,7 @@ export default function GroupS2(props: GroupS2Props) {
   /** Update data to show selected patient and notify parent */
   function handleSelectGroup(groupId: string, patientIds: string[]) {
 
-    // **** add to our data ****
+    // add to our data
     if ((props.data) && (props.data.length > 0)) {
       let updated: SingleRequestData = {...props.data[0], info: `Using group id: ${groupId}`};
       props.setData([updated]);
@@ -54,16 +56,13 @@ export default function GroupS2(props: GroupS2Props) {
       props.setData([updated]);
     }
 
-    // **** register with parent ****
-
+    // register with parent
     props.registerSelectedGroupId(groupId, patientIds);
   }
 
-  // **** check for NOT supporting create ****
-
-  if (!props.paneProps.fhirServerInfo.supportsCreatePatient) {
-    // **** return only search ****
-
+  // check for NOT supporting create
+  if (!supported) {
+    // return only search
     return(
       <DataCard
         info={info}
@@ -80,8 +79,7 @@ export default function GroupS2(props: GroupS2Props) {
     );
   }
 
-  // **** return card with search and create options ****
-
+  // return card with search and create options
   return(
     <DataCard
       info={info}

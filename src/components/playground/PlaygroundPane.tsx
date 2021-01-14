@@ -52,6 +52,8 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 	const [websocketData, setWebsocketData] = useState<SingleRequestData[]>([]);
 	const [websocketStatus, setWebsocketStatus] = useState<DataCardStatus>(_statusAvailable);
 
+	const [pendingMessages, setPendingMessages] = useState<string[]>([]);
+
 	useEffect(() => {
 		/** Determine if the client is connected enough to proceed and update state accordingly */
 		function checkIfConnected() {
@@ -75,6 +77,23 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 
 		props.registerHostMessageHandler(handleHostMessage);
 	});
+
+	useEffect(() => {
+		if (pendingMessages.length === 0) {
+			return;
+		}
+
+		handleHostMessage(pendingMessages[0]);
+		let updated:string[] = pendingMessages.slice(1);
+		setPendingMessages(updated);
+	}, [pendingMessages, setPendingMessages, handleHostMessage]);
+
+	function queueMessage(message:string) {
+		let updated:string[] = pendingMessages.slice();
+		updated.push(message);
+		setPendingMessages(updated);
+	}
+
 
 	// check for not being connected
 	if (!connected) {
@@ -114,31 +133,34 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 		// attempt to parse into a bundle
 		let notificationReturn:NotificationReturn = NotificationHelper.ParseNotificationMessage(
 			props.useBackportToR4,
-			message
-		);
+			message);
 
 		if (!notificationReturn.success) {
+			console.log('Parsing notification failed', message);
 			// ignore
 			return;
 		}
 
-		let rec:SingleRequestData = {
+		let additional:SingleRequestData = {
 			id:`event_${notificationData.length}`, 
 			name: `Notification #${notificationData.length}`,
 			responseData: JSON.stringify(notificationReturn.bundle, null, 2),
 			responseDataType: RenderDataAsTypes.FHIR,
 			info: `Notification #${notificationData.length}:\n`+
-				`\tSubscription:      ${notificationReturn.subscription}\n` +
-				`\tSubscriptionTopic: ${notificationReturn.topicUrl}\n` +
-				`\tType:              ${notificationReturn.notificationType}\n` +
-				`\tStatus:            ${notificationReturn.status}\n` +
-				`\tBundle Events:     ${notificationReturn.eventsInNotification}\n`+
-				`\tTotal Events:      ${notificationReturn.eventsSinceSubscriptionStart}`,
+				`\tSubscription:           ${notificationReturn.subscription}\n` +
+				`\tSubscriptionTopic:      ${notificationReturn.topicUrl}\n` +
+				`\tType:                   ${notificationReturn.notificationType}\n` +
+				`\tStatus:                 ${notificationReturn.status}\n` +
+				`\tBundle Events:          ${notificationReturn.eventsInNotification}\n`+
+				`\tTotal Events:           ${notificationReturn.eventsSinceSubscriptionStart}\n` +
+				`\tEntries with URLs:      ${notificationReturn.entriesWithFullUrl}\n` +
+				`\tEntries with resources: ${notificationReturn.entriesWithResource}\n`,
 		}
 
-		let data: SingleRequestData[] = notificationData.slice();
-		data.push(rec);
-		setNotificationData(data);
+		let updated: SingleRequestData[] = notificationData.slice();
+		updated.push(additional);
+
+		setNotificationData(updated);
 	}
 
 	/** Register a subscription as active in this scenario */
@@ -184,13 +206,14 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 
 	async function getGroupPatientIds(groupId: string):Promise<string[]> {
     // construct the search url
-		var url: string = new URL(groupId, props.fhirServerInfo.url).toString();
+		var url: string = new URL(
+			groupId, 
+			props.useBackportToR4 ? props.fhirServerInfoR4.url : props.fhirServerInfoR5.url).toString();
 
     try {
       let response:ApiResponse<fhir.Group> = await ApiHelper.apiGetFhir<fhir.Group>(
         url,
-        props.fhirServerInfo.authHeaderContent
-      );
+        props.useBackportToR4 ? props.fhirServerInfoR4.authHeaderContent : props.fhirServerInfoR5.authHeaderContent);
 
       // check for no values
       if (!response.value) {
@@ -284,7 +307,7 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 				data={websocketData}
 				setData={setWebsocketData}
 				subscriptions={subscriptions}
-				handleHostMessage={handleHostMessage}
+				handleHostMessage={queueMessage}
 				/>
 
 			<EncountersPlayground

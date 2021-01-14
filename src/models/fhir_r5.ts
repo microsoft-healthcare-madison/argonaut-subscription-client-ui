@@ -32414,8 +32414,8 @@ export interface SubscriptionStatus extends DomainResource {
   /**
    * The type of event being conveyed with this notificaiton.
    */
-  notificationType: string;
-  _notificationType?: Element;
+  type: string;
+  _type?: Element;
   /**
    * The status of the subscription, which marks the server state for managing the subscription.
    */
@@ -32429,7 +32429,7 @@ export interface SubscriptionStatus extends DomainResource {
   /**
    * The reference to the SubscriptionTopic for the Subscription which generated this notification.
    */
-  topic: Reference;
+  topic: string;
   _topic?: Element;
 }
 /**
@@ -32450,6 +32450,13 @@ export enum SubscriptionStatusStatusCodes {
   OFF = "off",
 }
 /**
+ * Code values for the SubscriptionTopicResourceTriggerQueryCriteria.resultForXXX
+ */
+export enum CriteriaNotExistsBehavior {
+  TEST_PASSES = "test-passes",
+  TEST_FAILS = "test-fails",
+}
+/**
  * The FHIR query based rules that the server should use to determine when to trigger a notification for this subscription topic.
  */
 export interface SubscriptionTopicResourceTriggerQueryCriteria extends BackboneElement {
@@ -32458,11 +32465,21 @@ export interface SubscriptionTopicResourceTriggerQueryCriteria extends BackboneE
    */
   current?: string;
   _current?: Element;
+  // /**
+  //  * Result for missing object during create
+  //  */
+  // resultForCreate?: string;
+  // _resultForCreate?: Element;
   /**
    * The rules are search criteria (without the [base] part). Like Bundle.entry.request.url, it has no leading "/".
    */
   previous?: string;
   _previous?: Element;
+  // /**
+  //  * Result for missing object during delete
+  //  */
+  // resultForDelete?: string;
+  // _resultForDelete?: Element;
   /**
    * If set to true, both current and previous criteria must evaluate true to  trigger a notification for this topic.  Otherwise a notification for this topic will be triggered if either one evaluates to true.
    */
@@ -32497,7 +32514,7 @@ export interface SubscriptionTopicResourceTrigger extends BackboneElement {
    * The list of resource types that are candidates for this subscription topic.  For example, the Encounter resource is updated in an 'admission' subscription topic.
    */
   resourceType?: string[];
-  _resourceType?: Element;
+  _resourceType?: Element[];
 }
 /**
  * Code Values for the SubscriptionTopic.resourceTrigger.methodCriteria field
@@ -32584,13 +32601,8 @@ export interface SubscriptionTopic extends DomainResource {
   /**
    * The canonical URL pointing to another FHIR-defined SubscriptionTopic that is adhered to in whole or in part by this SubscriptionTopic.
    */
-  derivedFromCanonical?: string[];
-  _derivedFromCanonical?: Element;
-  /**
-   * This might be an HTML page, PDF, etc. or could just be a non-resolvable URI identifier.
-   */
-  derivedFromUri?: string[];
-  _derivedFromUri?: Element;
+  derivedFrom?: string[];
+  _derivedFrom?: Element;
   /**
    * This description can be used to capture details such as why the Topic was built, comments about misuse, instructions for clinical use and interpretation, literature references, examples from the paper world, etc. It is not a rendering of the module as conveyed in the text field of the resource itself. This item SHOULD be populated unless the information is available from context.
    */

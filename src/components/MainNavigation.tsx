@@ -29,7 +29,9 @@ export interface MainNavigationProps {
   tabs: UiTabInformation[];
   selectedTabId: string;
   onSelectedTabChanged: ((id: string) => void);
-  fhirServerInfo: ConnectionInformation;
+  useBackportToR4: boolean;
+  fhirServerInfoR4: ConnectionInformation;
+  fhirServerInfoR5: ConnectionInformation;
   clientHostInfo: ConnectionInformation;
 }
 
@@ -37,7 +39,7 @@ export interface MainNavigationProps {
 const _minWidthToRenderFull: number = 900;
 
 export default function MainNavigation(props: MainNavigationProps) {
-  // **** set up local state ****
+  // set up local state
 
   const [renderSmall, setRenderSmall] = useState<boolean>(false);
   const [showNavDrawer, setShowNavDrawer] = useState<boolean>(false);
@@ -55,14 +57,14 @@ export default function MainNavigation(props: MainNavigationProps) {
   /** Function to handle resize events on the nav bar */
   function handleResize(entries: IResizeEntry[]) {
     if ((renderSmall) && (entries[0].contentRect.width > _minWidthToRenderFull)) {
-      // **** change to full render ****
+      // change to full render
  
       setRenderSmall(false);
       return;
     }
 
     if ((!renderSmall) && (entries[0].contentRect.width < _minWidthToRenderFull)) {
-      // **** change to small render ****
+      // change to small render
 
       setRenderSmall(true);
       return;
@@ -93,8 +95,7 @@ export default function MainNavigation(props: MainNavigationProps) {
     }
   }
 
-  // **** render this component ****
-
+  // render this component
   return(
     <ResizeSensor onResize={handleResize}>
       <Navbar className={Classes.DARK}>
@@ -111,7 +112,7 @@ export default function MainNavigation(props: MainNavigationProps) {
               selectedTabId={props.selectedTabId}
               vertical={false}
               >
-              { // **** add our tabs ****
+              { // add our tabs
                 props.tabs.map((tab) => (
                   <Tab key={tab.id} id={tab.id}>
                       {tab.title}
@@ -132,7 +133,12 @@ export default function MainNavigation(props: MainNavigationProps) {
         {/* Right side of nav-bar desktop */}
         { !renderSmall &&
         <NavbarGroup align={Alignment.RIGHT}>
-          <NavbarHeading>{iconForStatus(props.fhirServerInfo.status)} {props.fhirServerInfo.name}</NavbarHeading>
+          { props.useBackportToR4 &&
+            <NavbarHeading>{iconForStatus(props.fhirServerInfoR4.status)} {props.fhirServerInfoR4.name}</NavbarHeading>
+          }
+          { !props.useBackportToR4 &&
+            <NavbarHeading>{iconForStatus(props.fhirServerInfoR5.status)} {props.fhirServerInfoR5.name}</NavbarHeading>
+          }
           <NavbarHeading>{iconForStatus(props.clientHostInfo.status)} {props.clientHostInfo.name}</NavbarHeading>
         </NavbarGroup>
         }
@@ -163,14 +169,19 @@ export default function MainNavigation(props: MainNavigationProps) {
               selectedTabId={props.selectedTabId}
               vertical={true}
               >
-              { // **** add our tabs ****
+              { // add our tabs
                 props.tabs.map((tab) => (
                   <Tab key={tab.id} id={tab.id} title={tab.title}/>
                 ))
               }
             </Tabs>
             <br />
-            <H5 style={{margin: 5}}>{iconForStatus(props.fhirServerInfo.status)} {props.fhirServerInfo.name}</H5>
+            { props.useBackportToR4 &&
+              <H5 style={{margin: 5}}>{iconForStatus(props.fhirServerInfoR4.status)} {props.fhirServerInfoR4.name}</H5>
+            }
+            { !props.useBackportToR4 &&
+              <H5 style={{margin: 5}}>{iconForStatus(props.fhirServerInfoR5.status)} {props.fhirServerInfoR5.name}</H5>
+            }
             <H5 style={{margin: 5}}>{iconForStatus(props.clientHostInfo.status)} {props.clientHostInfo.name}</H5>
           </Drawer>
         </NavbarGroup>

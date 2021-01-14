@@ -41,7 +41,9 @@ export default function EncountersPlayground(props: EncountersPlaygroundProps) {
     props.updateStatus({...props.status, busy: true});
 
 		// build the url for our call
-    let url: string = new URL('Encounter?_format=json', props.paneProps.fhirServerInfo.url).toString();
+    let url: string = new URL(
+      'Encounter?_format=json',
+      props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.url : props.paneProps.fhirServerInfoR5.url).toString();
 
     // figure out our patient reference
     let patientRef: string = '';
@@ -82,9 +84,8 @@ export default function EncountersPlayground(props: EncountersPlaygroundProps) {
       let response:ApiResponse<fhir.Encounter> = await ApiHelper.apiPostFhir<fhir.Encounter>(
         url,
         encounter,
-        props.paneProps.fhirServerInfo.authHeaderContent,
-        props.paneProps.fhirServerInfo.preferHeaderContent
-      );
+        props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.authHeaderContent : props.paneProps.fhirServerInfoR5.authHeaderContent,
+        props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.preferHeaderContent : props.paneProps.fhirServerInfoR5.preferHeaderContent);
 
       if (!response.value) {
         // show the client subscription information
@@ -147,7 +148,8 @@ export default function EncountersPlayground(props: EncountersPlaygroundProps) {
   }
 
   // check for NOT being allowed to create encounters
-  if (!props.paneProps.fhirServerInfo.supportsCreateEncounter) {
+  if (((props.paneProps.useBackportToR4) && (!props.paneProps.fhirServerInfoR4.supportsCreateEncounter)) ||
+      ((!props.paneProps.useBackportToR4) && (!props.paneProps.fhirServerInfoR5.supportsCreateEncounter))) {
     return (
     <DataCard
       info={info}
@@ -164,7 +166,7 @@ export default function EncountersPlayground(props: EncountersPlaygroundProps) {
     );
   }
   
-  // **** return the standard component ****
+  // return the standard component
   return(
     <DataCard
       info={info}

@@ -125,7 +125,8 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
   
   async function createSubscription() {
     if ((props.paneProps.useBackportToR4) && 
-        (filters.length === 0)) {
+        (filters.length === 0) &&
+        (filterByValue.length === 0)) {
       props.paneProps.toaster('At least one filter is REQUIRED in backport mode', IconNames.ERROR, 1000);
       return;
     }
@@ -193,12 +194,30 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 
     if (filters.length > 0) {
       subscription.filterBy = filters;
+    } else if (filterByValue.length > 0) {
+      // create the filter object
+      let filter:fhir.SubscriptionFilterBy = {
+        searchParamName: props.topics[topicIndex].canFilterBy![filterByIndex].searchParamName!,
+        searchModifier: props.topics[topicIndex].canFilterBy![filterByIndex].searchModifier![filterByMatchTypeIndex],
+        value: filterByValue,
+      };
+      
+      // figure out patient IDs to list for encounters
+      if ((filter.searchParamName === 'patient') && (filter.searchModifier === '=')) {
+        props.registerPatientId(filter.value);
+      }
+
+      if ((filter.searchParamName === 'patient') && (filter.searchModifier === 'in')) {
+        props.registerGroupId(filter.value);
+      }
+
+      subscription.filterBy = [filter];
     }
 
     // try to create the subscription
     let subscriptionReturn:SubscriptionReturn = await SubscriptionHelper.CreateSubscription(
       props.paneProps.useBackportToR4,
-      props.paneProps.fhirServerInfo,
+      props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4 : props.paneProps.fhirServerInfoR5,
       subscription,
       props.topics[topicIndex],
     );
@@ -213,6 +232,8 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
     props.setData(updatedData);
 
     if (subscriptionReturn.subscription) {
+      setFilters([]);
+      setFilterByValue('');
       // register this subscription (updates status)
       props.registerSubscription(subscriptionReturn.subscription);
     } else {
@@ -225,7 +246,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 
     let subscriptionReturn:SubscriptionReturn = await SubscriptionHelper.RefreshSubscription(
       props.paneProps.useBackportToR4,
-      props.paneProps.fhirServerInfo,
+      props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4 : props.paneProps.fhirServerInfoR5,
       props.subscriptions[dataRowIndex]);
 
     // fix the subscription record name
@@ -246,7 +267,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
     try {
       ApiHelper.deleteSubscription(
         props.subscriptions[dataRowIndex].id!,
-        props.paneProps.fhirServerInfo.url,
+        props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.url : props.paneProps.fhirServerInfoR5.url,
         props.paneProps.useBackportToR4
       );
 
@@ -277,7 +298,6 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       let name: string = '';
 
       // determine our resource name
-
       if ((topicIndex < 0) || 
           (topicIndex >= props.topics.length)) {
         props.paneProps.toaster('Please select a Topic prior to searching for filter values.', IconNames.WARNING_SIGN);
@@ -312,7 +332,6 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       }
 
       // if there is no known resource name, disable for now
-
       if (!name) {
         props.paneProps.toaster('Search is not YET available for this combination', IconNames.WARNING_SIGN);
         return;
@@ -375,7 +394,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
     setManualFilterValue('');
   }
 
-  function addFilter() {
+  function addFilter(replace?:boolean) {
     // sanity checks
     if (filterByValue === '') {
         props.paneProps.toaster('Cannot add empty filters!', IconNames.ERROR);
@@ -390,7 +409,10 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
     };
 
     // add this filter
-    let updated: fhir.SubscriptionFilterBy[] = filters.slice();
+    let updated: fhir.SubscriptionFilterBy[] = 
+      (replace === true) 
+      ? []
+      : filters.slice();
     updated.push(rec);
 
     // figure out patient IDs to list for encounters
@@ -629,10 +651,15 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
               Search
             </Button>
             <Button
-              onClick={addFilter}
+              onClick={() => addFilter()}
               >
               Add Filter
             </Button>
+            <Button
+              onClick={createSubscription}
+              >
+              Quick Create
+              </Button>
           </ControlGroup>
         </FormGroup>
       }

@@ -13,6 +13,9 @@ export interface NotificationReturn {
   notificationType:string;
 
   bundle: fhir4.Bundle|fhir5.Bundle|undefined;
+
+  entriesWithFullUrl: number;
+  entriesWithResource: number;
 }
 
 export class NotificationHelper {
@@ -118,14 +121,21 @@ export class NotificationHelper {
       notificationReturn.eventsInNotification = 0;
     }
 
-    // if ((bundle.entry) && (bundle.entry.length > 1)) {
-    //   bundle.entry.forEach((entry, index) => {
-    //     if (index === 0) {
-    //       return;
-    //     }
-    //     notificationReturn.entriesR4.push(entry);
-    //   });
-    // }
+    if (bundle.entry.length > 1) {
+      bundle.entry.forEach((entry, index) => {
+        if (index === 0) {
+          return;
+        }
+
+        if (entry.fullUrl) {
+          notificationReturn.entriesWithFullUrl++;
+        }
+
+        if (entry.resource) {
+          notificationReturn.entriesWithResource++;
+        }
+      })
+    }
 
     notificationReturn.success = true;
 
@@ -142,7 +152,7 @@ export class NotificationHelper {
 			// assume non-bundle message got through
       return notificationReturn;
     }
-    
+
     notificationReturn.bundle = bundle;
     notificationReturn.bundleType = bundle.type;
 
@@ -177,14 +187,14 @@ export class NotificationHelper {
     }
 
     if ((subscriptionStatus.topic) && (subscriptionStatus.topic)) {
-      notificationReturn.topicUrl = subscriptionStatus.topic.reference!;
+      notificationReturn.topicUrl = subscriptionStatus.topic;
     }
 
     if (subscriptionStatus.subscription.reference) {
       notificationReturn.subscription = subscriptionStatus.subscription.reference!;
     }
 
-    notificationReturn.notificationType = subscriptionStatus.notificationType;
+    notificationReturn.notificationType = subscriptionStatus.type;
     if (notificationReturn.notificationType === fhir5.SubscriptionStatusNotificationTypeCodes.HANDSHAKE) {
       notificationReturn.eventsSinceSubscriptionStart = 0;
       notificationReturn.eventsInNotification = 0;
@@ -192,14 +202,21 @@ export class NotificationHelper {
       notificationReturn.eventsInNotification = 0;
     }
 
-    // if (bundle.entry.length > 1) {
-    //   bundle.entry.forEach((entry, index) => {
-    //     if (index === 0) {
-    //       return;
-    //     }
-    //     notificationReturn.entriesR5.push(entry);
-    //   })
-    // }
+    if (bundle.entry.length > 1) {
+      bundle.entry.forEach((entry, index) => {
+        if (index === 0) {
+          return;
+        }
+
+        if (entry.fullUrl) {
+          notificationReturn.entriesWithFullUrl++;
+        }
+
+        if (entry.resource) {
+          notificationReturn.entriesWithResource++;
+        }
+      })
+    }
 
     notificationReturn.success = true;
 
@@ -217,6 +234,8 @@ export class NotificationHelper {
       subscription: '',
       notificationType: '',
       bundle: undefined,
+      entriesWithFullUrl: 0,
+      entriesWithResource: 0,
     };
   }
 

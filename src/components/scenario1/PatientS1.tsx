@@ -23,10 +23,12 @@ export interface PatientS1Props {
 /** Component representing the Scenario 1 Patient Card */
 export default function PatientS1(props: PatientS1Props) {
 
+  let supported:boolean|undefined = props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.supportsCreatePatient : props.paneProps.fhirServerInfoR5.supportsCreatePatient;
+
   const info: DataCardInfo = {
     id: 's1_patient',
     stepNumber: 2,
-    heading: (props.paneProps.fhirServerInfo.supportsCreatePatient) ? 'Select or Create a Patient' : 'Select a Patient',
+    heading: supported ? 'Select or Create a Patient' : 'Select a Patient',
     description: '',
     optional: false,
   };
@@ -41,7 +43,7 @@ export default function PatientS1(props: PatientS1Props) {
   /** Update data to show selected patient and notify parent */
   function handleSelectPatient(patientId: string) {
 
-    // **** add to our data ****
+    // add to our data
     if ((props.data) && (props.data.length > 0)) {
       let updated: SingleRequestData = {...props.data[0], info: `Using patient id: ${patientId}`};
       props.setData([updated]);
@@ -54,16 +56,14 @@ export default function PatientS1(props: PatientS1Props) {
       props.setData([updated]);
     }
 
-    // **** register with parent ****
+    // register with parent
 
     props.registerSelectedPatientId(patientId);
   }
 
-  // **** check for NOT supporting create ****
-
-  if (!props.paneProps.fhirServerInfo.supportsCreatePatient) {
-    // **** return only search ****
-
+  // check for NOT supporting create
+  if (!supported) {
+    // return only search
     return(
       <DataCard
         info={info}
@@ -80,8 +80,7 @@ export default function PatientS1(props: PatientS1Props) {
     );
   }
 
-  // **** return card with search and create options ****
-
+  // return card with search and create options
   return(
     <DataCard
       info={info}

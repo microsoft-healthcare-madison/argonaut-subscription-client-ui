@@ -53,13 +53,14 @@ export default function GroupSearchCard(props: GroupSearchProps) {
 
   /** Function to handle user request to search a FHIR server for groups */
 	async function handleSearchClick() {
-    // **** flag we are searching ****
+    // flag we are searching
     
     setBusy(true);
 
-    // **** construct the search url ****
-
-		var url: string = new URL('Group/', props.paneProps.fhirServerInfo.url).toString();
+    // construct the search url
+    var url: string = new URL(
+      'Group/', 
+      props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.url : props.paneProps.fhirServerInfoR5.url).toString();
 		
 		if (searchFilter) {
 				url += `?${encodeURIComponent(matchType)}=${encodeURIComponent(searchFilter)}&actual=true`;
@@ -68,11 +69,10 @@ export default function GroupSearchCard(props: GroupSearchProps) {
     try {
       let response:ApiResponse<fhir.Bundle> = await ApiHelper.apiGetFhir<fhir.Bundle>(
         url,
-        props.paneProps.fhirServerInfo.authHeaderContent
+        props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.authHeaderContent : props.paneProps.fhirServerInfoR5.authHeaderContent
       );
 
-      // **** check for no values ****
-
+      // check for no values
       if ((!response.value) || (!response.value.entry) || (!response.value.entry)) {
         let data: SingleRequestData[] = [
           {
@@ -93,8 +93,7 @@ export default function GroupSearchCard(props: GroupSearchProps) {
 
       var bundleGroups: KeySelectionInfo[] = [];
 
-      // **** loop over groups ****
-
+      // loop over groups
       response.value.entry!.forEach(entry => {
         if (!entry.resource) return;
 
@@ -123,8 +122,7 @@ export default function GroupSearchCard(props: GroupSearchProps) {
         }
       });
       
-      // **** build data for display ****
-
+      // build data for display
       let data: SingleRequestData[] = [
         {
           name: 'Group Search',
@@ -136,16 +134,14 @@ export default function GroupSearchCard(props: GroupSearchProps) {
         }
       ]
 
-      // **** update our state ****
-
+      // update our state
       setBusy(false);
       setGroups(bundleGroups);
       setSelectedGroupIndex(-1);
       props.setData(data);
       
     } catch (err) {
-      // **** build data for display ****
-
+      // build data for display
       let data: SingleRequestData[] = [
         {
           name: 'Group Search',
@@ -156,8 +152,7 @@ export default function GroupSearchCard(props: GroupSearchProps) {
         }
       ]
 
-      // **** update our state ****
-
+      // update our state
       setBusy(false);
       setGroups([]);
       setSelectedGroupIndex(-1);

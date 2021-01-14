@@ -43,7 +43,9 @@ export default function TriggerS2(props: TriggerS2Props) {
     props.updateStatus({...props.status, busy: true});
 
 		// build the url for our call
-    let url: string = new URL('Encounter?_format=json', props.paneProps.fhirServerInfo.url).toString();
+    let url: string = new URL(
+      'Encounter?_format=json',
+      props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.url : props.paneProps.fhirServerInfoR5.url).toString();
 
     // figure out our patient reference
     let patientRef: string = '';
@@ -79,18 +81,16 @@ export default function TriggerS2(props: TriggerS2Props) {
 			}
     }
 
-    // **** ask for this encounter to be created ****
-    
+    // ask for this encounter to be created
     try {
       let response:ApiResponse<fhir.Encounter> = await ApiHelper.apiPostFhir<fhir.Encounter>(
         url,
         encounter,
-        props.paneProps.fhirServerInfo.authHeaderContent,
-        props.paneProps.fhirServerInfo.preferHeaderContent
-      );
+        props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.authHeaderContent : props.paneProps.fhirServerInfoR5.authHeaderContent,
+        props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.preferHeaderContent : props.paneProps.fhirServerInfoR5.preferHeaderContent);
 
       if (!response.value) {
-        // **** show the client subscription information ****
+        // show the client subscription information
 
         let updated: SingleRequestData = {
           name: 'Create Encounter',
@@ -110,8 +110,7 @@ export default function TriggerS2(props: TriggerS2Props) {
         return;
       }
 
-      // **** show the client encounter information ****
-
+      // show the client encounter information
       let updated: SingleRequestData = {
         name: 'Create Encounter',
         id: 'create_encounter',
@@ -128,8 +127,7 @@ export default function TriggerS2(props: TriggerS2Props) {
 
       props.registerEncounterSent();
     } catch (err) {
-      // **** show the client subscription information ****
-
+      // show the client subscription information
       let updated: SingleRequestData = {
         name: 'Create Encounter',
         id: 'create_encounter',
@@ -154,10 +152,10 @@ export default function TriggerS2(props: TriggerS2Props) {
 		setSelectedPatient(event.currentTarget.value);
   }
 
+  let supported:boolean|undefined = props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.supportsCreateEncounter : props.paneProps.fhirServerInfoR5.supportsCreateEncounter;
 
-  // **** check for NOT being allowed to create encounters
-  
-  if (!props.paneProps.fhirServerInfo.supportsCreateEncounter) {
+  // check for NOT being allowed to create encounters
+  if (!supported) {
     return (
     <DataCard
       info={info}
@@ -174,7 +172,7 @@ export default function TriggerS2(props: TriggerS2Props) {
     );
   }
   
-  // **** return the standard component ****
+  // return the standard component
   return(
     <DataCard
       info={info}

@@ -23,11 +23,9 @@ export default function GroupCreateCard(props: GroupCreateProps) {
   const [patientIds, setPatientIds] = useState<string[]>([]);
 
   const [busy, setBusy] = useState<boolean>(false);
-
   
   useEffect(() => {
-    // **** check for having data ****
-
+    // check for having data
     if (groupId !== '') {
       return;
     }
@@ -45,8 +43,8 @@ export default function GroupCreateCard(props: GroupCreateProps) {
       }
       return (value);
     }
-		// **** generate some info in case a new group is created ****
 
+    // generate some info in case a new group is created
     setName(`TestGroup-${Math.floor((Math.random() * 10000) + 1)}`);
 		setGroupId(`${getRandomChars(3)}${Math.floor((Math.random() * 10000) + 1)}`);
   },
@@ -65,22 +63,19 @@ export default function GroupCreateCard(props: GroupCreateProps) {
   
   /** Function to handle a user request to create a patient */
   async function handleCreateGroupClick() {
-    // **** flag we are busy ****
-    
+    // flag we are busy
     setBusy(true);
     
     let members: fhir.GroupMember[] = [];
     
-    // **** add our patient references ****
-
+    // add our patient references
     patientIds.forEach((patientId: string) => {
       members.push({
         entity: {reference: patientId}
       });
     });
 
-		// **** create a new group ****
-
+		// create a new group
 		var group: fhir.Group = {
 			resourceType: 'Group',
 			id: groupId,
@@ -91,21 +86,20 @@ export default function GroupCreateCard(props: GroupCreateProps) {
       member: members,
     }
     
-		// **** PUT this on the server ****
-
-		let url: string = new URL(`Group/${group.id!}?_format=json`, props.paneProps.fhirServerInfo.url).toString();
+		// PUT this on the server
+		let url: string = new URL(
+      `Group/${group.id!}?_format=json`,
+      props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.url : props.paneProps.fhirServerInfoR5.url).toString();
 
     try {
       let response:ApiResponse<fhir.Group> = await ApiHelper.apiPutFhir<fhir.Group>(
         url,
         group,
-        props.paneProps.fhirServerInfo.authHeaderContent,
-        props.paneProps.fhirServerInfo.preferHeaderContent
-        );
+        props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.authHeaderContent : props.paneProps.fhirServerInfoR5.authHeaderContent,
+        props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.preferHeaderContent : props.paneProps.fhirServerInfoR5.preferHeaderContent);
       
       if (!response.value) {
-        // **** show the client error information ****
-
+        // show the client error information
         let updated: SingleRequestData = {
           name: 'Group Create',
           id: 'group_create', 
@@ -124,8 +118,7 @@ export default function GroupCreateCard(props: GroupCreateProps) {
         return;
       }
 
-      // **** build data for display ****
-
+      // build data for display
       let data: SingleRequestData = {
         name: 'Group Create',
         id: 'group_create', 
@@ -137,17 +130,14 @@ export default function GroupCreateCard(props: GroupCreateProps) {
         outcome: response.outcome ? JSON.stringify(response.outcome) : undefined,
       };
 
-      // **** update our state ****
-
+      // update our state
       setBusy(false);
       props.setData([data]);
 
-      // **** flag this patient has been selected ****
-
+      // flag this patient has been selected
       props.registerSelectedGroup(response.value!.id!, patientIds);
     } catch (err) {
-      // **** build data for display ****
-
+      // build data for display
       let data: SingleRequestData = {
         name: 'Group Create',
         id: 'group_create', 
@@ -158,8 +148,7 @@ export default function GroupCreateCard(props: GroupCreateProps) {
         responseDataType: RenderDataAsTypes.Error
       };
 
-      // **** update our state ****
-
+      // update our state
       setBusy(false);
       props.setData([data]);
     }

@@ -35,9 +35,7 @@ export class TopicHelper {
     try {
       let response:ApiResponse<fhir4.Parameters> = await ApiHelper.apiGetFhir(
         url,
-        fhirServerInfo.authHeaderContent,
-        '4.0'
-      );
+        fhirServerInfo.authHeaderContent);
 
       if (!response.value) {
         topicReturn = {

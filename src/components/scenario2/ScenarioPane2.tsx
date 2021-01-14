@@ -72,16 +72,14 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 			let lastState: boolean = connected;
 			let nextState: boolean;
 
-			// **** check to make sure we are connected to the host (requires server) ****
-
+			// check to make sure we are connected to the host (requires server)
 			if (props.clientHostInfo.status !== 'ok') {
 				nextState = false;
 			} else {
 				nextState = true;
 			}
 
-			// **** update state (if necessary) ****
-
+			// update state (if necessary)
 			if (lastState !== nextState) {
 				setConnected(nextState);
 			}
@@ -92,8 +90,7 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 		props.registerHostMessageHandler(handleHostMessage);
 	});
 
-	// **** check for not being connected ****
-
+	// check for not being connected
   if (!connected) {
 		return (
 		<div id='mainContent'>
@@ -138,9 +135,8 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 			if (subscription) {
 				ApiHelper.deleteSubscription(
 					subscription.id!,
-					props.fhirServerInfo.url,
-					props.useBackportToR4
-					);
+					props.useBackportToR4 ? props.fhirServerInfoR4.url : props.fhirServerInfoR5.url,
+					props.useBackportToR4);
 			}
 			setSubscription(null);
 			setSubscriptionData([]);
@@ -171,14 +167,12 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 
 	/** Reset this scenario to clean state */
 	function cleanUp() {
-		// **** flag busy ****
-
+		// flag busy
 		setCleanUpStatus(_statusBusy);
 
 		let info: string = 'Cleaning up...\n';
 
-		// **** build our string ****
-
+		// build our string
 		if (subscription) {
 			info += `\tRemoved subscription: ${subscription.id!}\n`;
 		}
@@ -190,12 +184,10 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 		info += '\tCleaned internal steps.\n'
 		info += `Cleaned at: ${Date()}`;
 
-		// **** reset to step 2 (removes endpoints and subscriptions) ****
-
+		// reset to step 2 (removes endpoints and subscriptions)
 		disableSteps(2);
 
-		// **** done ****
-
+		// done
 		let data: SingleRequestData = {
 			id: 'cleanup',
 			name: 'Clean Up',
@@ -208,12 +200,10 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 
 	/** Register an encounter has been sent by the trigger card */
 	function registerEncounterSent() {
-		// **** increment our number of events we are waiting on ****
-
+		// increment our number of events we are waiting on
 		setTriggerCount(triggerCount + 1);
 
-		// **** update status ****
-
+		// update status
 		setTriggerStatus(_statusComplete);
 		setNotificationStatus(_statusBusy);
 	}
@@ -223,83 +213,67 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 		
 		if (!value)
 		{
-			// **** disable subsequent steps ****
-
+			// disable subsequent steps
 			disableSteps(5);
 
-			// **** check for an old subscription ****
-
+			// check for an old subscription
 			if (subscription) {
 				ApiHelper.deleteSubscription(
 					subscription.id!,
-					props.fhirServerInfo.url,
-					props.useBackportToR4
-				);
+					props.useBackportToR4 ? props.fhirServerInfoR4.url : props.fhirServerInfoR5.url,
+					props.useBackportToR4);
 				setSubscription(null);
 			}
 
-			// **** flag we are waiting on subscription ****
-			
+			// flag we are waiting on subscription handshake
 			setHandshakeStatus(_statusBusy);
 
-			// **** done ****
-
+			// done
 			return;
 		}
 
-		// **** save subscription ****
-
+		// save subscription
 		setSubscription(value);
 
-		// **** update status ***
-
+		// update status
 		setSubscriptionStatus(_statusComplete);
 	}
 
 	/** Register an endpoint as active in this scenario */
 	function registerEndpoint(value: EndpointRegistration) {
-		// **** disable subsequent steps ****
-
+		// disable subsequent steps
 		disableSteps(4);
 
-		// **** check for an old endpoint ****
-
+		// check for an old endpoint
 		if (endpoint) {
 			ApiHelper.deleteEndpoint(
 				props.clientHostInfo.registration,
 				endpoint.uid!,
-				props.clientHostInfo.url
-				);
+				props.clientHostInfo.url);
 		}
 
-		// **** save endpoint ****
-
+		// save endpoint
 		setEndpoint(value);
 
-		// **** update status ****
-
+		// update status
 		setEndpointStatus(_statusComplete);
 		setSubscriptionStatus(_statusAvailable);
   }
 
 	/** Register a group id as active in this scenario */
 	function registerSelectedGroupId(id: string, patientIds: string[]) {
-		// **** disable subsequent steps ****
-
+		// disable subsequent steps
 		disableSteps(3);
 
-    // **** save patient id ***
-
+    // save group and patient ids
     setSelectedGroupId(id);
     setGroupPatientIds(patientIds);
 
-    // **** update status ****
-
+    // update status
     setGroupStatus(_statusComplete);
     setEndpointStatus(_statusAvailable);
 
-		// **** if there was a clean-up performed, reset the data (no longer clean) ****
-
+		// if there was a clean-up performed, reset the data (no longer clean)
 		if ((cleanUpData) && (cleanUpData.length > 0)) {
 			setCleanUpStatus(_statusAvailable);
 			setCleanUpData([]);
@@ -334,8 +308,10 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 			setHandshakeData([data]);
 			setHandshakeStatus(_statusComplete);
 
+			let supported:boolean|undefined = props.useBackportToR4 ? props.fhirServerInfoR4.supportsCreateEncounter : props.fhirServerInfoR5.supportsCreateEncounter;
+
 			// check for NOT being allowed to trigger on this server
-			if (!props.fhirServerInfo.supportsCreateEncounter) {
+			if (!supported) {
 				setTriggerCount(100000);
 				setNotificationStatus(_statusBusy);
 			}
@@ -374,7 +350,7 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 		}
 	}
 
-	// **** if we are connected, render scenario content ****
+	// if we are connected, render scenario content
 	return (
 	<div id='mainContent'>
 		<Card key='title' elevation={Elevation.TWO} style={{margin: 5}}>

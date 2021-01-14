@@ -39,14 +39,14 @@ export default function TriggerS1(props: TriggerS1Props) {
   async function sendEncounter() {
     props.updateStatus({...props.status, busy: true});
 
-		// **** build the url for our call ***
+		// build the url for our call
+    let url: string = new URL(
+      'Encounter?_format=json',
+      props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.url : props.paneProps.fhirServerInfoR5.url).toString();
 
-    let url: string = new URL('Encounter?_format=json', props.paneProps.fhirServerInfo.url).toString();
-
-		// **** build our encounter ****
-
+		// build our encounter
 		let encounter: fhir.Encounter = {
-			resourceType: "Encounter",
+			resourceType: 'Encounter',
 			class: {
 				system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode',
 				code: encounterClass,
@@ -57,19 +57,16 @@ export default function TriggerS1(props: TriggerS1Props) {
 			}
     }
 
-    // **** ask for this encounter to be created ****
-    
+    // ask for this encounter to be created
     try {
       let response:ApiResponse<fhir.Encounter> = await ApiHelper.apiPostFhir<fhir.Encounter>(
         url,
         encounter,
-        props.paneProps.fhirServerInfo.authHeaderContent,
-        props.paneProps.fhirServerInfo.preferHeaderContent
-      );
+        props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.authHeaderContent : props.paneProps.fhirServerInfoR5.authHeaderContent,
+        props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.preferHeaderContent : props.paneProps.fhirServerInfoR5.preferHeaderContent);
 
       if (!response.value) {
-        // **** show the client subscription information ****
-
+        // show the client subscription information
         let updated: SingleRequestData = {
           name: 'Create Encounter',
           id: 'create_encounter',
@@ -88,8 +85,7 @@ export default function TriggerS1(props: TriggerS1Props) {
         return;
       }
 
-      // **** show the client encounter information ****
-
+      // show the client encounter information
       let updated: SingleRequestData = {
         name: 'Create Encounter',
         id: 'create_encounter',
@@ -106,8 +102,7 @@ export default function TriggerS1(props: TriggerS1Props) {
 
       props.registerEncounterSent();
     } catch (err) {
-      // **** show the client subscription information ****
-
+      // show the client subscription information
       let updated: SingleRequestData = {
         name: 'Create Encounter',
         id: 'create_encounter',
@@ -128,9 +123,10 @@ export default function TriggerS1(props: TriggerS1Props) {
 		setPayloadType(event.currentTarget.value);
   }
 
-  // **** check for NOT being allowed to create encounters
-  
-  if (!props.paneProps.fhirServerInfo.supportsCreateEncounter) {
+  let supported:boolean|undefined = props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.supportsCreateEncounter : props.paneProps.fhirServerInfoR5.supportsCreateEncounter;
+
+  // check for NOT being allowed to create encounters
+  if (!supported) {
     return (
     <DataCard
       info={info}
@@ -147,7 +143,7 @@ export default function TriggerS1(props: TriggerS1Props) {
     );
   }
   
-  // **** return the standard component ****
+  // return the standard component
   return(
     <DataCard
       info={info}

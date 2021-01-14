@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Props } from 'react';
 
 import { 
   Card,
@@ -19,14 +19,18 @@ import { ContentPaneProps } from '../models/ContentPaneProps';
 import { ConnectionInformation } from '../models/ConnectionInformation';
 import { StorageHelper } from '../util/StorageHelper';
 import { IconNames } from '@blueprintjs/icons';
+import { connect } from 'http2';
 
 export default function ConfigurationPane(props: ContentPaneProps) {
 
   const initialLoadRef = useRef<boolean>(true);
 
-  const [fhirServerUrl, setFhirServerUrl] = useState<string>(props.fhirServerInfo.url);
-  const [fhirServerAuth, setFhirServerAuth] = useState<string>(props.fhirServerInfo.authHeaderContent!);
-  const [fhirServerPrefer, setFhirServerPrefer] = useState<string>(props.fhirServerInfo.preferHeaderContent);
+  const [fhirServerUrlR4, setFhirServerUrlR4] = useState<string>(props.fhirServerInfoR4.url);
+  const [fhirServerAuthR4, setFhirServerAuthR4] = useState<string>(props.fhirServerInfoR4.authHeaderContent!);
+  const [fhirServerPreferR4, setFhirServerPreferR4] = useState<string>(props.fhirServerInfoR4.preferHeaderContent);
+  const [fhirServerUrlR5, setFhirServerUrlR5] = useState<string>(props.fhirServerInfoR5.url);
+  const [fhirServerAuthR5, setFhirServerAuthR5] = useState<string>(props.fhirServerInfoR5.authHeaderContent!);
+  const [fhirServerPreferR5, setFhirServerPreferR5] = useState<string>(props.fhirServerInfoR5.preferHeaderContent);
   // const [fhirServerProxyUrl, setFhirServerProxyUrl] = useState<string>(props.fhirServerInfo.proxyDestinationUrl!)
 
   const [clientHostUrl, setClientHostUrl] = useState<string>(props.clientHostInfo.url);
@@ -118,18 +122,29 @@ export default function ConfigurationPane(props: ContentPaneProps) {
   useEffect(() => {
     if (initialLoadRef.current) {
 
-      // **** update local settings that we need values for ****
-
-      if (localStorage.getItem('fhirServerUrl')) {
-        setFhirServerUrl(localStorage.getItem('fhirServerUrl')!);
+      // update local settings that we need values for
+      if (localStorage.getItem('fhirServerUrlR4')) {
+        setFhirServerUrlR4(localStorage.getItem('fhirServerUrlR4')!);
       }
 
-      if (localStorage.getItem('fhirServerAuth')) {
-        setFhirServerAuth(localStorage.getItem('fhirServerAuth')!);
+      if (localStorage.getItem('fhirServerAuthR4')) {
+        setFhirServerAuthR4(localStorage.getItem('fhirServerAuthR4')!);
       }
 
-      if (localStorage.getItem('fhirServerPrefer')) {
-        setFhirServerPrefer(localStorage.getItem('fhirServerPrefer')!);
+      if (localStorage.getItem('fhirServerPreferR4')) {
+        setFhirServerPreferR4(localStorage.getItem('fhirServerPreferR4')!);
+      }
+
+      if (localStorage.getItem('fhirServerUrlR5')) {
+        setFhirServerUrlR5(localStorage.getItem('fhirServerUrlR5')!);
+      }
+
+      if (localStorage.getItem('fhirServerAuthR5')) {
+        setFhirServerAuthR5(localStorage.getItem('fhirServerAuthR5')!);
+      }
+
+      if (localStorage.getItem('fhirServerPreferR5')) {
+        setFhirServerPreferR5(localStorage.getItem('fhirServerPreferR5')!);
       }
 
       // if (localStorage.getItem('fhirServerProxyUrl')) {
@@ -140,7 +155,7 @@ export default function ConfigurationPane(props: ContentPaneProps) {
         setClientHostUrl(localStorage.getItem('clientHostUrl')!);
       }
       
-      // **** check for requesting a connection ****
+      // check for requesting a connection
 
       if ((StorageHelper.isLocalStorageAvailable) &&
           (!connected) &&
@@ -148,7 +163,7 @@ export default function ConfigurationPane(props: ContentPaneProps) {
         setRequestConnectionToggle(true);
       }
 
-      // **** no longer initial load ****
+      // no longer initial load
 
       initialLoadRef.current = false;
     }
@@ -160,87 +175,96 @@ export default function ConfigurationPane(props: ContentPaneProps) {
       return;
     }
 
-    // **** clear our flag ****
-
+    // clear our flag
     setRequestConnectionToggle(false);
 
-    // **** set busy ****
-
+    // set busy
     setBusy(true);
 
     function completionHandler(success: boolean) {
-      // **** done ****
-
       setBusy(false);
     }
 
-    // **** if we are connected to a client, we need to disconnect ****
-
+    // if we are connected to a client, we need to disconnect
     if (connected) {
       props.disconnect();
 
-      // **** flag we want to be disconnected ****
-
+      // flag we want to be disconnected
       if (StorageHelper.isLocalStorageAvailable) {
         localStorage.setItem('connectionRequested', false.toString());
       }
 
-      // **** done ****
-
       setBusy(false);
-
-      // **** done ****
-
       return;
     }
 
-    // **** check most basic of input ****
+    let serverInfoR4: ConnectionInformation = {...props.fhirServerInfoR4,
+      url: fhirServerUrlR4,
+      authHeaderContent: fhirServerAuthR4,
+      preferHeaderContent: fhirServerPreferR4,
+    };
 
-    if ((!fhirServerUrl) || 
-        (fhirServerUrl.length < 8) || 
-        (!fhirServerUrl.startsWith('http'))) {
-      // **** error ****
+    // check most basic of input
+    if ((!serverInfoR4.url) || 
+        (serverInfoR4.url.length < 8) || 
+        (!serverInfoR4.url.startsWith('http'))) {
+      // error
 
       props.toaster('Invalid FHIR Server URL!', IconNames.ERROR);
       setBusy(false);
       return;
     }
 
-    if ((!clientHostUrl) || 
-        (clientHostUrl.length < 8) || 
-        (!clientHostUrl.startsWith('http'))) {
-      // **** error ****
+    if (!serverInfoR4.url.endsWith('/')) {
+      serverInfoR4.url = serverInfoR4.url + '/';
+    }
+
+    let serverInfoR5: ConnectionInformation = {...props.fhirServerInfoR5,
+      url: fhirServerUrlR5,
+      authHeaderContent: fhirServerAuthR5,
+      preferHeaderContent: fhirServerPreferR5,
+    };
+
+    // check most basic of input
+    if ((!serverInfoR5.url) || 
+        (serverInfoR5.url.length < 8) || 
+        (!serverInfoR5.url.startsWith('http'))) {
+      // error
+
+      props.toaster('Invalid FHIR Server URL!', IconNames.ERROR);
+      setBusy(false);
+      return;
+    }
+
+    if (!serverInfoR5.url.endsWith('/')) {
+      serverInfoR5.url = serverInfoR5.url + '/';
+    }
+
+    let clientInfo: ConnectionInformation = {...props.clientHostInfo, url: clientHostUrl};
+
+    if ((!clientInfo.url) || 
+        (clientInfo.url.length < 8) || 
+        (!clientInfo.url.startsWith('http'))) {
+      // error
 
       props.toaster('Invalid Client Host URL!', IconNames.ERROR);
       setBusy(false);
       return;
     }
 
-    // **** use updated URLs for server and client ****
-
-    let serverInfo: ConnectionInformation = {...props.fhirServerInfo, 
-      url: fhirServerUrl,
-      authHeaderContent: fhirServerAuth,
-      preferHeaderContent: fhirServerPrefer,
-    };
-    let clientInfo: ConnectionInformation = {...props.clientHostInfo, url: clientHostUrl};
-
-    // **** make sure the URLs end with a trailing slash ****
-
-    if (!fhirServerUrl.endsWith('/')) {
-      serverInfo.url = fhirServerUrl + '/';
-    }
-
-    if (!clientHostUrl.endsWith('/')) {
+    if (!clientInfo.url.endsWith('/')) {
       clientInfo.url = clientHostUrl + '/';
     }
 
-    // **** connect to the servers ****
+    // connect to the servers
 
-    props.connect(serverInfo, clientInfo, completionHandler);
+    if (props.useBackportToR4) {
+      props.connect(serverInfoR4, clientInfo, completionHandler);
+    } else {
+      props.connect(serverInfoR5, clientInfo, completionHandler);
+    }
 
-    // **** flag we want to be connected ****
-
+    // flag we want to be connected
     if (StorageHelper.isLocalStorageAvailable) {
       localStorage.setItem('connectionRequested', true.toString());
     }
@@ -273,35 +297,52 @@ export default function ConfigurationPane(props: ContentPaneProps) {
   }
 
 	/** Process HTML events for the FHIR Server URL text box (update state for managed) */
-  function handleFhirServerUrlChange(event: React.ChangeEvent<HTMLInputElement>) {
-    setFhirServerUrl(event.target.value);
+  function handleFhirServerUrlChangeR4(event: React.ChangeEvent<HTMLInputElement>) {
+    setFhirServerUrlR4(event.target.value);
 
     if (StorageHelper.isLocalStorageAvailable) {
-      localStorage.setItem('fhirServerUrl', event.target.value);
+      localStorage.setItem('fhirServerUrlR4', event.target.value);
     }
   }
 
-  function handleFhirServerAuthChange(event: React.ChangeEvent<HTMLInputElement>) {
-    setFhirServerAuth(event.target.value);
+	/** Process HTML events for the FHIR Server URL text box (update state for managed) */
+  function handleFhirServerUrlChangeR5(event: React.ChangeEvent<HTMLInputElement>) {
+    setFhirServerUrlR5(event.target.value);
 
     if (StorageHelper.isLocalStorageAvailable) {
-      localStorage.setItem('fhirServerAuth', event.target.value);
+      localStorage.setItem('fhirServerUrlR5', event.target.value);
     }
   }
 
-  function handleFhirServerPreferChange(event: React.FormEvent<HTMLSelectElement>) {
-    setFhirServerPrefer(event.currentTarget.value);
+  function handleFhirServerAuthChangeR4(event: React.ChangeEvent<HTMLInputElement>) {
+    setFhirServerAuthR4(event.target.value);
 
     if (StorageHelper.isLocalStorageAvailable) {
-      localStorage.setItem('fhirServerPrefer', event.currentTarget.value);
+      localStorage.setItem('fhirServerAuthR4', event.target.value);
     }
   }
 
-  function handleFhirServerProxyUrlChange(event: React.ChangeEvent<HTMLInputElement>) {
-    setFhirServerPrefer(event.target.value);
+  function handleFhirServerPreferChangeR4(event: React.FormEvent<HTMLSelectElement>) {
+    setFhirServerPreferR4(event.currentTarget.value);
 
     if (StorageHelper.isLocalStorageAvailable) {
-      localStorage.setItem('fhirServerProxyUrl', event.target.value);
+      localStorage.setItem('fhirServerPreferR4', event.currentTarget.value);
+    }
+  }
+
+  function handleFhirServerAuthChangeR5(event: React.ChangeEvent<HTMLInputElement>) {
+    setFhirServerAuthR5(event.target.value);
+
+    if (StorageHelper.isLocalStorageAvailable) {
+      localStorage.setItem('fhirServerAuthR5', event.target.value);
+    }
+  }
+
+  function handleFhirServerPreferChangeR5(event: React.FormEvent<HTMLSelectElement>) {
+    setFhirServerPreferR5(event.currentTarget.value);
+
+    if (StorageHelper.isLocalStorageAvailable) {
+      localStorage.setItem('fhirServerPreferR5', event.currentTarget.value);
     }
   }
 
@@ -318,49 +359,37 @@ export default function ConfigurationPane(props: ContentPaneProps) {
   <div id='mainContent'>
     <Card elevation={Elevation.TWO} key='config_card'>
       <FormGroup
-        label = {props.fhirServerInfo.name + ' URL'}
-        helperText = {props.fhirServerInfo.hint}
-        labelFor='fhir-server-url'
+        label = {props.fhirServerInfoR4.name + ' URL'}
+        helperText = {props.fhirServerInfoR4.hint}
+        labelFor='fhir-server-url-r4'
         >
         <InputGroup 
-          id='fhir-server-url'
-          value={fhirServerUrl}
-          onChange={handleFhirServerUrlChange}
-          disabled={connected}
-          />
-      </FormGroup>
-      {/* <FormGroup
-        label = 'FHIR Server Proxy Destination URL'
-        helperText = 'ONLY use if using the provided Server-Proxy; sets the destination we are proxying to'
-        labelFor='fhir-server-proxy'
-        >
-        <InputGroup 
-          id='fhir-server-proxy'
-          value={fhirServerProxyUrl}
-          onChange={handleFhirServerProxyUrlChange}
-          disabled={connected}
-          />
-      </FormGroup> */}
-      <FormGroup
-        label = 'FHIR Server Authorization Header'
-        helperText = 'CONTENT of the authorization header the server requires, if any'
-        labelFor='fhir-server-auth'
-        >
-        <InputGroup 
-          id='fhir-server-auth'
-          value={fhirServerAuth}
-          onChange={handleFhirServerAuthChange}
+          id='fhir-server-url-r4'
+          value={fhirServerUrlR4}
+          onChange={handleFhirServerUrlChangeR4}
           disabled={connected}
           />
       </FormGroup>
       <FormGroup
-        label = 'FHIR Server Prefer Header'
+        label = 'FHIR R4 Server Authorization Header'
+        helperText = 'CONTENT of the authorization header the R4 server requires, if any'
+        labelFor='fhir-server-auth-r4'
+        >
+        <InputGroup 
+          id='fhir-server-auth-r4'
+          value={fhirServerAuthR4}
+          onChange={handleFhirServerAuthChangeR4}
+          disabled={connected}
+          />
+      </FormGroup>
+      <FormGroup
+        label = 'FHIR R4 Server Prefer Header'
         helperText = 'Type of content preferred by the client for returns'
-        labelFor='fhir-server-prefer'
+        labelFor='fhir-server-prefer-r4'
         >
         <HTMLSelect
-          onChange={handleFhirServerPreferChange}
-          value={fhirServerPrefer}
+          onChange={handleFhirServerPreferChangeR4}
+          value={fhirServerPreferR4}
           disabled={connected}
           >
           <option>minimal</option>
@@ -368,6 +397,47 @@ export default function ConfigurationPane(props: ContentPaneProps) {
           <option>OperationOutcome</option>
         </HTMLSelect>
       </FormGroup>
+
+      <FormGroup
+        label = {props.fhirServerInfoR5.name + ' URL'}
+        helperText = {props.fhirServerInfoR5.hint}
+        labelFor='fhir-server-url-r5'
+        >
+        <InputGroup 
+          id='fhir-server-url-r5'
+          value={fhirServerUrlR5}
+          onChange={handleFhirServerUrlChangeR5}
+          disabled={connected}
+          />
+      </FormGroup>
+      <FormGroup
+        label = 'FHIR R5 Server Authorization Header'
+        helperText = 'CONTENT of the authorization header the R5 server requires, if any'
+        labelFor='fhir-server-auth-r5'
+        >
+        <InputGroup 
+          id='fhir-server-auth-r5'
+          value={fhirServerAuthR5}
+          onChange={handleFhirServerAuthChangeR5}
+          disabled={connected}
+          />
+      </FormGroup>
+      <FormGroup
+        label = 'FHIR R5 Server Prefer Header'
+        helperText = 'Type of content preferred by the client for returns'
+        labelFor='fhir-server-prefer-r5'
+        >
+        <HTMLSelect
+          onChange={handleFhirServerPreferChangeR5}
+          value={fhirServerPreferR5}
+          disabled={connected}
+          >
+          <option>minimal</option>
+          <option>representation</option>
+          <option>OperationOutcome</option>
+        </HTMLSelect>
+      </FormGroup>
+
 
       <FormGroup
         label = {props.clientHostInfo.name + ' URL'}
@@ -391,7 +461,8 @@ export default function ConfigurationPane(props: ContentPaneProps) {
       </Button>
       <Switch
         checked={props.useBackportToR4}
-        label='Use Backport To R4 (Argonaut Backport IG)'
+        label='Use Backport To R4 (FHIR-I Backport IG)'
+        disabled={connected}
         onChange={() => props.toggleUseBackportToR4(true)}
         />
       <Switch

@@ -46,13 +46,14 @@ export default function PatientSearchCard(props: PatientSearchProps) {
 
   /** Function to handle user request to search a FHIR server for patients */
 	async function handleSearchClick() {
-    // **** flag we are searching ****
+    // flag we are searching
     
     setBusy(true);
 
-    // **** construct the search url ****
-
-		var url: string = new URL('Patient/', props.paneProps.fhirServerInfo.url).toString();
+    // construct the search url
+		var url: string = new URL(
+      'Patient/', 
+      props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.url : props.paneProps.fhirServerInfoR5.url).toString();
 		
 		if (searchFilter) {
 				url += `?${encodeURIComponent(matchType)}=${encodeURIComponent(searchFilter)}`;
@@ -61,11 +62,9 @@ export default function PatientSearchCard(props: PatientSearchProps) {
     try {
       let response:ApiResponse<fhir.Bundle> = await ApiHelper.apiGetFhir<fhir.Bundle>(
         url,
-        props.paneProps.fhirServerInfo.authHeaderContent
-      );
+        props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.authHeaderContent : props.paneProps.fhirServerInfoR5.authHeaderContent);
 
-      // **** check for no values ****
-
+      // check for no values
       if ((!response.value) || (!response.value.entry) || (!response.value.entry)) {
         let data: SingleRequestData[] = [
           {
@@ -85,8 +84,7 @@ export default function PatientSearchCard(props: PatientSearchProps) {
 
       var bundlePatients: KeySelectionInfo[] = [];
 
-      // **** loop over patients ****
-
+      // loop over patients
       response.value.entry!.forEach(entry => {
         if (!entry.resource) return;
 
@@ -99,8 +97,7 @@ export default function PatientSearchCard(props: PatientSearchProps) {
         }
       });
       
-      // **** build data for display ****
-
+      // build data for display
       let data: SingleRequestData[] = [
         {
           name: 'Patient Search',
@@ -112,15 +109,13 @@ export default function PatientSearchCard(props: PatientSearchProps) {
         }
       ]
 
-      // **** update our state ****
-
+      // update our state
       setBusy(false);
       setPatients(bundlePatients);
       props.setData(data);
       
     } catch (err) {
-      // **** build data for display ****
-
+      // build data for display
       let data: SingleRequestData[] = [
         {
           name: 'Patient Search',
@@ -131,8 +126,7 @@ export default function PatientSearchCard(props: PatientSearchProps) {
         }
       ]
 
-      // **** update our state ****
-
+      // update our state
       setBusy(false);
       setPatients([]);
       props.setData(data);

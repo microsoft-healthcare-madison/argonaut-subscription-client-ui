@@ -29,8 +29,7 @@ export default function PatientCreateCard(props: PatientCreateProps) {
   const [usePost, setUsePost] = useState<boolean>(false);
 
   useEffect(() => {
-    // **** check for having data ****
-
+    // check for having data
     if (patientId !== '') {
       return;
     }
@@ -48,14 +47,12 @@ export default function PatientCreateCard(props: PatientCreateProps) {
       }
       return (value);
     }
-
     
 		let msPerYear: number = 365.25 * 24 * 60 * 60 * 1000;
     let birthDate: Date = new Date((new Date()).valueOf() - Math.floor((Math.random() * 110) * msPerYear));
     let genderIndex: number = Math.floor(Math.random() * Object.values(fhir.PatientGenderCodes).length);
 
-		// **** generate some info in case a new patient is created ****
-
+		// generate some info in case a new patient is created
 		setGivenName(`Argonaut-${Math.floor((Math.random() * 10000) + 1)}`);
 		setFamilyName(`Project-${Math.floor((Math.random() * 10000) + 1)}`);
 		setPatientId(`${getRandomChars(3)}${Math.floor((Math.random() * 10000) + 1)}`);
@@ -111,15 +108,13 @@ export default function PatientCreateCard(props: PatientCreateProps) {
       putPatient();
     }
   }
-
   
   async function postPatient() {
-    // **** flag we are busy ****
+    // flag we are busy
     
     setBusy(true);
 		
-		// **** create a new patient ****
-
+		// create a new patient
 		var patient: fhir.Patient = {
 			resourceType: 'Patient',
 			name: [{
@@ -131,21 +126,20 @@ export default function PatientCreateCard(props: PatientCreateProps) {
 			birthDate: getFhirDateFromDate(birthDate),
 		}
 
-		// **** POST this on the server ****
-
-		let url: string = new URL(`Patient/?_format=json`, props.paneProps.fhirServerInfo.url).toString();
+		// POST this on the server
+		let url: string = new URL(
+      `Patient/?_format=json`, 
+      props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.url : props.paneProps.fhirServerInfoR5.url).toString();
 
     try {
       let response:ApiResponse<fhir.Patient> = await ApiHelper.apiPostFhir<fhir.Patient>(
         url,
         patient,
-        props.paneProps.fhirServerInfo.authHeaderContent,
-        props.paneProps.fhirServerInfo.preferHeaderContent
-        );
+        props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.authHeaderContent : props.paneProps.fhirServerInfoR5.authHeaderContent,
+        props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.preferHeaderContent : props.paneProps.fhirServerInfoR5.preferHeaderContent);
       
       if (!response.value) {
-        // **** show the client error information ****
-
+        // show the client error information
         let updated: SingleRequestData = {
           name: 'Patient Create',
           id: 'patient_create', 
@@ -166,8 +160,7 @@ export default function PatientCreateCard(props: PatientCreateProps) {
 
       setPatientId(patient.id!);
 
-      // **** build data for display ****
-
+      // build data for display
       let data: SingleRequestData = {
         name: 'Patient Create',
         id: 'patient_create', 
@@ -179,17 +172,14 @@ export default function PatientCreateCard(props: PatientCreateProps) {
         outcome: response.outcome ? JSON.stringify(response.outcome) : undefined,
       };
 
-      // **** update our state ****
-
+      // update our state
       setBusy(false);
       props.setData([data]);
 
-      // **** flag this patient has been selected ****
-
+      // flag this patient has been selected
       props.registerSelectedPatient(response.value!.id!);
     } catch (err) {
-      // **** build data for display ****
-
+      // build data for display
       let data: SingleRequestData = {
         name: 'Patient Create',
         id: 'patient_create', 
@@ -200,8 +190,7 @@ export default function PatientCreateCard(props: PatientCreateProps) {
         responseDataType: RenderDataAsTypes.Error
       };
 
-      // **** update our state ****
-
+      // update our state
       setBusy(false);
       props.setData([data]);
     }
@@ -209,12 +198,10 @@ export default function PatientCreateCard(props: PatientCreateProps) {
 
 
   async function putPatient() {
-    // **** flag we are busy ****
-    
+    // flag we are busy
     setBusy(true);
 		
-		// **** create a new patient ****
-
+		// create a new patient
 		var patient: fhir.Patient = {
 			resourceType: 'Patient',
 			id: patientId,
@@ -227,21 +214,20 @@ export default function PatientCreateCard(props: PatientCreateProps) {
 			birthDate: getFhirDateFromDate(birthDate),
 		}
 
-		// **** PUT this on the server ****
-
-		let url: string = new URL(`Patient/${patient.id!}?_format=json`, props.paneProps.fhirServerInfo.url).toString();
+		// PUT this on the server
+		let url: string = new URL(
+      `Patient/${patient.id!}?_format=json`, 
+      props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.url : props.paneProps.fhirServerInfoR5.url).toString();
 
     try {
       let response:ApiResponse<fhir.Patient> = await ApiHelper.apiPutFhir<fhir.Patient>(
         url,
         patient,
-        props.paneProps.fhirServerInfo.authHeaderContent,
-        props.paneProps.fhirServerInfo.preferHeaderContent
-        );
+        props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.authHeaderContent : props.paneProps.fhirServerInfoR5.authHeaderContent,
+        props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.preferHeaderContent : props.paneProps.fhirServerInfoR5.preferHeaderContent);
       
       if (!response.value) {
-        // **** show the client error information ****
-
+        // show the client error information
         let updated: SingleRequestData = {
           name: 'Patient Create',
           id: 'patient_create', 
@@ -260,8 +246,7 @@ export default function PatientCreateCard(props: PatientCreateProps) {
         return;
       }
 
-      // **** build data for display ****
-
+      // build data for display
       let data: SingleRequestData = {
         name: 'Patient Create',
         id: 'patient_create', 
@@ -273,17 +258,14 @@ export default function PatientCreateCard(props: PatientCreateProps) {
         outcome: response.outcome ? JSON.stringify(response.outcome) : undefined,
       };
 
-      // **** update our state ****
-
+      // update our state
       setBusy(false);
       props.setData([data]);
 
-      // **** flag this patient has been selected ****
-
+      // flag this patient has been selected
       props.registerSelectedPatient(response.value!.id!);
     } catch (err) {
-      // **** build data for display ****
-
+      // build data for display
       let data: SingleRequestData = {
         name: 'Patient Create',
         id: 'patient_create', 
@@ -294,8 +276,7 @@ export default function PatientCreateCard(props: PatientCreateProps) {
         responseDataType: RenderDataAsTypes.Error
       };
 
-      // **** update our state ****
-
+      // update our state
       setBusy(false);
       props.setData([data]);
     }

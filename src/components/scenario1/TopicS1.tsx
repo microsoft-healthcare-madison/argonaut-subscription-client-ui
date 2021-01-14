@@ -38,8 +38,7 @@ export default function TopicS1(props: TopicS1Props) {
 
     let topicReturn:TopicReturn = await TopicHelper.GetTopics(
       props.paneProps.useBackportToR4,
-      props.paneProps.fhirServerInfo
-    );
+      props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4 : props.paneProps.fhirServerInfoR5);
 
     if (topicReturn.success) {
       // find the 'encounter-start' topic
@@ -48,9 +47,8 @@ export default function TopicS1(props: TopicS1Props) {
       topicReturn.topics!.forEach((topic) => {
         let isEncounterStart:Boolean = (topic.url === 'http://argonautproject.org/encounters-ig/SubscriptionTopic/encounter-start');
 
-        // TODO: May2020 build still has derivedFromCanonical instead of derivedFrom
-        if ((!isEncounterStart) && (topic.derivedFromCanonical) && (topic.derivedFromCanonical.length > 0)) {
-          topic.derivedFromCanonical!.forEach((canonical) => {
+        if ((!isEncounterStart) && (topic.derivedFrom) && (topic.derivedFrom.length > 0)) {
+          topic.derivedFrom!.forEach((canonical) => {
             if (canonical === 'http://argonautproject.org/encounters-ig/SubscriptionTopic/encounter-start') {
               isEncounterStart = true;
             }
