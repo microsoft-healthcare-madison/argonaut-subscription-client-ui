@@ -96,7 +96,6 @@ export default function MainPage() {
   const [skipCapabilitiesCheck, setSkipCapabilitesCheck] = useState<boolean>(false);
 
   // handle lifecycle changes
-
   useEffect(() => {
     // check for initial load
     if (initialLoadRef.current) {
@@ -631,6 +630,12 @@ export default function MainPage() {
           toggleSkipCapabilitesCheck: toggleSkipCapabilitiesCheck,
         }) }
       {/* </div> */}
+      <Toaster 
+        position={Position.TOP}
+        autoFocus={false}
+        canEscapeKeyClear={true}
+        ref={ref => _toasterRef}
+        />
     </div>
   );
 }
