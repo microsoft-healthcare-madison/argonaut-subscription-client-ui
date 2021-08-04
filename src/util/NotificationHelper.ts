@@ -61,65 +61,59 @@ export class NotificationHelper {
       return notificationReturn;
     }
 
-    let statusParameters: fhir4.Parameters;
+    let subscriptionStatus: fhir4.SubscriptionStatus;
 
     try {
-      statusParameters = bundle.entry[0].resource as fhir4.Parameters;
+      subscriptionStatus = bundle.entry[0].resource as fhir4.SubscriptionStatus;
 		} catch(error) {
       return notificationReturn;
     }
 
-    if ((!statusParameters.parameter) ||
-        (statusParameters.parameter.length === 0)) {
-      return notificationReturn;
+    if (subscriptionStatus.eventsSinceSubscriptionStart) {
+      notificationReturn.eventsSinceSubscriptionStart = Number(subscriptionStatus.eventsSinceSubscriptionStart!);
     }
 
-    statusParameters.parameter!.forEach((parameter) => {
-      if (!parameter.name) {
-        return;
-      }
+    if (subscriptionStatus.eventsInNotification) {
+      notificationReturn.eventsInNotification = Number(subscriptionStatus.eventsInNotification!);
+    }
 
-      switch (parameter.name) {
-        case 'events-since-subscription-start':
-            if (parameter.valueUnsignedInt) {
-            notificationReturn.eventsSinceSubscriptionStart = Number(parameter.valueUnsignedInt);
-          }
-          break;
-        case 'events-in-notification':
-          if (parameter.valueUnsignedInt) {
-            notificationReturn.eventsInNotification = Number(parameter.valueUnsignedInt);
-          }
-          break;
-        case 'topic':
-          if (parameter.valueUri) {
-            notificationReturn.topicUrl = parameter.valueUri;
-          }
-          break;
-        case 'subscription':
-          if (parameter.valueReference) {
-            if (parameter.valueReference.reference) {
-              notificationReturn.subscription = parameter.valueReference.reference!;
-            }
-          }
-          break;
-        case 'type':
-          if (parameter.valueCode) {
-            notificationReturn.notificationType = parameter.valueCode;
-          }
-          break;
-        case 'status':
-          if (parameter.valueCode) {
-            notificationReturn.status = parameter.valueCode;
-          }
-      };
-    });
+    if (subscriptionStatus.status) {
+      notificationReturn.status = subscriptionStatus.status!;
+    }
 
+    if ((subscriptionStatus.topic) && (subscriptionStatus.topic)) {
+      notificationReturn.topicUrl = subscriptionStatus.topic;
+    }
+
+    if (subscriptionStatus.subscription.reference) {
+      notificationReturn.subscription = subscriptionStatus.subscription.reference!;
+    }
+
+    notificationReturn.notificationType = subscriptionStatus.type;
     if (notificationReturn.notificationType === fhir5.SubscriptionStatusNotificationTypeCodes.HANDSHAKE) {
       notificationReturn.eventsSinceSubscriptionStart = 0;
       notificationReturn.eventsInNotification = 0;
     } else if (notificationReturn.notificationType === fhir5.SubscriptionStatusNotificationTypeCodes.HEARTBEAT) {
       notificationReturn.eventsInNotification = 0;
     }
+
+    if (bundle.entry.length > 1) {
+      bundle.entry.forEach((entry, index) => {
+        if (index === 0) {
+          return;
+        }
+
+        if (entry.fullUrl) {
+          notificationReturn.entriesWithFullUrl++;
+        }
+
+        if (entry.resource) {
+          notificationReturn.entriesWithResource++;
+        }
+      })
+    }
+
+    notificationReturn.success = true;
 
     if (bundle.entry.length > 1) {
       bundle.entry.forEach((entry, index) => {

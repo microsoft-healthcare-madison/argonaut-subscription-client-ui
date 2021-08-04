@@ -15,8 +15,9 @@ const ExtensionUrlTopic = 'http://hl7.org/fhir/uv/subscriptions-backport/Structu
 const ExtensionUrlHeartbeat = 'http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-heartbeat-period';
 const ExtensionUrlTimeout = 'http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-timeout';
 const ExtensionUrlContent = 'http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-payload-content';
+const ExtensionUrlFilterCriteria = 'http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-filter-criteria';
 
-const ExtensionNotificationUrlLocation = "http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-notification-url-location";
+//const ExtensionNotificationUrlLocation = "http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-notification-url-location";
 const ExtensionMaxCount = "http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-max-count";
 
 const CanonicalChannelType = 'http://hl7.org/fhir/ValueSet/subscription-channel-type';
@@ -34,11 +35,11 @@ export class SubscriptionHelper {
     useR4: boolean,
     fhirServerInfo: ConnectionInformation,
     subscription: fhir5.Subscription,
-    topic?: fhir5.SubscriptionTopic|null
+    topic?: fhir4.SubscriptionTopic|fhir5.SubscriptionTopic|null
     ):Promise<SubscriptionReturn> {
 
     if (useR4) {
-      return this.CreateSubscriptionR4(fhirServerInfo, subscription, topic || undefined);
+      return this.CreateSubscriptionR4(fhirServerInfo, subscription, topic as fhir4.SubscriptionTopic || undefined);
     }
 
     return this.CreateSubscriptionR5(fhirServerInfo, subscription);
@@ -160,7 +161,7 @@ export class SubscriptionHelper {
   private static async CreateSubscriptionR4(
     fhirServerInfo: ConnectionInformation,
     subscription: fhir5.Subscription,
-    topic?: fhir5.SubscriptionTopic
+    topic?: fhir4.SubscriptionTopic
     ):Promise<SubscriptionReturn> {
 
     let subscriptionReturn: SubscriptionReturn;
@@ -314,7 +315,7 @@ export class SubscriptionHelper {
    * @param s5 
    * @param t5 
    */
-  static ToR4(s5: fhir5.Subscription, t5?: fhir5.SubscriptionTopic, fhirServerUrl?:string):fhir4.Subscription {
+  static ToR4(s5: fhir5.Subscription, t4?: fhir4.SubscriptionTopic, fhirServerUrl?:string):fhir4.Subscription {
     let s4:fhir4.Subscription = {
       resourceType: 'Subscription',
       id: s5.id,
@@ -360,18 +361,10 @@ export class SubscriptionHelper {
       }
     }
 
-    if (t5) {
-      s4.extension = [ {
-        url: ExtensionUrlTopic,
-        valueUri: t5.url,
-        }
-      ];
+    if (t4) {
+      s4.criteria = t4.url;
     } else {
-      s4.extension = [ {
-        url: ExtensionUrlTopic,
-        valueUri: `${fhirServerUrl}SubscriptionTopic/encounter-start`,
-        }
-      ];
+      s4.criteria = `${fhirServerUrl}SubscriptionTopic/encounter-start`;
     }
 
     if (s5.heartbeatPeriod) {
@@ -393,50 +386,37 @@ export class SubscriptionHelper {
     }
 
     if ((s5.filterBy) && (s5.filterBy.length > 0)) {
-      let critiera:string;
+      s4._criteria = { extension: [] };
 
-      if ((t5) &&
-          (t5.resourceTrigger) &&
-          (t5.resourceTrigger.resourceType) &&
-          (t5.resourceTrigger.resourceType.length > 0)) {
-        critiera = t5.resourceTrigger.resourceType[0];
-      }
-
+      let filterParam:string;
       let resourceDelim = s5.filterBy[0].searchParamName.indexOf('?');
 
       if (resourceDelim === -1) {
-        critiera = 'Encounter';
+        filterParam = 'Encounter';
       } else {
-        critiera = ''
+        filterParam = ''
       }
 
       s5.filterBy.forEach((filter, index) => {
         let value: string|undefined = this.CollapseFilter(filter);
 
         if (value) {
-          if (index === 0) {
-            if (critiera) {
-              critiera += '?';
-            }
-          } else {
-            critiera += '&'
-          }
-
-          critiera += value;
+          s4._criteria!.extension!.push({
+            url: ExtensionUrlFilterCriteria,
+            valueString: filterParam + '?' + value,
+            });
         }
       });
       
-      s4.criteria = critiera;
-
       if (!s4.channel.extension) {
         s4.channel.extension = [];
       }
 
-      // TODO: Need December 2020 R5 build to add NotificationUrlLocation
-      s4.channel.extension.push({
-        url: ExtensionNotificationUrlLocation,
-        valueCode: "full-url",
-      });
+      // // TODO: Need December 2020 R5 build to add NotificationUrlLocation
+      // s4.channel.extension.push({
+      //   url: ExtensionNotificationUrlLocation,
+      //   valueCode: "full-url",
+      // });
 
       // TODO: Need December 2020 R5 build to add MaxCount
       s4.channel.extension.push({
@@ -526,20 +506,20 @@ export class SubscriptionHelper {
       code: s4.channel.type,
     }
 
-    if (s4.extension) {
-      s4.extension.forEach((ext) => {
-        if ((ext.url === ExtensionUrlTopic) && (ext.valueUri)) {
-          s5.topic = {
-            reference: ext.valueUri,
-          }
-        }
-        if ((ext.url === ExtensionUrlTopic) && (ext.valueCanonical)) {
-          s5.topic = {
-            reference: ext.valueCanonical,
-          }
-        }
-      });
-    }
+    // if (s4.extension) {
+    //   s4.extension.forEach((ext) => {
+    //     if ((ext.url === ExtensionUrlTopic) && (ext.valueUri)) {
+    //       s5.topic = {
+    //         reference: ext.valueUri,
+    //       }
+    //     }
+    //     if ((ext.url === ExtensionUrlTopic) && (ext.valueCanonical)) {
+    //       s5.topic = {
+    //         reference: ext.valueCanonical,
+    //       }
+    //     }
+    //   });
+    // }
 
     if (s4.channel.extension) {
       s4.channel.extension.forEach((ext) => {
@@ -548,9 +528,6 @@ export class SubscriptionHelper {
         }
         if ((ext.url === ExtensionUrlTimeout) && (ext.valueUnsignedInt)) {
           s5.timeout = ext.valueUnsignedInt;
-        }
-        if ((ext.url === ExtensionNotificationUrlLocation) && (ext.valueCode)) {
-          // TODO: Need December 2020 R5 build to add NotificationUrlLocation
         }
         if ((ext.url === ExtensionMaxCount) && (ext.valuePositiveInt)) {
           // TODO: Need December 2020 R5 build to add MaxCount
@@ -567,25 +544,23 @@ export class SubscriptionHelper {
     }
 
     if (s4.criteria) {
-      let criteria: string = s4.criteria;
+      s5.topic = {
+        reference: s4.criteria,
+      }
+    }
 
-      const endOfResourceName: number = criteria.indexOf('?');
+    if ((s4._criteria) && (s4._criteria.extension) && (s4._criteria.extension.length > 0)) {
+      s5.filterBy = [];
 
-      criteria = criteria.substr(endOfResourceName + 1);
-
-      let components: string[] = criteria.split('&');
-
-      if (components.length > 0) {
-        s5.filterBy = [];
-
-        components.forEach((component) => {
-          let filter: fhir5.SubscriptionFilterBy|undefined = this.ExpandFilter(component);
+      s4._criteria.extension.forEach((ext) => {
+        if ((ext.url === ExtensionUrlFilterCriteria) && (ext.valueString)) {
+          let filter: fhir5.SubscriptionFilterBy|undefined = this.ExpandFilter(ext.valueString);
 
           if (filter) {
             s5.filterBy!.push(filter);
           }
-        });
-      }
+        }
+      });
     }
 
     return s5;

@@ -9,20 +9,21 @@ import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import { EndpointRegistration } from '../../models/EndpointRegistration';
-import * as fhir from '../../models/fhir_r5';
+import * as fhir4 from '../../models/fhir_r4';
+import * as fhir5 from '../../models/fhir_r5';
 import * as ValueSet from '../../models/fhir_VS';
 import { SubscriptionReturn, SubscriptionHelper } from '../../util/SubscriptionHelper';
 
 export interface SubscriptionS1Props {
   paneProps: ContentPaneProps,
-  registerSubscription: ((subscription?: fhir.Subscription) => void),
+  registerSubscription: ((subscription?: fhir5.Subscription) => void),
   status: DataCardStatus,
   updateStatus: ((status: DataCardStatus) => void),
   data: SingleRequestData[],
   setData: ((data: SingleRequestData[]) => void),
   selectedPatientId: string,
-  topic: fhir.SubscriptionTopic|null,
-  subscription: fhir.Subscription,
+  topic: fhir4.SubscriptionTopic|fhir5.SubscriptionTopic|null,
+  subscription: fhir5.Subscription,
   endpoint: EndpointRegistration,
 }
 
@@ -54,7 +55,7 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
     let endpointUrl: string = new URL(`Endpoints/${props.endpoint.uid!}`, props.paneProps.clientHostInfo.url).toString();
 
 		// build our filter information
-		let filter: fhir.SubscriptionFilterBy = {
+		let filter: fhir5.SubscriptionFilterBy = {
 			searchModifier: '=',
 			searchParamName: 'patient',
 			value: `Patient/${props.selectedPatientId}`	    //`Patient/${patientFilter},Patient/K123`
@@ -71,7 +72,7 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
       : new URL(`${topicResource}/encounter-start`, baseUrl).toString();
 
 		// build the subscription object
-		let subscription: fhir.Subscription = {
+		let subscription: fhir5.Subscription = {
       resourceType: 'Subscription',
       endpoint: endpointUrl,
       channelType: ValueSet.SubscriptionChannelType.rest_hook,
@@ -160,7 +161,7 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
           onChange={handlePayloadTypeChange}
           value={payloadType}
           >
-          { Object.values(fhir.SubscriptionContentCodes).map((value) => (
+          { Object.values(fhir5.SubscriptionContentCodes).map((value) => (
             <option key={value}>{value}</option> 
               ))}
         </HTMLSelect>
