@@ -10,7 +10,8 @@ import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import { EndpointRegistration } from '../../models/EndpointRegistration';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
-import * as fhir from '../../models/fhir_r5';
+import * as fhir4 from '../../models/fhir_r4';
+import * as fhir5 from '../../models/fhir_r5';
 import * as ValueSet from '../../models/fhir_VS';
 import SubscriptionFilters from './SubscriptionFilters';
 import { IconNames } from '@blueprintjs/icons';
@@ -20,15 +21,15 @@ import { StorageHelper } from '../../util/StorageHelper';
 
 export interface SubscriptionPlaygroundProps {
   paneProps: ContentPaneProps,
-  registerSubscription: ((subscription: fhir.Subscription) => void),
+  registerSubscription: ((subscription: fhir5.Subscription) => void),
   status: DataCardStatus,
   updateStatus: ((status: DataCardStatus) => void),
   data: SingleRequestData[],
   setData: ((data: SingleRequestData[]) => void),
   selectedPatientId: string,
   endpoints: EndpointRegistration[],
-  topics: fhir.SubscriptionTopic[],
-  subscriptions: fhir.Subscription[],
+  topics: fhir4.SubscriptionTopic[]|fhir5.SubscriptionTopic[],
+  subscriptions: fhir5.Subscription[],
   registerPatientId: ((value: string) => void),
   registerGroupId: ((value: string) => void),
 }
@@ -67,7 +68,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 
   const [manualFilterValue, setManualFilterValue] = useState<string>('');
 
-  const [filters, setFilters] = useState<fhir.SubscriptionFilterBy[]>([]);
+  const [filters, setFilters] = useState<fhir5.SubscriptionFilterBy[]>([]);
 
   const [resourceName, setResourceName] = useState<string>('');
   const [showSearchOverlay, setShowSearchOverlay] = useState<boolean>(false);
@@ -107,24 +108,51 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
     }
 
     if (topicIndex > -1) {
-      let topic: fhir.SubscriptionTopic = props.topics[topicIndex];
-      if ((!topic.canFilterBy) || (filterByIndex >= topic.canFilterBy!.length)) {
-        setFilterByIndex(-1);
-      }
-      if ((filterByIndex < 0) &&
-          (topic.canFilterBy) &&
-          (topic.canFilterBy!.length > 0)) {
-        setFilterByIndex(0);
-      }
-      if (filterByIndex > -1) {
-        let filterBy: fhir.SubscriptionTopicCanFilterBy = topic.canFilterBy![filterByIndex];
-        if ((!filterBy.searchModifier) || (filterByMatchTypeIndex >= filterBy.searchModifier!.length)) {
-          setFilterByMatchTypeIndex(-1);
+      if (props.paneProps.useBackportToR4) {
+        let topic: fhir4.SubscriptionTopic = props.topics[topicIndex] as fhir4.SubscriptionTopic;
+        if ((!topic.canFilterBy) || (filterByIndex >= topic.canFilterBy!.length)) {
+          setFilterByIndex(-1);
         }
-        if ((filterByMatchTypeIndex < 0) &&
-            (filterBy.searchModifier) && 
-            (filterBy.searchModifier!.length > 0)) {
-          setFilterByMatchTypeIndex(0);
+        if ((filterByIndex < 0) &&
+            (topic.canFilterBy) &&
+            (topic.canFilterBy!.length > 0)) {
+          setFilterByIndex(0);
+        }
+        if (filterByIndex > -1) {
+          let filterBy: fhir5.SubscriptionTopicCanFilterBy = {
+            searchParamName: topic.canFilterBy![filterByIndex].filterParameter,
+            searchModifier: topic.canFilterBy![filterByIndex].modifier,
+            documentation: topic.canFilterBy![filterByIndex].description,
+          };
+          if ((!filterBy.searchModifier) || (filterByMatchTypeIndex >= filterBy.searchModifier!.length)) {
+            setFilterByMatchTypeIndex(-1);
+          }
+          if ((filterByMatchTypeIndex < 0) &&
+              (filterBy.searchModifier) && 
+              (filterBy.searchModifier!.length > 0)) {
+            setFilterByMatchTypeIndex(0);
+          }
+        }
+      } else {
+        let topic: fhir5.SubscriptionTopic = props.topics[topicIndex] as fhir5.SubscriptionTopic;
+        if ((!topic.canFilterBy) || (filterByIndex >= topic.canFilterBy!.length)) {
+          setFilterByIndex(-1);
+        }
+        if ((filterByIndex < 0) &&
+            (topic.canFilterBy) &&
+            (topic.canFilterBy!.length > 0)) {
+          setFilterByIndex(0);
+        }
+        if (filterByIndex > -1) {
+          let filterBy: fhir5.SubscriptionTopicCanFilterBy = topic.canFilterBy![filterByIndex];
+          if ((!filterBy.searchModifier) || (filterByMatchTypeIndex >= filterBy.searchModifier!.length)) {
+            setFilterByMatchTypeIndex(-1);
+          }
+          if ((filterByMatchTypeIndex < 0) &&
+              (filterBy.searchModifier) && 
+              (filterBy.searchModifier!.length > 0)) {
+            setFilterByMatchTypeIndex(0);
+          }
         }
       }
     }
@@ -153,7 +181,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 		expirationTime.setHours(expirationTime.getHours() + 1);
 
     let endpoint:string;
-    let channelCoding:fhir.Coding;
+    let channelCoding:fhir5.Coding;
     let contentType:string = 'application/fhir+json';
 
     // determine the endpoint type
@@ -201,7 +229,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
     }
       
 		// build the subscription object
-		let subscription: fhir.Subscription = {
+		let subscription: fhir5.Subscription = {
       resourceType: 'Subscription',
       endpoint: endpoint,
       channelType: channelCoding,
@@ -222,18 +250,37 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       subscription.filterBy = filters;
     } else if (filterByValue.length > 0) {
       // create the filter object
-      let filter:fhir.SubscriptionFilterBy = {
-        searchParamName: props.topics[topicIndex].canFilterBy![filterByIndex].searchParamName!,
-        searchModifier: props.topics[topicIndex].canFilterBy![filterByIndex].searchModifier![filterByMatchTypeIndex],
-        value: filterByValue,
-      };
+      let filter:fhir5.SubscriptionFilterBy;
       
+      if (props.paneProps.useBackportToR4) {
+        let topic: fhir4.SubscriptionTopic = props.topics[topicIndex]! as fhir4.SubscriptionTopic;
+        filter = {
+          searchParamName: topic.canFilterBy![filterByIndex].filterParameter!,
+          searchModifier: topic.canFilterBy![filterByIndex].modifier![filterByMatchTypeIndex],
+          value: filterByValue,
+        };
+      } else {
+        let topic: fhir5.SubscriptionTopic = props.topics[topicIndex]! as fhir5.SubscriptionTopic;
+        filter = {
+          searchParamName: topic.canFilterBy![filterByIndex].searchParamName!,
+          searchModifier: topic.canFilterBy![filterByIndex].searchModifier![filterByMatchTypeIndex],
+          value: filterByValue,
+        };
+      }
+
       // figure out patient IDs to list for encounters
-      if ((filter.searchParamName === 'patient') && (filter.searchModifier === '=')) {
+      if ((filter.searchModifier === '=') &&
+          ((filter.searchParamName === 'patient') || (filter.searchParamName === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient'))) {
         props.registerPatientId(filter.value);
       }
 
-      if ((filter.searchParamName === 'patient') && (filter.searchModifier === 'in')) {
+      if ((filter.searchModifier === 'eq') &&
+          ((filter.searchParamName === 'patient') || (filter.searchParamName === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient'))) {
+        props.registerPatientId(filter.value);
+      }
+
+      if ((filter.searchModifier === 'in') &&
+          ((filter.searchParamName === 'patient') || (filter.searchParamName === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient'))) {
         props.registerGroupId(filter.value);
       }
 
@@ -336,25 +383,71 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         return;
       }
 
-      if ((filterByMatchTypeIndex < 0) || 
-          (filterByMatchTypeIndex >= props.topics[topicIndex].canFilterBy![filterByIndex].searchModifier!.length)) {
-        props.paneProps.toaster('Please select a match type before searching for filter values.', IconNames.WARNING_SIGN);
-        return;
-      }
+      if (props.paneProps.useBackportToR4) {
+        let topic: fhir4.SubscriptionTopic = props.topics[topicIndex]! as fhir4.SubscriptionTopic;
 
-      if ((props.topics[topicIndex].canFilterBy![filterByIndex].searchParamName === 'patient') &&
-          (props.topics[topicIndex].canFilterBy![filterByIndex].searchModifier![filterByMatchTypeIndex] === '=')) {
-        name = 'Patient';
-      }
+        if ((filterByMatchTypeIndex < 0) || 
+            (filterByMatchTypeIndex >= topic.canFilterBy![filterByIndex].modifier!.length)) {
+          props.paneProps.toaster('Please select a match type before searching for filter values.', IconNames.WARNING_SIGN);
+          return;
+        }
 
-      if ((props.topics[topicIndex].canFilterBy![filterByIndex].searchParamName === 'patient') &&
-          (props.topics[topicIndex].canFilterBy![filterByIndex].searchModifier![filterByMatchTypeIndex] === 'in')) {
-        name = 'Group';
-      }
+        if (((topic.canFilterBy![filterByIndex].filterParameter === 'patient') ||
+            (topic.canFilterBy![filterByIndex].filterParameter === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient')) &&
+            (topic.canFilterBy![filterByIndex].modifier![filterByMatchTypeIndex] === '=')) {
+          name = 'Patient';
+        }
 
-      if ((props.topics[topicIndex].canFilterBy![filterByIndex].searchParamName === 'patient') &&
-          (props.topics[topicIndex].canFilterBy![filterByIndex].searchModifier![filterByMatchTypeIndex] === 'not-in')) {
-        name = 'Group';
+        if (((topic.canFilterBy![filterByIndex].filterParameter === 'patient') ||
+            (topic.canFilterBy![filterByIndex].filterParameter === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient')) &&
+            (topic.canFilterBy![filterByIndex].modifier![filterByMatchTypeIndex] === 'eq')) {
+          name = 'Patient';
+        }
+
+        if (((topic.canFilterBy![filterByIndex].filterParameter === 'patient') ||
+            (topic.canFilterBy![filterByIndex].filterParameter === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient')) &&
+            (topic.canFilterBy![filterByIndex].modifier![filterByMatchTypeIndex] === 'in')) {
+          name = 'Group';
+        }
+
+        if (((topic.canFilterBy![filterByIndex].filterParameter === 'patient') ||
+            (topic.canFilterBy![filterByIndex].filterParameter === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient')) &&
+            (topic.canFilterBy![filterByIndex].modifier![filterByMatchTypeIndex] === 'not-in')) {
+          name = 'Group';
+        }
+
+      } else {
+        let topic: fhir5.SubscriptionTopic = props.topics[topicIndex]! as fhir5.SubscriptionTopic;
+
+        if ((filterByMatchTypeIndex < 0) || 
+            (filterByMatchTypeIndex >= topic.canFilterBy![filterByIndex].searchModifier!.length)) {
+          props.paneProps.toaster('Please select a match type before searching for filter values.', IconNames.WARNING_SIGN);
+          return;
+        }
+
+        if (((topic.canFilterBy![filterByIndex].searchParamName === 'patient') ||
+            (topic.canFilterBy![filterByIndex].searchParamName === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient')) &&
+            (topic.canFilterBy![filterByIndex].searchModifier![filterByMatchTypeIndex] === '=')) {
+          name = 'Patient';
+        }
+
+        if (((topic.canFilterBy![filterByIndex].searchParamName === 'patient') ||
+            (topic.canFilterBy![filterByIndex].searchParamName === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient')) &&
+            (topic.canFilterBy![filterByIndex].searchModifier![filterByMatchTypeIndex] === 'eq')) {
+          name = 'Patient';
+        }
+
+        if (((topic.canFilterBy![filterByIndex].searchParamName === 'patient') ||
+            (topic.canFilterBy![filterByIndex].searchParamName === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient')) &&
+            (topic.canFilterBy![filterByIndex].searchModifier![filterByMatchTypeIndex] === 'in')) {
+          name = 'Group';
+        }
+
+        if (((topic.canFilterBy![filterByIndex].searchParamName === 'patient') ||
+            (topic.canFilterBy![filterByIndex].searchParamName === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient')) &&
+            (topic.canFilterBy![filterByIndex].searchModifier![filterByMatchTypeIndex] === 'not-in')) {
+          name = 'Group';
+        }
       }
 
       // if there is no known resource name, disable for now
@@ -397,21 +490,29 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       value = manualFilterValue.substr(equalsIndex + 1);
     }
     
-    let rec:fhir.SubscriptionFilterBy = {
+    let rec:fhir5.SubscriptionFilterBy = {
       searchParamName: searchParamName,
       searchModifier: searchModifier,
       value: value,
     };
 
-    let updated: fhir.SubscriptionFilterBy[] = filters.slice();
+    let updated: fhir5.SubscriptionFilterBy[] = filters.slice();
     updated.push(rec);
 
     // figure out patient IDs to list for encounters
-    if ((rec.searchParamName === 'patient') && (rec.searchModifier === '=')) {
+    if ((rec.searchModifier === '=') &&
+        ((rec.searchParamName === 'patient') || (rec.searchParamName === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient'))) {
       props.registerPatientId(rec.value);
     }
 
-    if ((rec.searchParamName === 'patient') && (rec.searchModifier === 'in')) {
+    if ((rec.searchModifier === 'eq') &&
+        ((rec.searchParamName === 'patient') || (rec.searchParamName === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient'))) {
+      rec.searchModifier = '=';
+      props.registerPatientId(rec.value);
+    }
+
+    if ((rec.searchModifier === 'in') &&
+        ((rec.searchParamName === 'patient') || (rec.searchParamName === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient'))) {
       props.registerGroupId(rec.value);
     }
 
@@ -428,27 +529,48 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
     }
 
     // create the filter object
-    let rec:fhir.SubscriptionFilterBy = {
-      searchParamName: props.topics[topicIndex].canFilterBy![filterByIndex].searchParamName!,
-      searchModifier: props.topics[topicIndex].canFilterBy![filterByIndex].searchModifier![filterByMatchTypeIndex],
-      value: filterByValue,
-    };
+    let rec: fhir5.SubscriptionFilterBy;
+    
+    if (props.paneProps.useBackportToR4) {
+      let topic: fhir4.SubscriptionTopic = props.topics[topicIndex]! as fhir4.SubscriptionTopic;
+      rec = {
+        searchParamName: topic.canFilterBy![filterByIndex].filterParameter!,
+        searchModifier: topic.canFilterBy![filterByIndex].modifier![filterByMatchTypeIndex],
+        value: filterByValue,
+      };
+    } else {
+      let topic: fhir5.SubscriptionTopic = props.topics[topicIndex]! as fhir5.SubscriptionTopic;
+      rec = {
+        searchParamName: topic.canFilterBy![filterByIndex].searchParamName!,
+        searchModifier: topic.canFilterBy![filterByIndex].searchModifier![filterByMatchTypeIndex],
+        value: filterByValue,
+      };
+    }
 
     // add this filter
-    let updated: fhir.SubscriptionFilterBy[] = 
+    let updated: fhir5.SubscriptionFilterBy[] = 
       (replace === true) 
       ? []
       : filters.slice();
     updated.push(rec);
 
     // figure out patient IDs to list for encounters
-    if ((rec.searchParamName === 'patient') && (rec.searchModifier === '=')) {
+    if ((rec.searchModifier === '=') &&
+        ((rec.searchParamName === 'patient') || (rec.searchParamName === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient'))) {
       props.registerPatientId(rec.value);
     }
 
-    if ((rec.searchParamName === 'patient') && (rec.searchModifier === 'in')) {
+    if ((rec.searchModifier === 'eq') &&
+        ((rec.searchParamName === 'patient') || (rec.searchParamName === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient'))) {
+      rec.searchModifier = '=';
+      props.registerPatientId(rec.value);
+    }
+
+    if ((rec.searchModifier === 'in') &&
+        ((rec.searchParamName === 'patient') || (rec.searchParamName === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient'))) {
       props.registerGroupId(rec.value);
     }
+
 
     // update state
     setFilters(updated);
@@ -456,7 +578,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
   }
 
   function removeFilter(index: number) {
-    let updated: fhir.SubscriptionFilterBy[] = filters.slice();
+    let updated: fhir5.SubscriptionFilterBy[] = filters.slice();
     updated.splice(index);
     setFilters(updated);
   }
@@ -661,7 +783,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
           onChange={handlePayloadTypeChange}
           value={payloadType}
           >
-          { Object.values(fhir.SubscriptionContentCodes).map((value) => (
+          { Object.values(fhir5.SubscriptionContentCodes).map((value) => (
             <option key={value}>{value}</option> 
               ))}
         </HTMLSelect>
@@ -683,16 +805,28 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
               onChange={handleFilterByNameChange}
               value={filterByIndex}
               >
-              { Object.values(props.topics[topicIndex].canFilterBy!).map((value, index) => (
+              { (props.paneProps.useBackportToR4) &&
+                Object.values((props.topics[topicIndex] as fhir4.SubscriptionTopic).canFilterBy!).map((value, index) => (
+                <option key={value.filterParameter} value={index}>{value.filterParameter}</option>
+              )) }
+
+              { (!props.paneProps.useBackportToR4) &&
+                Object.values((props.topics[topicIndex] as fhir5.SubscriptionTopic).canFilterBy!).map((value, index) => (
                 <option key={value.searchParamName} value={index}>{value.searchParamName}</option>
               )) }
+
             </HTMLSelect>
             <HTMLSelect
               onChange={handleFilterByMatchTypeChange}
               value={filterByMatchTypeIndex}
               >
-              { (filterByIndex > -1) && 
-                Object.values(props.topics[topicIndex].canFilterBy![filterByIndex].searchModifier!).map((value, index) => (
+              { ((filterByIndex > -1) && (props.paneProps.useBackportToR4)) && 
+                Object.values((props.topics[topicIndex] as fhir4.SubscriptionTopic).canFilterBy![filterByIndex].modifier!).map((value, index) => (
+                <option key={`opt_${index}`} value={index}>{value}</option>
+              ))}
+
+              { ((filterByIndex > -1) && (!props.paneProps.useBackportToR4)) && 
+                Object.values((props.topics[topicIndex] as fhir5.SubscriptionTopic).canFilterBy![filterByIndex].searchModifier!).map((value, index) => (
                 <option key={`opt_${index}`} value={index}>{value}</option>
               ))}
             </HTMLSelect>

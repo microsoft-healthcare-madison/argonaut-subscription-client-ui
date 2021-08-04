@@ -578,11 +578,16 @@ export default function MainPage() {
     }
   }
 
+  function setToasterRef(ref: Toaster) {
+    _toasterRef.current = ref;
+  }
+
   /** Render function */
   return (
     <div>
       {/* Render the navigation bar */}
       <MainNavigation
+        key='mainNav'
         selectedTabId={selectedNavbarTabId}
         tabs={_tabs}
         onSelectedTabChanged={setSelectedNavbarTabId}
@@ -616,10 +621,12 @@ export default function MainPage() {
         }) }
       {/* </div> */}
       <Toaster 
+        key='toaster'
         position={Position.TOP}
         autoFocus={false}
         canEscapeKeyClear={true}
-        ref={ref => _toasterRef}
+        ref={setToasterRef}
+        usePortal={false}
         />
     </div>
   );

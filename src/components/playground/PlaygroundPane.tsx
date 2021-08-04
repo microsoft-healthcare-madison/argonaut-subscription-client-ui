@@ -5,7 +5,8 @@ import {
   Elevation, NonIdealState, H3, Text,
 } from '@blueprintjs/core';
 
-import * as fhir from '../../models/fhir_r5';
+import * as fhir4 from '../../models/fhir_r4';
+import * as fhir5 from '../../models/fhir_r5';
 import {IconNames} from "@blueprintjs/icons";
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import TopicPlayground from './TopicPlayground';
@@ -35,7 +36,7 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 
 	const [topicData, setTopicData] = useState<SingleRequestData[]>([]);
 	const [topicStatus, setTopicStatus] = useState<DataCardStatus>(_statusAvailable);
-	const [topics, setTopics] = useState<fhir.SubscriptionTopic[]>([]);
+	const [topics, setTopics] = useState<fhir4.SubscriptionTopic[]|fhir5.SubscriptionTopic[]>([]);
 
 	const [endpointData, setEndpointData] = useState<SingleRequestData[]>([]);
 	const [endpointStatus, setEndpointStatus] = useState<DataCardStatus>(_statusAvailable);
@@ -43,7 +44,7 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 
 	const [subscriptionData, setSubscriptionData] = useState<SingleRequestData[]>([]);
 	const [subscriptionStatus, setSubscriptionStatus] = useState<DataCardStatus>(_statusAvailable);
-	const [subscriptions, setSubscriptions] = useState<fhir.Subscription[]>([]);
+	const [subscriptions, setSubscriptions] = useState<fhir5.Subscription[]>([]);
 
 	const [encounterData, setEncounterData] = useState<SingleRequestData[]>([]);
 	const [encounterStatus, setEncounterStatus] = useState<DataCardStatus>(_statusAvailable);
@@ -164,8 +165,8 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 	}
 
 	/** Register a subscription as active in this scenario */
-	function registerSubscription(value: fhir.Subscription) {
-		let values: fhir.Subscription[] = subscriptions.slice();
+	function registerSubscription(value: fhir5.Subscription) {
+		let values: fhir5.Subscription[] = subscriptions.slice();
 		values.push(value);
 
 		// save subscription
@@ -211,7 +212,7 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 			props.useBackportToR4 ? props.fhirServerInfoR4.url : props.fhirServerInfoR5.url).toString();
 
     try {
-      let response:ApiResponse<fhir.Group> = await ApiHelper.apiGetFhir<fhir.Group>(
+      let response:ApiResponse<fhir5.Group> = await ApiHelper.apiGetFhir<fhir5.Group>(
         url,
         props.useBackportToR4 ? props.fhirServerInfoR4.authHeaderContent : props.fhirServerInfoR5.authHeaderContent);
 
@@ -220,7 +221,7 @@ export default function PlaygroundPane(props: ContentPaneProps) {
         return [];
 			}
 			
-			const group:fhir.Group = response.value! as fhir.Group;
+			const group:fhir5.Group = response.value! as fhir5.Group;
 
 			if (!group.actual) return [];
 
@@ -228,7 +229,7 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 			let ids: string[] = [];
 
 			if (group.member) {
-				group.member!.forEach((member: fhir.GroupMember) => {
+				group.member!.forEach((member: fhir5.GroupMember) => {
 					if ((member.entity) && (member.entity.reference)) {
 						ids.push(member.entity.reference);
 					}

@@ -5,7 +5,8 @@ import {
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { DataCardInfo } from '../../models/DataCardInfo';
-import * as fhir from '../../models/fhir_r5';
+import * as fhir4 from '../../models/fhir_r4';
+import * as fhir5 from '../../models/fhir_r5';
 import { SingleRequestData } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
@@ -17,7 +18,7 @@ export interface TopicPlaygroundProps {
   updateStatus: ((status: DataCardStatus) => void),
   data: SingleRequestData[],
   setData: ((data: SingleRequestData[]) => void),
-  setTopics: ((topics: fhir.SubscriptionTopic[]) => void),
+  setTopics: ((topics: fhir4.SubscriptionTopic[]|fhir5.SubscriptionTopic[]) => void),
 }
 
 /** Component representing the Playground Topic Card */
