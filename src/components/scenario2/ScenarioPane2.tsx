@@ -11,7 +11,8 @@ import {IconNames} from "@blueprintjs/icons";
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { EndpointRegistration } from '../../models/EndpointRegistration';
 import { ApiHelper } from '../../util/ApiHelper';
-import * as fhir from '../../models/fhir_r5';
+import * as fhir4 from '../../models/fhir_r4';
+import * as fhir5 from '../../models/fhir_r5';
 import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import TopicS2 from './TopicS2';
@@ -38,7 +39,7 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 	
 	const [topicData, setTopicData] = useState<SingleRequestData[]>([]);
 	const [topicStatus, setTopicStatus] = useState<DataCardStatus>(_statusAvailable);
-	const [selectedTopic, setSelectedTopic] = useState<fhir.SubscriptionTopic|null>(null); 
+	const [selectedTopic, setSelectedTopic] = useState<fhir4.SubscriptionTopic|fhir5.SubscriptionTopic|null>(null); 
 	
 	const [groupData, setGroupData] = useState<SingleRequestData[]>([]);
 	const [groupStatus, setGroupStatus] = useState<DataCardStatus>(_statusAvailable);
@@ -51,7 +52,7 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 
 	const [subscriptionData, setSubscriptionData] = useState<SingleRequestData[]>([]);
 	const [subscriptionStatus, setSubscriptionStatus] = useState<DataCardStatus>(_statusNotAvailable);
-	const [subscription, setSubscription] = useState<fhir.Subscription | null>(null);
+	const [subscription, setSubscription] = useState<fhir5.Subscription | null>(null);
 
 	const [handshakeData, setHandshakeData] = useState<SingleRequestData[]>([]);
 	const [handshakeStatus, setHandshakeStatus] = useState<DataCardStatus>(_statusNotAvailable);
@@ -209,7 +210,7 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 	}
 
 	/** Register a subscription as active in this scenario */
-	function registerSubscription(value?: fhir.Subscription) {
+	function registerSubscription(value?: fhir5.Subscription) {
 		
 		if (!value)
 		{
@@ -293,7 +294,7 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 		}
 
 		// special handling for handshake
-		if (notificationReturn.notificationType === fhir.SubscriptionStatusNotificationTypeCodes.HANDSHAKE) {
+		if (notificationReturn.notificationType === fhir5.SubscriptionStatusNotificationTypeCodes.HANDSHAKE) {
 			let data: SingleRequestData = {
 				name: 'Handshake',
 				id: 'handshake',
