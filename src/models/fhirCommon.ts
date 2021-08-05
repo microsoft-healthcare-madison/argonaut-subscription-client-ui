@@ -59,6 +59,21 @@ import { Coding } from '../local_dts/fhir5';
   FULL_RESOURCE = 'full-resource',
 }
 
+export enum SubscriptionChannelTypeCodes {
+  REST_HOOK = 'rest-hook',
+  WEBSOCKET = 'websocket',
+  EMAIL = 'email',
+  MESSAGE = 'message',
+}
+
+export enum SubscriptionStatusCodes {
+  REQUESTED = 'requested',
+  ACTIVE = 'active',
+  ERROR = 'error',
+  OFF = 'off',
+}
+
+
 /**
  * Code Values for the SubscriptionTopic.canFilterBy.searchModifier field
  */
@@ -106,6 +121,30 @@ import { Coding } from '../local_dts/fhir5';
   SEARCH_TYPE = 'search-type',
 }
 
+export enum BundleTypeCodes4 {
+  DOCUMENT = 'document',
+  MESSAGE = 'message',
+  TRANSACTION = 'transaction',
+  TRANSACTION_RESPONSE = 'transaction-response',
+  BATCH = 'batch',
+  BATCH_RESPONSE = 'batch-response',
+  HISTORY = 'history',
+  SEARCHSET = 'searchset',
+  COLLECTION = 'collection',
+}
+
+export enum BundleTypeCodes5 {
+  DOCUMENT = 'document',
+  MESSAGE = 'message',
+  TRANSACTION = 'transaction',
+  TRANSACTION_RESPONSE = 'transaction-response',
+  BATCH = 'batch',
+  BATCH_RESPONSE = 'batch-response',
+  HISTORY = 'history',
+  SEARCHSET = 'searchset',
+  COLLECTION = 'collection',
+  SUBSCRIPTION_NOTIFICATION = 'subscription-notification',
+}
 
 const v3_ActEncounterCode_AMB: Coding = {
   code: 'AMB',

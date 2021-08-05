@@ -13,6 +13,7 @@ import { EndpointRegistration } from '../../models/EndpointRegistration';
 import { ApiHelper } from '../../util/ApiHelper';
 import * as fhir4 from '../../local_dts/fhir4';
 import * as fhir5 from '../../local_dts/fhir5';
+import * as fhirCommon from '../../models/fhirCommon';
 import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import TopicS2 from './TopicS2';
@@ -294,7 +295,7 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 		}
 
 		// special handling for handshake
-		if (notificationReturn.notificationType === fhir5.SubscriptionStatusNotificationTypeCodes.HANDSHAKE) {
+		if (notificationReturn.notificationType === fhirCommon.SubscriptionNotificationTypeCodes.HANDSHAKE) {
 			let data: SingleRequestData = {
 				name: 'Handshake',
 				id: 'handshake',
