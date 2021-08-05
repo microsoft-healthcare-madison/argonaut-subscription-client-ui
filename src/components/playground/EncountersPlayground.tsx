@@ -9,8 +9,8 @@ import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
-import * as fhir from '../../models/fhir_r4';
-import * as ValueSet from '../../models/fhir_VS';
+import * as fhir from '../../local_dts/fhir4';
+import * as fhirCommon from '../../models/fhirCommon';
 
 export interface EncountersPlaygroundProps {
   paneProps: ContentPaneProps,
@@ -73,7 +73,7 @@ export default function EncountersPlayground(props: EncountersPlaygroundProps) {
 				system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode',
 				code: encounterClass,
 			},
-			status: encounterStatus,
+			status: encounterStatus as fhirCommon.EncounterStatusCodes4,
 			subject: {
 				reference: patientRef,
 			}
@@ -201,7 +201,7 @@ export default function EncountersPlayground(props: EncountersPlaygroundProps) {
           onChange={handleEncounterClassChange}
           value={encounterClass}
           >
-          { Object.values(ValueSet.v3_ActEncounterCode).map((value) => (
+          { Object.values(fhirCommon.v3_ActEncounterCode).map((value) => (
             <option key={value.code} value={value.code}>{value.display}</option>
               ))}
         </HTMLSelect>

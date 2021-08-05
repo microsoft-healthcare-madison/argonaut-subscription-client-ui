@@ -1,4 +1,4 @@
-import * as fhir5 from "../models/fhir_r5";
+import * as fhir5 from "fhir_r5";
 
 export interface ApiResponse<T> {
   statusCode?: number;

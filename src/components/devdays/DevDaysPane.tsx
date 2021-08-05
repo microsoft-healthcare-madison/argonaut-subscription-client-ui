@@ -5,7 +5,7 @@ import {
   Elevation, NonIdealState, H3, Text,
 } from '@blueprintjs/core';
 
-import * as fhir from '../../models/fhir_r5';
+import * as fhir from '../../local_dts/fhir5';
 import {IconNames} from "@blueprintjs/icons";
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { DataCardStatus } from '../../models/DataCardStatus';

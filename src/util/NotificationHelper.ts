@@ -1,5 +1,5 @@
-import * as fhir4 from "../models/fhir_r4";
-import * as fhir5 from "../models/fhir_r5";
+import * as fhir4 from "fhir_r4";
+import * as fhir5 from "fhir_r5";
 
 export interface NotificationReturn {
   success: boolean;

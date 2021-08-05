@@ -6,7 +6,7 @@ import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import { Button, FormGroup, InputGroup, HTMLSelect, Switch } from '@blueprintjs/core';
-import { Subscription, SubscriptionContentCodes, Parameters, ParametersParameter } from '../../models/fhir_r5';
+import { Subscription, SubscriptionContentCodes, Parameters, ParametersParameter } from '../../local_dts/fhir5';
 import { IconNames } from '@blueprintjs/icons';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
 

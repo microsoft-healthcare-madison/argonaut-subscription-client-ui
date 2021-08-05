@@ -9,9 +9,9 @@ import { SingleRequestData } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import { EndpointRegistration } from '../../models/EndpointRegistration';
-import * as fhir4 from '../../models/fhir_r4';
-import * as fhir5 from '../../models/fhir_r5';
-import * as ValueSet from '../../models/fhir_VS';
+import * as fhir4 from '../../local_dts/fhir4';
+import * as fhir5 from '../../local_dts/fhir5';
+import * as fhirCommon from '../../models/fhirCommon';
 import { SubscriptionHelper, SubscriptionReturn } from '../../util/SubscriptionHelper';
 
 export interface SubscriptionS2Props {
@@ -75,13 +75,13 @@ export default function SubscriptionS2(props: SubscriptionS2Props) {
 		let subscription: fhir5.Subscription = {
       resourceType: 'Subscription',
       endpoint: endpointUrl,
-      channelType: ValueSet.SubscriptionChannelType.rest_hook,
+      channelType: fhirCommon.SubscriptionChannelType.rest_hook,
       heartbeatPeriod: 60,
-      content: payloadType,
+      content: payloadType as fhirCommon.SubscriptionContentCodes,
       contentType: 'application/fhir+json',
 			filterBy: [filter],
 			end: getInstantFromDate(expirationTime),
-			topic: {reference:  topicUrl},
+			topic: topicUrl,
 			reason: 'Client Testing',
 			status: 'requested',
     }
@@ -161,7 +161,7 @@ export default function SubscriptionS2(props: SubscriptionS2Props) {
           onChange={handlePayloadTypeChange}
           value={payloadType}
           >
-          { Object.values(fhir5.SubscriptionContentCodes).map((value) => (
+          { Object.values(fhirCommon.SubscriptionContentCodes).map((value) => (
             <option key={value}>{value}</option> 
               ))}
         </HTMLSelect>

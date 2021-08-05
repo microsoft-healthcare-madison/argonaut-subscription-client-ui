@@ -5,7 +5,8 @@ import {
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
-import * as fhir from '../../models/fhir_r4';
+import * as fhir from '../../local_dts/fhir4';
+import * as fhirCommon from '../../models/fhirCommon';
 import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import PatientSearchMultiCard from './PatientSearchCardMulti';
 
@@ -82,7 +83,7 @@ export default function GroupCreateCard(props: GroupCreateProps) {
       name: name,
       actual: true,
       active: true,
-      type: fhir.GroupTypeCodes.PERSON,
+      type: fhirCommon.GroupTypeCodes.PERSON,
       member: members,
     }
     

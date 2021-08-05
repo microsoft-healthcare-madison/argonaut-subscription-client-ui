@@ -1,5 +1,5 @@
-import * as fhir4 from "../models/fhir_r4";
-import * as fhir5 from "../models/fhir_r5";
+import * as fhir4 from "fhir_r4";
+import * as fhir5 from "fhir_r5";
 import { SingleRequestData, RenderDataAsTypes } from "../models/RequestData";
 import { ConnectionInformation } from "../models/ConnectionInformation";
 import { ApiHelper, ApiResponse } from "./ApiHelper";

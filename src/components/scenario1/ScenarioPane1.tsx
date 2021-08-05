@@ -11,8 +11,9 @@ import {IconNames} from "@blueprintjs/icons";
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { EndpointRegistration } from '../../models/EndpointRegistration';
 import { ApiHelper } from '../../util/ApiHelper';
-import * as fhir4 from '../../models/fhir_r4';
-import * as fhir5 from '../../models/fhir_r5';
+import * as fhir4 from '../../local_dts/fhir4';
+import * as fhir5 from '../../local_dts/fhir5';
+import * as fhirCommon from '../../models/fhirCommon';
 import TopicS1 from './TopicS1';
 import PatientS1 from './PatientS1';
 import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
@@ -294,7 +295,7 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 		}
 
 		// special handling for handshake
-		if (notificationReturn.notificationType === fhir5.SubscriptionStatusNotificationTypeCodes.HANDSHAKE) {
+		if (notificationReturn.notificationType === fhirCommon.SubscriptionNotificationTypeCodes.HANDSHAKE) {
 			let data: SingleRequestData = {
 				name: 'Handshake',
 				id: 'handshake',
