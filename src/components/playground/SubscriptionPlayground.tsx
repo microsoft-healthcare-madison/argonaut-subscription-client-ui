@@ -237,7 +237,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       content: payloadType as fhirCommon.SubscriptionContentCodes,
       contentType: contentType,
 			end: getInstantFromDate(expirationTime),
-			topic: `${props.topics[topicIndex].url!}`,
+			topic: { reference: `${props.topics[topicIndex].url!}` },
 			reason: 'Client Testing',
 			status: 'requested',
     }

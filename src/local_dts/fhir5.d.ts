@@ -28278,7 +28278,7 @@ export interface Subscription extends DomainResource {
   /**
    * The reference to the subscription topic to be notified about.
    */
-  topic: string;
+  topic: Reference<SubscriptionTopic>|undefined;
   _topic?: Element|undefined;
 }
 /**

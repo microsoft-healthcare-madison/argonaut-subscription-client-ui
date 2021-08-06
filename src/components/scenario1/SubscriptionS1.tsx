@@ -81,7 +81,7 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
       contentType: 'application/fhir+json',
 			filterBy: [filter],
 			end: getInstantFromDate(expirationTime),
-			topic: topicUrl,
+			topic: { reference: topicUrl },
 			reason: 'Client Testing',
 			status: 'requested',
     }
