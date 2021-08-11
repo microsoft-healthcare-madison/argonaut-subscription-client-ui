@@ -21,6 +21,7 @@ import { ApiResponse, ApiHelper } from '../../util/ApiHelper';
 // import { KeySelectionInfo } from '../../models/KeySelectionInfo';
 import EncountersPlayground from './EncountersPlayground';
 import { NotificationHelper, NotificationReturn } from '../../util/NotificationHelper';
+import OperationEventsCard from '../common/OperationEventsCard';
 
 export default function PlaygroundPane(props: ContentPaneProps) {
 
@@ -34,7 +35,10 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 	const [notificationData, setNotificationData] = useState<SingleRequestData[]>([]);
 	const [notificationStatus, setNotificationStatus] = useState<DataCardStatus>(_statusAvailable);
 
-	const [topicData, setTopicData] = useState<SingleRequestData[]>([]);
+  const [opEventsData, setOpEventsData] = useState<SingleRequestData[]>([]);
+  const [opEventsStatus, setOpEventsStatus] = useState<DataCardStatus>(_statusAvailable);
+
+  const [topicData, setTopicData] = useState<SingleRequestData[]>([]);
 	const [topicStatus, setTopicStatus] = useState<DataCardStatus>(_statusAvailable);
 	const [topics, setTopics] = useState<fhir4.SubscriptionTopic[]|fhir5.SubscriptionTopic[]>([]);
 
@@ -259,6 +263,18 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 				status={notificationStatus}
 				data={notificationData}
 				/>
+
+		{/* Query for events */}
+		<OperationEventsCard
+			key='s1_operation_events'
+			paneProps={props}
+			status={opEventsStatus}
+      updateStatus={setOpEventsStatus}
+			data={opEventsData}
+      setData={setOpEventsData}
+      subscriptions={subscriptions}
+			/>
+
 
 			{/* Topic Playground Card */}
 			<TopicPlayground

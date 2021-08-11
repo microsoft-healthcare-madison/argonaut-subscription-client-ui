@@ -25,6 +25,7 @@ import TriggerS1 from './TriggerS1';
 import NotificationS1 from './NotificationS1';
 import CleanUpS1 from './CleanUpS1';
 import { NotificationHelper, NotificationReturn } from '../../util/NotificationHelper';
+import OperationEventsCard from '../common/OperationEventsCard';
 
 /**
  * Walks a user through the steps of Scenario 1
@@ -63,6 +64,9 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 
 	const [notificationData, setNotificationData] = useState<SingleRequestData[]>([]);
 	const [notificationStatus, setNotificationStatus] = useState<DataCardStatus>(_statusNotAvailable);
+
+  const [opEventsData, setOpEventsData] = useState<SingleRequestData[]>([]);
+  const [opEventsStatus, setOpEventsStatus] = useState<DataCardStatus>(_statusAvailable);
 
 	const [cleanUpData, setCleanUpData] = useState<SingleRequestData[]>([]);
 	const [cleanUpStatus, setCleanUpStatus] = useState<DataCardStatus>(_statusAvailable);
@@ -144,6 +148,8 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 			setSubscription(null);
 			setSubscriptionData([]);
 			setSubscriptionStatus(_statusNotAvailable);
+
+      setOpEventsData([]);
 		}
 
 		if (startingAt <= 5) {
@@ -440,6 +446,17 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 			paneProps={props}
 			status={notificationStatus}
 			data={notificationData}
+			/>
+
+		{/* Query for events */}
+		<OperationEventsCard
+			key='s1_operation_events'
+			paneProps={props}
+			status={opEventsStatus}
+      updateStatus={setOpEventsStatus}
+			data={opEventsData}
+      setData={setOpEventsData}
+      subscription={subscription}
 			/>
 
 		{/* Clean up */}
