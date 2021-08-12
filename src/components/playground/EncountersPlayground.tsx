@@ -1,7 +1,7 @@
 import React, {useState, useRef} from 'react';
 
 import {
-  HTMLSelect, Button, FormGroup,
+  HTMLSelect, Button, FormGroup, InputGroup, Overlay, Classes, Card, ControlGroup,
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { DataCardInfo } from '../../models/DataCardInfo';
@@ -11,6 +11,9 @@ import { DataCardStatus } from '../../models/DataCardStatus';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
 import * as fhir from '../../local_dts/fhir4';
 import * as fhirCommon from '../../models/fhirCommon';
+import PatientSearchCard from '../common/PatientSearchCard';
+import PatientCreateCard from '../common/PatientCreateCard';
+import { IconNames } from '@blueprintjs/icons';
 
 export interface EncountersPlaygroundProps {
   paneProps: ContentPaneProps,
@@ -25,7 +28,11 @@ export interface EncountersPlaygroundProps {
 export default function EncountersPlayground(props: EncountersPlaygroundProps) {
 
   const lastPatientIndexRef = useRef<number>(-1);
-  const [selectedPatient, setSelectedPatient] = useState<string>('_sequential');
+  const [selectedPatient, setSelectedPatient] = useState<string>('_manual');
+
+  const [manualPatient, setManualPatient] = useState<string>('');
+  const [showSearchOverlay, setShowSearchOverlay] = useState<boolean>(false);
+  const [showCreateOverlay, setShowCreateOverlay] = useState<boolean>(false);
 
   const info: DataCardInfo = {
     id: 'playground_encounter',
@@ -49,23 +56,35 @@ export default function EncountersPlayground(props: EncountersPlaygroundProps) {
     let patientRef: string = '';
 
     switch (selectedPatient) {
+      case '_manual':
+        if (!manualPatient) {
+          props.paneProps.toaster('Please select or create a patient!', IconNames.ERROR, 1000);
+          props.updateStatus({...props.status, busy: false});
+          return;
+        }
+        patientRef = manualPatient;
+        break;
       case '_sequential':
-          if ((lastPatientIndexRef.current + 1) >= props.patientIds.length) {
-            lastPatientIndexRef.current = 0;
-          } else {
-            lastPatientIndexRef.current = lastPatientIndexRef.current + 1;
-          }
-          patientRef = props.patientIds[lastPatientIndexRef.current];
+        if ((lastPatientIndexRef.current + 1) >= props.patientIds.length) {
+          lastPatientIndexRef.current = 0;
+        } else {
+          lastPatientIndexRef.current = lastPatientIndexRef.current + 1;
+        }
+        patientRef = props.patientIds[lastPatientIndexRef.current];
         break;
       case '_random':
-          let index: number = Math.floor(Math.random() * props.patientIds.length);
-          patientRef = props.patientIds[index];
+        let index: number = Math.floor(Math.random() * props.patientIds.length);
+        patientRef = props.patientIds[index];
         break;
       default:
-          patientRef = selectedPatient;
+        patientRef = selectedPatient;
         break;
     }
     
+    if (patientRef.indexOf('/') === -1) {
+      patientRef = 'Patient/' + patientRef;
+    }
+
 		// build our encounter
 		let encounter: fhir.Encounter = {
 			resourceType: "Encounter",
@@ -147,6 +166,31 @@ export default function EncountersPlayground(props: EncountersPlaygroundProps) {
 		setSelectedPatient(event.currentTarget.value);
   }
 
+  /** Process HTML events for manual patient changes (update state for managed) */
+  function handleManualPatientChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setManualPatient(event.target.value);
+  }
+
+  function toggleSearchOverlay() {
+    setShowSearchOverlay(!showSearchOverlay);
+  }
+
+  function toggleCreateOverlay() {
+    setShowCreateOverlay(!showCreateOverlay);
+  }
+
+  function handleSelectPatient(patientId: string) {
+    setManualPatient('Patient/' + patientId);
+
+    if (showSearchOverlay) {
+      toggleSearchOverlay();
+    }
+    
+    if (showCreateOverlay) {
+      toggleCreateOverlay();
+    }
+  }
+
   // check for NOT being allowed to create encounters
   if (((props.paneProps.useBackportToR4) && (!props.paneProps.fhirServerInfoR4.supportsCreateEncounter)) ||
       ((!props.paneProps.useBackportToR4) && (!props.paneProps.fhirServerInfoR5.supportsCreateEncounter))) {
@@ -179,17 +223,41 @@ export default function EncountersPlayground(props: EncountersPlaygroundProps) {
         helperText='Patient to use in this Encounter'
         labelFor='encounter-patient'
         >
-        <HTMLSelect
-          id='encounter-patient'
-          value={selectedPatient}
-          onChange={handleSelectedPatientChange}
-          >
-          <option value='_sequential'>Sequential Selection</option>
-          <option value='_random'>Random Selection</option>
-          {props.patientIds.map((value) => (
-            <option value={value}>{value}</option>
-            ))}
-        </HTMLSelect>
+        <ControlGroup
+          id='patient-selection-group'>
+          <HTMLSelect
+            id='encounter-patient'
+            value={selectedPatient}
+            onChange={handleSelectedPatientChange}
+            >
+            <option value='_manual'>Manual Selection</option>
+            { (props.patientIds.length > 0) && [
+              <option value='_sequential'>Sequential Selection</option>,
+              <option value='_random'>Random Selection</option>
+            ]}
+            {props.patientIds.map((value) => (
+              <option value={value}>{value}</option>
+              ))}
+          </HTMLSelect>
+          { (selectedPatient === '_manual') && [
+            <InputGroup
+              id='manual-patient'
+              value={manualPatient}
+              onChange={handleManualPatientChange}
+              />,
+            <Button
+              onClick={toggleSearchOverlay}
+              >
+              Search
+            </Button>,
+            <Button
+              onClick={toggleCreateOverlay}
+              >
+              Create
+            </Button>
+          ]}
+
+        </ControlGroup>
       </FormGroup>
       <FormGroup
         label='Encounter class'
@@ -220,12 +288,49 @@ export default function EncountersPlayground(props: EncountersPlaygroundProps) {
         </HTMLSelect>
       </FormGroup>
       <Button
-        disabled={(!props.status.available) || (props.status.busy) || (props.patientIds.length === 0)}
+        disabled={(!props.status.available) || (props.status.busy) || ((props.patientIds.length === 0) && (!manualPatient))}
         onClick={sendEncounter}
         style={{margin: 5}}
         >
         Send Encounter
       </Button>
+      <Overlay 
+        isOpen={showSearchOverlay}
+        onClose={toggleSearchOverlay}
+        className={Classes.OVERLAY_SCROLL_CONTAINER}
+        usePortal={false}
+        autoFocus={true}
+        hasBackdrop={true}
+        canEscapeKeyClose={true}
+        canOutsideClickClose={true}
+        >
+        <Card className='centered'>
+          <PatientSearchCard
+            paneProps={props.paneProps}
+            setData={(data: SingleRequestData[]) => {}}
+            registerSelectedPatient={handleSelectPatient}
+            />
+        </Card>
+      </Overlay>
+      <Overlay 
+        isOpen={showCreateOverlay}
+        onClose={toggleCreateOverlay}
+        className={Classes.OVERLAY_SCROLL_CONTAINER}
+        usePortal={false}
+        autoFocus={true}
+        hasBackdrop={true}
+        canEscapeKeyClose={true}
+        canOutsideClickClose={true}
+        >
+        <Card className='centered'>
+          <PatientCreateCard
+            paneProps={props.paneProps}
+            setData={(data: SingleRequestData[]) => {}}
+            registerSelectedPatient={handleSelectPatient}
+            />
+        </Card>
+      </Overlay>
+
     </DataCard>
   );
 }

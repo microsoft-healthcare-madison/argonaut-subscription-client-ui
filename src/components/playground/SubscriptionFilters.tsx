@@ -33,9 +33,6 @@ export default function SubscriptionFilters(props: SubscriptionFiltersProps) {
   }
   
   if (props.filters.length === 0) {
-    if (props.useBackportToR4) {
-      return (<H6>No Filters Added (at least one filter is REQUIRED while using the backport).</H6>);
-    }
     return (<H6>No Filters Added (will trigger on all resource CREATE/UPDATE operatons).</H6>);
   }
 

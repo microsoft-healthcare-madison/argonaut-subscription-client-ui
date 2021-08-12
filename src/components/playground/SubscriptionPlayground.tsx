@@ -259,6 +259,10 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
     if (filters.length > 0) {
       subscription.filterBy = filters;
     } else if (filterByValue.length > 0) {
+      let filterValueActual:string = (filterByValue.indexOf('/') === -1)
+        ? 'Patient/' + filterByValue
+        : filterByValue;
+
       // create the filter object
       let filter:fhir5.SubscriptionFilterBy;
       
@@ -267,14 +271,14 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         filter = {
           searchParamName: topic.canFilterBy![filterByIndex].filterParameter!,
           searchModifier: topic.canFilterBy![filterByIndex].modifier![filterByMatchTypeIndex],
-          value: filterByValue,
+          value: filterValueActual,
         };
       } else {
         let topic: fhir5.SubscriptionTopic = props.topics[topicIndex]! as fhir5.SubscriptionTopic;
         filter = {
           searchParamName: topic.canFilterBy![filterByIndex].filterParameter!,
           searchModifier: topic.canFilterBy![filterByIndex].modifier![filterByMatchTypeIndex],
-          value: filterByValue,
+          value: filterValueActual,
         };
       }
 
@@ -538,6 +542,10 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         return;
     }
 
+    let filterValueActual:string = (filterByValue.indexOf('/') === -1)
+      ? 'Patient/' + filterByValue
+      : filterByValue;
+
     // create the filter object
     let rec: fhir5.SubscriptionFilterBy;
     
@@ -546,14 +554,14 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       rec = {
         searchParamName: topic.canFilterBy![filterByIndex].filterParameter!,
         searchModifier: topic.canFilterBy![filterByIndex].modifier![filterByMatchTypeIndex],
-        value: filterByValue,
+        value: filterValueActual,
       };
     } else {
       let topic: fhir5.SubscriptionTopic = props.topics[topicIndex]! as fhir5.SubscriptionTopic;
       rec = {
         searchParamName: topic.canFilterBy![filterByIndex].filterParameter!,
         searchModifier: topic.canFilterBy![filterByIndex].modifier![filterByMatchTypeIndex],
-        value: filterByValue,
+        value: filterValueActual,
       };
     }
 
@@ -650,7 +658,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 		setFilterByMatchTypeIndex(parseInt(event.currentTarget.value));
   }
 
-  /** Process HTML events for filter balue (update state for managed) */
+  /** Process HTML events for filter value (update state for managed) */
   function handleFilterByValueChange(event: React.ChangeEvent<HTMLInputElement>) {
     setFilterByValue(event.target.value);
   }
