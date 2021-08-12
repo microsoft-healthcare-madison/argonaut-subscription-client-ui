@@ -2,11 +2,11 @@ import React, {useRef, useState, useEffect} from 'react';
 
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { DataCardInfo } from '../../models/DataCardInfo';
-import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
+import { SingleRequestData } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
-import { Button, FormGroup, InputGroup, HTMLSelect, Switch } from '@blueprintjs/core';
-import { Subscription, SubscriptionContentCodes, Parameters, ParametersParameter } from '../../local_dts/fhir5';
+import { Button, FormGroup, InputGroup, Switch } from '@blueprintjs/core';
+import { Subscription, Parameters, ParametersParameter } from '../../local_dts/fhir5';
 import { IconNames } from '@blueprintjs/icons';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
 
@@ -237,7 +237,7 @@ export default function WebsocketPlayground(props: WebsocketPlaygroundProps) {
         >
         {connected ? 'Disconnect' : 'Connect'} Websocket
       </Button>
-      { connected && 
+      { (connected && (props.subscriptions.length > 0)) &&
         <FormGroup
           label='Subscription'
           helperText='Subscriptions to interact with'

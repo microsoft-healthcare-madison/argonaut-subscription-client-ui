@@ -75,6 +75,8 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 
   const [externalEndpoint, setExternalEndpoint] = useState<string>('');
 
+  const [zulipPmUserId, setZulipPmUserId] = useState<string>('');
+
   useEffect(() => {
     if (StorageHelper.isLocalStorageAvailable) {
         // update local settings
@@ -164,13 +166,6 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
   }
   
   async function createSubscription() {
-    if ((props.paneProps.useBackportToR4) && 
-        (filters.length === 0) &&
-        (filterByValue.length === 0)) {
-      props.paneProps.toaster('At least one filter is REQUIRED in backport mode', IconNames.ERROR, 1000);
-      return;
-    }
-
     props.updateStatus({...props.status, busy: true});
 
     let header: string[] = (headers)
@@ -222,6 +217,10 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         contentType = emailMimeType;
         channelCoding = fhirCommon.SubscriptionChannelType.email;
         break;
+      case 'zulip':
+        endpoint = '';
+        channelCoding = fhirCommon.SubscriptionChannelType.zulip;
+        break;
       default:
         endpoint = '';
         channelCoding = {};
@@ -241,7 +240,18 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 			reason: 'Client Testing',
 			status: 'requested',
     }
-    
+
+    // add zulip extensions
+    if (channelType === 'zulip') {
+      if (subscription.extension === undefined) {
+        subscription.extension = [];
+      }
+      subscription.extension.push({
+        url: 'http://fhir-extension.zulip.org/pm-user-id',
+        valueString: `${zulipPmUserId}`,
+      });
+    }
+
     if (header.length > 0) {
       subscription.header = header;
     }
@@ -601,6 +611,10 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
     setExternalEndpoint(event.target.value);
   }
 
+  function handleZulipPmUserIdChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setZulipPmUserId(event.target.value);
+  }
+
   /** Process HTML events for the payload type select box */
 	function handleChannelTypeChange(event: React.FormEvent<HTMLSelectElement>) {
 		setChannelType(event.currentTarget.value);
@@ -682,12 +696,27 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
           onChange={handleChannelTypeChange}
           value={channelType}
           >
-          <option key='websocket' value='websocket'>Websocket</option>
+          <option key='email' value='email'>Email</option>
           <option key='rest-hook-external' value='rest-hook-external'>EXTERNAL REST Hook</option>
           <option key='rest-hook' value='rest-hook'>REST Hook</option>
-          <option key='email' value='email'>Email</option>
+          <option key='websocket' value='websocket'>Websocket</option>
+          <option key='zulip' value='zulip'>Zulip (chat.fhir.org)</option>
         </HTMLSelect>
       </FormGroup>
+      { (channelType === 'zulip') && [
+        <FormGroup
+          label='PM User Id'
+          helperText='User ID this subscription will PM to'
+          labelFor='zulip-pm-user-id'
+          >
+          <InputGroup
+            id='zulip-pm-user-id'
+            value={zulipPmUserId}
+            onChange={handleZulipPmUserIdChange}
+            />
+        </FormGroup>,
+        ]
+      }
       { (channelType === 'rest-hook-external') && [
         <FormGroup
           label='Endpoint'

@@ -28,7 +28,7 @@ export default function OperationEventsCard(props: OperationEventsProps) {
 
   const info: DataCardInfo = {
     id: 'operation_events',
-    heading: 'Query Subscription Events',
+    heading: 'Operation: Subscription Instance $events',
     description: '',
     optional: true,
   };
@@ -65,12 +65,19 @@ export default function OperationEventsCard(props: OperationEventsProps) {
 
     props.updateStatus({...props.status, busy: true});
 
+    let urlPart = `Subscription/${id}/$events?content=${contentHint}`;
+
+    if (eventNumberLow > 0) {
+      urlPart += `&eventsSinceNumber=${eventNumberLow}`;
+    }
+
+    if (eventNumberHigh > 0) {
+      urlPart += `&eventsUntilNumber=${eventNumberHigh}`;
+    }
+
 		// build the url for our call
     let url: string = new URL(
-      `Subscription/${id}/$events` +
-        `?eventsSinceNumber=${eventNumberLow}` +
-        `&eventsUntilNumber=${eventNumberHigh}` +
-        `&content=${contentHint}`,
+      urlPart,
       props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.url : props.paneProps.fhirServerInfoR5.url).toString();
 
     // ask for this encounter to be created

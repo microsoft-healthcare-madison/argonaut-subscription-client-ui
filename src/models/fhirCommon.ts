@@ -274,6 +274,13 @@ const SubscriptionChannelType_message: Coding = {
   display: 'Message',
   system: 'http://terminology.hl7.org/CodeSystem/subscription-channel-type'
 };
+
+const SubscriptionChannelType_zulip: Coding = {
+  code: 'zulip',
+  display: 'Zulip Messages (chat.fhir.org)',
+  system: 'http://fhir-extensions.zulip.org/subscription-channel-type'
+}
+
 /**
 * Core-defined FHIR channel types allowed for use in Subscriptions.
 */
@@ -294,4 +301,6 @@ email: SubscriptionChannelType_email,
  * The channel is executed by sending a message (e.g. a Bundle with a MessageHeader resource etc.) to the application identified in the URI.
  */
 message: SubscriptionChannelType_message,
+
+zulip: SubscriptionChannelType_zulip,
 }

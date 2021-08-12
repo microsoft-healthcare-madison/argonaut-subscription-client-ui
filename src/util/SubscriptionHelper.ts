@@ -12,11 +12,15 @@ export interface SubscriptionReturn {
   success: boolean;
 }
 
+const ExtensionUrlAdditionalChannelType = "http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-channel-type";
 const ExtensionUrlTopic = 'http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-topic-canonical';
 const ExtensionUrlHeartbeat = 'http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-heartbeat-period';
 const ExtensionUrlTimeout = 'http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-timeout';
 const ExtensionUrlContent = 'http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-payload-content';
 const ExtensionUrlFilterCriteria = 'http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-filter-criteria';
+
+const ZulipChannelSystem = "http://fhir-extensions.zulip.org/subscription-channel-type";
+const ZulipChannelCode = "zulip";
 
 //const ExtensionNotificationUrlLocation = "http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-notification-url-location";
 const ExtensionMaxCount = "http://hl7.org/fhir/uv/subscriptions-backport/StructureDefinition/backport-max-count";
@@ -317,6 +321,18 @@ export class SubscriptionHelper {
    * @param t5 
    */
   static ToR4(s5: fhir5.Subscription, t4?: fhir4.SubscriptionTopic, fhirServerUrl?:string):fhir4.Subscription {
+
+    let channelType:('rest-hook'|'websocket'|'email'|'sms'|'message');
+    let needsChannelTypeExtension:boolean = false;
+    if ((s5.channelType.code) &&
+        (s5.channelType.code in fhirCommon.SubscriptionChannelTypeCodes)) {
+      channelType = s5.channelType.code! as fhirCommon.SubscriptionChannelTypeCodes;
+    } else {
+      // use rest-hook plus extension
+      channelType = 'rest-hook';
+      needsChannelTypeExtension = true;
+    }
+
     let s4:fhir4.Subscription = {
       resourceType: 'Subscription',
       id: s5.id,
@@ -334,11 +350,31 @@ export class SubscriptionHelper {
             valueCode: s5.content,
           }],
         },
-        type: s5.channelType.code! as fhirCommon.SubscriptionChannelTypeCodes,
+        type: channelType,
       },
       status: s5.status as fhirCommon.SubscriptionStatusCodes,
       criteria: '',
     };
+    
+    if (needsChannelTypeExtension) {
+      if (!s4.channel.extension) {
+        s4.channel.extension = [];
+      }
+      s4.channel.extension.push({
+          url: ExtensionUrlAdditionalChannelType,
+          valueCoding: {
+            system: s5.channelType.system,
+            code: s5.channelType.code,
+            display: s5.channelType.display,
+          }});
+    }
+
+    if (s5.extension !== undefined) {
+      if (!s4.extension) {
+        s4.extension = [];
+      }
+      s5.extension.forEach((ext) => s4.extension!.push(ext as fhir4.Extension));
+    }
 
     if (s5.meta) {
       s4.meta = {
@@ -350,14 +386,14 @@ export class SubscriptionHelper {
       if (s5.meta.security) {
         s4.meta.security = [];
         s5.meta.security.forEach((c5) => {
-          s4.meta!.security!.push(SubscriptionHelper.CodingToR4(c5));
+          s4.meta!.security!.push(c5 as fhir4.Coding);
         });
       }
 
       if (s5.meta.tag) {
         s4.meta.tag = [];
         s5.meta.tag.forEach((c5) => {
-          s4.meta!.tag!.push(SubscriptionHelper.CodingToR4(c5));
+          s4.meta!.tag!.push(c5 as fhir4.Coding);
         });
       }
     }
@@ -369,7 +405,9 @@ export class SubscriptionHelper {
     }
 
     if (s5.heartbeatPeriod) {
-      s4.channel.extension = [];
+      if (!s4.channel.extension) {
+        s4.channel.extension = [];
+      }
       s4.channel.extension.push({
         url: ExtensionUrlHeartbeat,
         valueUnsignedInt: s5.heartbeatPeriod,
@@ -480,6 +518,13 @@ export class SubscriptionHelper {
       topic: '',
     };
 
+    if (s4.extension) {
+      if (!s5.extension) {
+        s5.extension = [];
+      }
+      s4.extension.forEach((ext) => s5.extension!.push(ext as fhir5.Extension));
+    }
+
     if (s4.meta) {
       s5.meta = {
         lastUpdated: s4.meta.lastUpdated,
@@ -490,14 +535,14 @@ export class SubscriptionHelper {
       if (s4.meta.security) {
         s5.meta.security = [];
         s4.meta.security.forEach((c4) => {
-          s5.meta!.security!.push(SubscriptionHelper.CodingToR5(c4));
+          s5.meta!.security!.push(c4 as fhir5.Coding);
         });
       }
 
       if (s4.meta.tag) {
         s5.meta.tag = [];
         s4.meta.tag.forEach((c4) => {
-          s5.meta!.tag!.push(SubscriptionHelper.CodingToR5(c4));
+          s5.meta!.tag!.push(c4 as fhir5.Coding);
         });
       }
     }
@@ -675,33 +720,5 @@ export class SubscriptionHelper {
         searchModifier: searchModifier as fhirCommon.SubscriptionFilterByModifierCodes,
         value: searchValue,
       };
-  }
-
-  /**
-   * Convert an R4 Coding to R5
-   * @param c4 
-   */
-  static CodingToR5(c4: fhir4.Coding):fhir5.Coding {
-    return {
-      system: c4.system,
-      userSelected: c4.userSelected,
-      display: c4.display,
-      code: c4.code,
-      version: c4.version,
-    }
-  }
-
-  /**
-   * Convert an R5 Coding to R4
-   * @param c5 
-   */
-  static CodingToR4(c5: fhir5.Coding):fhir4.Coding {
-    return {
-      system: c5.system,
-      userSelected: c5.userSelected,
-      display: c5.display,
-      code: c5.code,
-      version: c5.version,
-    }
   }
 }
