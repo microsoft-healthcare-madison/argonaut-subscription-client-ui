@@ -1,4 +1,4 @@
-import * as fhir5 from "fhir_r5";
+import * as fhir5 from '../local_dts/fhir5';
 
 export interface ApiResponse<T> {
   statusCode?: number;
@@ -105,6 +105,7 @@ export class ApiHelper {
       });
       let body: string = await response.text();
       let typed: T|undefined = undefined;
+
 
       // attempt Typed parse
       try {

@@ -5,7 +5,7 @@ import {
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { DataCardInfo } from '../../models/DataCardInfo';
-import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
+import { SingleRequestData } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import { EndpointRegistration } from '../../models/EndpointRegistration';

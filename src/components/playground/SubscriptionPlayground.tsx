@@ -1,15 +1,15 @@
 import React, {useState, useEffect} from 'react';
 
 import {
-  HTMLSelect, Button, FormGroup, InputGroup, ControlGroup, Overlay, Classes, Card, Switch,
+  HTMLSelect, Button, FormGroup, InputGroup, ControlGroup, Overlay, Classes, Card,
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { DataCardInfo } from '../../models/DataCardInfo';
-import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
+import { SingleRequestData } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import { EndpointRegistration } from '../../models/EndpointRegistration';
-import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
+import { ApiHelper } from '../../util/ApiHelper';
 import * as fhir4 from '../../local_dts/fhir4';
 import * as fhir5 from '../../local_dts/fhir5';
 import * as fhirCommon from '../../models/fhirCommon';
@@ -22,6 +22,7 @@ import { StorageHelper } from '../../util/StorageHelper';
 export interface SubscriptionPlaygroundProps {
   paneProps: ContentPaneProps,
   registerSubscription: ((subscription: fhir5.Subscription) => void),
+  removeSubscription: ((index: number) => void),
   status: DataCardStatus,
   updateStatus: ((status: DataCardStatus) => void),
   data: SingleRequestData[],
@@ -351,6 +352,8 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
   async function deleteSubscription(dataRowIndex: number) {
     props.updateStatus({...props.status, busy: true});
 
+    let id:string = props.subscriptions[dataRowIndex].id!;
+
     try {
       ApiHelper.deleteSubscription(
         props.subscriptions[dataRowIndex].id!,
@@ -362,8 +365,9 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       let updatedData: SingleRequestData[] = props.data.slice();
       updatedData.splice(dataRowIndex, 1);
       props.setData(updatedData);
-
-      props.updateStatus({...props.status, busy:false});
+      
+      // deregister this subscription
+      props.removeSubscription(dataRowIndex);
 
       return;
     } catch (err) {

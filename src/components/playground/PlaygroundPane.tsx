@@ -181,6 +181,18 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 		setNotificationStatus(_statusBusy);
 	}
 
+  function removeSubscription(index: number) {
+    let values: fhir5.Subscription[] = subscriptions.slice();
+    values.splice(index, 1);
+
+		// save subscription
+		setSubscriptions(values);
+
+		// update status
+		setSubscriptionStatus(_statusComplete);
+		setNotificationStatus(_statusBusy);
+  }
+
 	function registerPatientId(value: string) {
 		if (!(value in patientIds)) {
 			let ids = patientIds.slice();
@@ -304,6 +316,7 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 				key='playground_subscription'
 				paneProps={props}
 				registerSubscription={registerSubscription}
+        removeSubscription={removeSubscription}
 				status={subscriptionStatus}
 				updateStatus={setSubscriptionStatus}
 				data={subscriptionData}

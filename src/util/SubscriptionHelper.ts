@@ -4,7 +4,6 @@ import * as fhirCommon from '../models/fhirCommon';
 import { SingleRequestData, RenderDataAsTypes } from "../models/RequestData";
 import { ConnectionInformation } from "../models/ConnectionInformation";
 import { ApiHelper, ApiResponse } from "./ApiHelper";
-import { Code } from "@blueprintjs/core";
 
 export interface SubscriptionReturn {
   data: SingleRequestData;
@@ -324,13 +323,20 @@ export class SubscriptionHelper {
 
     let channelType:('rest-hook'|'websocket'|'email'|'sms'|'message');
     let needsChannelTypeExtension:boolean = false;
-    if ((s5.channelType.code) &&
-        (s5.channelType.code in fhirCommon.SubscriptionChannelTypeCodes)) {
-      channelType = s5.channelType.code! as fhirCommon.SubscriptionChannelTypeCodes;
-    } else {
-      // use rest-hook plus extension
-      channelType = 'rest-hook';
-      needsChannelTypeExtension = true;
+
+    switch (s5.channelType.code) {
+      case 'rest-hook':
+      case 'websocket':
+      case 'email':
+      case 'message':
+        needsChannelTypeExtension = false;
+        channelType = s5.channelType.code! as fhirCommon.SubscriptionChannelTypeCodes;
+        break;
+      default:
+        // use rest-hook plus extension
+        channelType = 'rest-hook';
+        needsChannelTypeExtension = true;
+        break;
     }
 
     let s4:fhir4.Subscription = {

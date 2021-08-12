@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Props } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import { 
   Card,
@@ -19,7 +19,6 @@ import { ContentPaneProps } from '../models/ContentPaneProps';
 import { ConnectionInformation } from '../models/ConnectionInformation';
 import { StorageHelper } from '../util/StorageHelper';
 import { IconNames } from '@blueprintjs/icons';
-import { connect } from 'http2';
 
 export default function ConfigurationPane(props: ContentPaneProps) {
 
