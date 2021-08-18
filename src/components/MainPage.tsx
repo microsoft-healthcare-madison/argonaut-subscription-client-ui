@@ -32,7 +32,7 @@ let _tabs: UiTabInformation[] = [
   {title: 'Patient+REST', tip:'Single Patient to REST-Hook', id: '1', panel: React.createFactory(ScenarioPane1)},
   {title: 'Group+REST', tip:'Patient Group to REST-Hook', id: '2', panel: React.createFactory(ScenarioPane2)},
   {title: 'Playground', tip:'Playground for testing Subscriptions', id: '3', panel: React.createFactory(PlaygroundPane)},
-  {title: 'DevDays', tip:'DevDays Amsterdam 2019', id: '4', panel: React.createFactory(DevDaysPane)},
+  // {title: 'DevDays', tip:'DevDays Amsterdam 2019', id: '4', panel: React.createFactory(DevDaysPane)},
 ]
 
 // extend the Window to include our _env settings

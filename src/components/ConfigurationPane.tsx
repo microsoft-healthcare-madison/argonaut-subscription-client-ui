@@ -54,12 +54,15 @@ export default function ConfigurationPane(props: ContentPaneProps) {
     {
       short: 'build.fhir.org', 
       description: 'Current FHIR R5 Build branch (Subscription, SubscriptionTopic, etc.)', 
-      link:'http://build.fhir.org/'
+      link:'http://build.fhir.org/branches/subscription-b/'
+      // link:'http://build.fhir.org/'
     },
     {
-      short: 'build.fhir.org', 
-      description: 'Draft FHIR-I Subscription Backport (R5 to R4) IG', 
-      link:'http://build.fhir.org/ig/HL7/fhir-subscription-backport-ig/'
+      short: 'argonautproject.github.io', 
+      // short: 'build.fhir.org', 
+      description: 'CI Build FHIR-I Subscription Backport (R5 to R4) IG', 
+      link:'https://argonautproject.github.io/subscription-backport-ig/'
+      // link:'http://build.fhir.org/ig/HL7/fhir-subscription-backport-ig/'
     },
     {
       short: 'github.com',
