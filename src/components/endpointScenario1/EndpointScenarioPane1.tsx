@@ -203,6 +203,7 @@ export default function EndpointScenarioPane1(props: ContentPaneProps) {
 
 		// update status
 		setSubscriptionStatus(_statusComplete);
+    setTriggerStatus(_statusAvailable);
 	}
 
 	/** Register a patient id as active in this scenario */
@@ -266,6 +267,7 @@ export default function EndpointScenarioPane1(props: ContentPaneProps) {
 		<PatientES1
 			key='s1_patient'
 			paneProps={props}
+      selectedPatientId={selectedPatientId}
 			registerSelectedPatientId={registerSelectedPatientId}
 			status={patientStatus}
 			updateStatus={setPatientStatus}
@@ -283,6 +285,7 @@ export default function EndpointScenarioPane1(props: ContentPaneProps) {
 			data={subscriptionData}
 			setData={setSubscriptionData}
 			selectedPatientId={selectedPatientId!}
+			registerSelectedPatientId={registerSelectedPatientId}
 			topic={selectedTopic}
 			subscription={subscription!}
 			/>

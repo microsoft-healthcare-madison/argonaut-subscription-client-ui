@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 
 import {
   Tabs, Tab, TabId,
@@ -13,6 +13,7 @@ import { DataCardStatus } from '../../models/DataCardStatus';
 
 export interface PatientES1Props {
   paneProps: ContentPaneProps,
+  selectedPatientId: string,
   registerSelectedPatientId: ((patientId: string) => void),
   status: DataCardStatus,
   updateStatus: ((status: DataCardStatus) => void),
@@ -22,6 +23,23 @@ export interface PatientES1Props {
 
 /** Component representing the Scenario 1 Patient Card */
 export default function PatientES1(props: PatientES1Props) {
+
+  useEffect(() => {
+    if ((props.selectedPatientId !== undefined) && (props.selectedPatientId !== '')) {
+      // add to our data
+      if ((props.data) && (props.data.length > 0)) {
+        let updated: SingleRequestData = {...props.data[0], info: `Using patient id: ${props.selectedPatientId}`};
+        props.setData([updated]);
+      } else {
+        let updated: SingleRequestData = {
+          name: 'Patient',
+          id: 'patient',
+          info: `Using patient id: ${props.selectedPatientId}`,
+        }
+        props.setData([updated]);
+      }
+    }
+  }, [props.setData, props.selectedPatientId]);
 
   let supported:boolean|undefined = props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4.supportsCreatePatient : props.paneProps.fhirServerInfoR5.supportsCreatePatient;
 
@@ -40,27 +58,6 @@ export default function PatientES1(props: PatientES1Props) {
     setSelectedTabId(navbarTabId.toString());
   }
 
-  /** Update data to show selected patient and notify parent */
-  function handleSelectPatient(patientId: string) {
-
-    // add to our data
-    if ((props.data) && (props.data.length > 0)) {
-      let updated: SingleRequestData = {...props.data[0], info: `Using patient id: ${patientId}`};
-      props.setData([updated]);
-    } else {
-      let updated: SingleRequestData = {
-        name: 'Patient',
-        id: 'patient',
-        info: `Using patient id: ${patientId}`,
-      }
-      props.setData([updated]);
-    }
-
-    // register with parent
-
-    props.registerSelectedPatientId(patientId);
-  }
-
   // check for NOT supporting create
   if (!supported) {
     // return only search
@@ -74,7 +71,7 @@ export default function PatientES1(props: PatientES1Props) {
         <PatientSearchCard
           paneProps={props.paneProps}
           setData={props.setData}
-          registerSelectedPatient={handleSelectPatient}
+          registerSelectedPatient={props.registerSelectedPatientId}
           />
       </DataCard>
     );
@@ -102,7 +99,7 @@ export default function PatientES1(props: PatientES1Props) {
               <PatientSearchCard
                 paneProps={props.paneProps}
                 setData={props.setData}
-                registerSelectedPatient={handleSelectPatient}
+                registerSelectedPatient={props.registerSelectedPatientId}
                 />
             }
             />

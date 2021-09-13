@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 
 import {
-  HTMLSelect, Button, FormGroup, InputGroup,
+  HTMLSelect, Button, FormGroup, InputGroup, Overlay, Card, Classes,
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { DataCardInfo } from '../../models/DataCardInfo';
@@ -13,6 +13,7 @@ import * as fhir5 from '../../local_dts/fhir5';
 import * as fhirCommon from '../../models/fhirCommon';
 import { SubscriptionReturn, SubscriptionHelper } from '../../util/SubscriptionHelper';
 import { IconNames } from '@blueprintjs/icons';
+import ResourceSearchSingleCard from '../common/ResourceSarchCardSingle';
 
 export interface SubscriptionES1Props {
   paneProps: ContentPaneProps,
@@ -22,6 +23,7 @@ export interface SubscriptionES1Props {
   data: SingleRequestData[],
   setData: ((data: SingleRequestData[]) => void),
   selectedPatientId: string,
+  registerSelectedPatientId: ((id: string) => void),
   topic: fhir4.SubscriptionTopic|fhir5.SubscriptionTopic|null,
   subscription: fhir5.Subscription,
 }
@@ -41,6 +43,8 @@ export default function SubscriptionES1(props: SubscriptionES1Props) {
   const [headers, setHeaders] = useState<string>('');
 
   const [endpointUrl, setEndpointUrl] = useState<string>('');
+
+  const [showSubscriptionSearchOverlay, setShowSubscriptionSearchOverlay] = useState<boolean>(false);
 
   /** Get a FHIR Instant value from a JavaScript Date */
 	function getInstantFromDate(date: Date) {
@@ -139,6 +143,66 @@ export default function SubscriptionES1(props: SubscriptionES1Props) {
     props.updateStatus({...props.status, busy:false});
   }
 
+
+  async function registerSelectedSubscription(id:string) {
+    setShowSubscriptionSearchOverlay(false);
+
+    // try to find the subscription
+    let subscriptionReturn:SubscriptionReturn = await SubscriptionHelper.GetSubscription(
+      props.paneProps.useBackportToR4,
+      props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4 : props.paneProps.fhirServerInfoR5,
+      id);
+
+    // fix the subscription record name
+    let updated: SingleRequestData = {...subscriptionReturn.data,
+      name: `Subscription #${props.data.length}`,
+    };
+
+    props.setData([updated]);
+
+    if (subscriptionReturn.subscription) {
+      if ((subscriptionReturn.subscription.filterBy) &&
+          (subscriptionReturn.subscription.filterBy!.length > 0)) {
+        subscriptionReturn.subscription!.filterBy!.forEach(filter => {
+          let id:string = filter.value.startsWith('Patient/')
+            ? filter.value.substr(8)
+            : filter.value;
+
+          // figure out patient IDs to list for encounters
+          if ((filter.searchModifier === '=') &&
+              ((filter.searchParamName === 'Encounter?patient') ||
+               (filter.searchParamName === 'patient') || 
+               (filter.searchParamName === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient'))) {
+            props.registerSelectedPatientId(id);
+          }
+    
+          if ((filter.searchModifier === 'eq') &&
+              ((filter.searchParamName === 'Encounter?patient') ||
+               (filter.searchParamName === 'patient') || 
+               (filter.searchParamName === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient'))) {
+            props.registerSelectedPatientId(id);
+          }
+    
+          if ((filter.searchModifier === 'in') &&
+              ((filter.searchParamName === 'Encounter?patient') ||
+               (filter.searchParamName === 'patient') || 
+               (filter.searchParamName === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient'))) {
+            props.registerSelectedPatientId(id);
+          }
+        });
+      }
+
+      // register this subscription (updates status)
+      props.registerSubscription(subscriptionReturn.subscription);
+    } else {
+      props.updateStatus({...props.status, busy: false});
+    }
+  }
+
+  function toggleSubscriptionSearchOverlay() {
+    setShowSubscriptionSearchOverlay(!showSubscriptionSearchOverlay);
+  }
+
   /** Process HTML events for the payload type select box */
 	function handlePayloadTypeChange(event: React.FormEvent<HTMLSelectElement>) {
 		setPayloadType(event.currentTarget.value);
@@ -164,6 +228,25 @@ export default function SubscriptionES1(props: SubscriptionES1Props) {
       tabButtonText='Get Status'
       tabButtonHandler={refreshSubscription}
       >
+      <Overlay 
+        isOpen={showSubscriptionSearchOverlay}
+        onClose={toggleSubscriptionSearchOverlay}
+        className={Classes.OVERLAY_SCROLL_CONTAINER}
+        usePortal={false}
+        autoFocus={true}
+        hasBackdrop={true}
+        canEscapeKeyClose={true}
+        canOutsideClickClose={true}
+        >
+        <Card className='centered'>
+          <ResourceSearchSingleCard
+            paneProps={props.paneProps}
+            setData={(data: SingleRequestData[]) => {}}
+            resourceName='Subscription'
+            registerSelectedId={registerSelectedSubscription}
+            />
+        </Card>
+      </Overlay>
       <FormGroup
         label='Subscription Notification Endpoint'
         helperText='Full URL of the REST Hook Endpoint'
@@ -207,6 +290,11 @@ export default function SubscriptionES1(props: SubscriptionES1Props) {
         style={{margin: 5}}
         >
         Create Subscription
+      </Button>
+      <Button
+        onClick={toggleSubscriptionSearchOverlay}
+        >
+        Search
       </Button>
     </DataCard>
   );
