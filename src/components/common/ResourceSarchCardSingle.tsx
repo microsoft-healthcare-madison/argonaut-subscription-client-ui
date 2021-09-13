@@ -1,7 +1,7 @@
 import React, {useState, useRef, useEffect} from 'react';
 
 import {
-  Button, Card, H6, ControlGroup, HTMLSelect, InputGroup, Spinner, Checkbox, 
+  Button, Card, H6, ControlGroup, HTMLSelect, InputGroup, Spinner, Checkbox, RadioGroup, Radio, 
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
@@ -10,16 +10,15 @@ import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import { KeySelectionInfo } from '../../models/KeySelectionInfo';
 import { ConnectionInformation } from '../../models/ConnectionInformation';
 
-export interface ResourceSearchMultiProps {
+export interface ResourceSearchSingleProps {
   paneProps: ContentPaneProps,
   resourceName: string,
   setData: ((data: SingleRequestData[]) => void),
-  registerSelectedIds: ((id: string[]) => void),
-  dismissOverlay?: (() => void),
+  registerSelectedId: ((id: string) => void),
 }
 
-/** Component representing a generic multi-select Resource Search Card */
-export default function ResourceSearchMultiCard(props: ResourceSearchMultiProps) {
+/** Component representing a generic single-select Resource Search Card */
+export default function ResourceSearchSingleCard(props: ResourceSearchSingleProps) {
 
   const initialLoadRef = useRef<boolean>(true);
 
@@ -28,6 +27,8 @@ export default function ResourceSearchMultiCard(props: ResourceSearchMultiProps)
   const [searchFilter, setSearchFilter] = useState<string>('');
   const [busy, setBusy] = useState<boolean>(false);
   const [records, setRecords] = useState<KeySelectionInfo[]>([]);
+  const [selectedId, setSelectedId] = useState<string>('');
+  const [hasSearched, setHasSearched] = useState<boolean>(false);
 
   useEffect(() => {
     if (initialLoadRef.current) {
@@ -40,7 +41,6 @@ export default function ResourceSearchMultiCard(props: ResourceSearchMultiProps)
         return;
 
       // look for this in the capabilities statement
-
       for (let index:number = 0; index < serverInfo.capabilitiesRest.length; index++) {
         if (serverInfo.capabilitiesRest[index].type === props.resourceName) {
           if (serverInfo.capabilitiesRest[index].searchParam) {
@@ -68,24 +68,11 @@ export default function ResourceSearchMultiCard(props: ResourceSearchMultiProps)
     setSearchFilter(event.target.value);
   }
 
-  /** Handle HTML events raised by user changing checkbox selection */
-	function handleCheckboxChange(index: number) {
-    let updated:KeySelectionInfo[] = records.slice();
-    updated[index].checked = !updated[index].checked;
-    setRecords(updated);
+  /** Handle HTML events raised by user changing radio selection */
+	function handleRadioChange(event: React.FormEvent<HTMLInputElement>) {
+    setSelectedId(event.currentTarget.value);
+	}
 
-    // grab the list of selected instances
-    let selected:string[] = [];
-
-    updated.forEach((keyInfo: KeySelectionInfo) => {
-      if (keyInfo.checked) {
-        selected.push(`${props.resourceName}/${keyInfo.key}`);
-      }
-    });
-
-    props.registerSelectedIds(selected);
-  }
-  
   function getString(value: any) {
     if (typeof(value) !== 'string') {
       // for now, just stringify
@@ -95,6 +82,11 @@ export default function ResourceSearchMultiCard(props: ResourceSearchMultiProps)
     return value;
   }
 
+  /** Function to push the selected ID up into the parent */
+  function handleSelectResourceClick() {
+    props.registerSelectedId(selectedId);
+  }
+  
   /** Function to handle user request to search a FHIR server for patients */
 	async function handleSearchClick() {
     // flag we are searching
@@ -108,6 +100,8 @@ export default function ResourceSearchMultiCard(props: ResourceSearchMultiProps)
 		if (searchFilter) {
 				url += `?${encodeURIComponent(matchType)}=${encodeURIComponent(searchFilter)}`;
 		}
+
+    setHasSearched(true);
 
     try {
       let response:ApiResponse<fhir.Bundle> = await ApiHelper.apiGetFhir<fhir.Bundle>(
@@ -191,13 +185,12 @@ export default function ResourceSearchMultiCard(props: ResourceSearchMultiProps)
       setRecords([]);
       props.setData(data);
     }
-
 	}
 
   /** Return this component */
   return(
     <Card style={{margin:0}}>
-      <H6>Search and Select for Multiple {props.resourceName} records</H6>
+      <H6>Search and Select Multiple Patients</H6>
       <ControlGroup>
         <HTMLSelect
           onChange={handleMatchTypeChange}
@@ -222,20 +215,30 @@ export default function ResourceSearchMultiCard(props: ResourceSearchMultiProps)
       { (busy) &&
         <Spinner />
       }
-      { (!busy) &&
-        records.map((record, index) => (
-          <Checkbox
-            key={`r_${record.key}`} 
-            checked={(record.checked === true)}
-            onChange={() => {handleCheckboxChange(index);}}
-            >
-            {record.value}
-          </Checkbox>
-        ))
+      { (!busy) && (hasSearched) &&
+        <RadioGroup
+          label={`Select a ${props.resourceName}, ${records.length} found`}
+          onChange={handleRadioChange}
+          selectedValue={selectedId}
+          >
+          { records.map((record, index) => (
+            <Radio
+              key={`r_${record.key}`}
+              label={record.value}
+              value={record.key}
+              checked={(record.key === selectedId)}
+              />
+            ))
+          }
+        </RadioGroup>
       }
-      { (props.dismissOverlay) &&
-        <Button onClick={props.dismissOverlay!}>
-          Done
+      { (!busy) &&
+        <Button
+          disabled={(selectedId === '')}
+          onClick={handleSelectResourceClick}
+          style={{margin: 5}}
+          >
+          Use Selected {props.resourceName}
         </Button>
       }
     </Card>

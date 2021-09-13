@@ -18,6 +18,7 @@ import { IconNames } from '@blueprintjs/icons';
 import ResourceSearchMultiCard from '../common/ResourceSarchCardMulti';
 import { SubscriptionHelper, SubscriptionReturn } from '../../util/SubscriptionHelper';
 import { StorageHelper } from '../../util/StorageHelper';
+import ResourceSearchSingleCard from '../common/ResourceSarchCardSingle';
 
 export interface SubscriptionPlaygroundProps {
   paneProps: ContentPaneProps,
@@ -72,7 +73,9 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
   const [filters, setFilters] = useState<fhir5.SubscriptionFilterBy[]>([]);
 
   const [resourceName, setResourceName] = useState<string>('');
-  const [showSearchOverlay, setShowSearchOverlay] = useState<boolean>(false);
+  const [showFilterSearchOverlay, setShowFilterSearchOverlay] = useState<boolean>(false);
+
+  const [showSubscriptionSearchOverlay, setShowSubscriptionSearchOverlay] = useState<boolean>(false);
 
   const [externalEndpoint, setExternalEndpoint] = useState<string>('');
 
@@ -383,9 +386,70 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
   function registerSelectedIds(ids: string[]) {
     setFilterByValue(ids.join(','));
   }
+  
+  async function registerSelectedSubscription(id:string) {
+    setShowSubscriptionSearchOverlay(false);
 
-  function toggleSearchOverlay() {
-    if (!showSearchOverlay) {
+    // check to see if we already are tracking this subscription
+    if (props.subscriptions.some(s => s.id === id)) {
+      return;
+    }
+
+    // try to find the subscription
+    let subscriptionReturn:SubscriptionReturn = await SubscriptionHelper.GetSubscription(
+      props.paneProps.useBackportToR4,
+      props.paneProps.useBackportToR4 ? props.paneProps.fhirServerInfoR4 : props.paneProps.fhirServerInfoR5,
+      id);
+
+    // fix the subscription record name
+    let updated: SingleRequestData = {...subscriptionReturn.data,
+      name: `Subscription #${props.data.length}`,
+    };
+    
+    let updatedData: SingleRequestData[] = props.data.slice();
+    updatedData.push(updated);
+    props.setData(updatedData);
+
+    if (subscriptionReturn.subscription) {
+      setFilters([]);
+      setFilterByValue('');
+
+      if ((subscriptionReturn.subscription.filterBy) &&
+          (subscriptionReturn.subscription.filterBy!.length > 0)) {
+        subscriptionReturn.subscription!.filterBy!.forEach(filter => {
+          // figure out patient IDs to list for encounters
+          if ((filter.searchModifier === '=') &&
+              ((filter.searchParamName === 'Encounter?patient') ||
+               (filter.searchParamName === 'patient') || 
+               (filter.searchParamName === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient'))) {
+            props.registerPatientId(filter.value);
+          }
+    
+          if ((filter.searchModifier === 'eq') &&
+              ((filter.searchParamName === 'Encounter?patient') ||
+               (filter.searchParamName === 'patient') || 
+               (filter.searchParamName === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient'))) {
+            props.registerPatientId(filter.value);
+          }
+    
+          if ((filter.searchModifier === 'in') &&
+              ((filter.searchParamName === 'Encounter?patient') ||
+               (filter.searchParamName === 'patient') || 
+               (filter.searchParamName === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient'))) {
+            props.registerGroupId(filter.value);
+          }
+        });
+      }
+
+      // register this subscription (updates status)
+      props.registerSubscription(subscriptionReturn.subscription);
+    } else {
+      props.updateStatus({...props.status, busy: false});
+    }
+  }
+
+  function toggleFilterSearchOverlay() {
+    if (!showFilterSearchOverlay) {
       let name: string = '';
 
       // determine our resource name
@@ -477,8 +541,13 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       setResourceName(name);
     }
 
-    setShowSearchOverlay(!showSearchOverlay);
+    setShowFilterSearchOverlay(!showFilterSearchOverlay);
   }
+
+  function toggleSubscriptionSearchOverlay() {
+    setShowSubscriptionSearchOverlay(!showSubscriptionSearchOverlay);
+  }
+
 
   function addManualFilter() {
     if (manualFilterValue === '') {
@@ -877,7 +946,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
               onChange={handleFilterByValueChange}
               />
             <Button
-              onClick={toggleSearchOverlay}
+              onClick={toggleFilterSearchOverlay}
               >
               Search
             </Button>
@@ -922,8 +991,8 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         </FormGroup>
       }
       <Overlay 
-        isOpen={showSearchOverlay}
-        onClose={toggleSearchOverlay}
+        isOpen={showFilterSearchOverlay}
+        onClose={toggleFilterSearchOverlay}
         className={Classes.OVERLAY_SCROLL_CONTAINER}
         usePortal={false}
         autoFocus={true}
@@ -937,7 +1006,26 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
             setData={(data: SingleRequestData[]) => {}}
             resourceName={resourceName}
             registerSelectedIds={registerSelectedIds}
-            dismissOverlay={toggleSearchOverlay}
+            dismissOverlay={toggleFilterSearchOverlay}
+            />
+        </Card>
+      </Overlay>
+      <Overlay 
+        isOpen={showSubscriptionSearchOverlay}
+        onClose={toggleSubscriptionSearchOverlay}
+        className={Classes.OVERLAY_SCROLL_CONTAINER}
+        usePortal={false}
+        autoFocus={true}
+        hasBackdrop={true}
+        canEscapeKeyClose={true}
+        canOutsideClickClose={true}
+        >
+        <Card className='centered'>
+          <ResourceSearchSingleCard
+            paneProps={props.paneProps}
+            setData={(data: SingleRequestData[]) => {}}
+            resourceName='Subscription'
+            registerSelectedId={registerSelectedSubscription}
             />
         </Card>
       </Overlay>
@@ -955,6 +1043,12 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         >
         Create Subscription
       </Button>
+      <Button
+        onClick={toggleSubscriptionSearchOverlay}
+        >
+        Search
+      </Button>
+
     </DataCard>
   );
 }

@@ -50,19 +50,19 @@ export class SubscriptionHelper {
   }
 
   /**
-   * Update a Subscription with current data from the server
+   * Get a Subscription record based off of ID
    * @param useR4 
    * @param fhirServerInfo 
-   * @param subscription 
+   * @param subscriptionId
    */
-  static async RefreshSubscription(
+   static async GetSubscription(
     useR4: boolean,
     fhirServerInfo: ConnectionInformation,
-    subscription: fhir5.Subscription
+    subscriptionId: string
   ):Promise<SubscriptionReturn> {
     let subscriptionReturn: SubscriptionReturn;
 
-    let url: string = new URL(`Subscription/${subscription.id!}`, fhirServerInfo.url).toString();
+    let url: string = new URL(`Subscription/${subscriptionId}`, fhirServerInfo.url).toString();
 
     try {
       if (useR4) {
@@ -160,6 +160,20 @@ export class SubscriptionHelper {
     }
 
     return subscriptionReturn;
+  }
+
+  /**
+   * Update a Subscription with current data from the server
+   * @param useR4 
+   * @param fhirServerInfo 
+   * @param subscription 
+   */
+  static async RefreshSubscription(
+    useR4: boolean,
+    fhirServerInfo: ConnectionInformation,
+    subscription: fhir5.Subscription
+  ):Promise<SubscriptionReturn> {
+    return this.GetSubscription(useR4, fhirServerInfo, subscription.id!);
   }
 
   private static async CreateSubscriptionR4(
