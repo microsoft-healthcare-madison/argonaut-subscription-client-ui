@@ -12,6 +12,7 @@ import * as fhir4 from '../../local_dts/fhir4';
 import * as fhir5 from '../../local_dts/fhir5';
 import * as fhirCommon from '../../models/fhirCommon';
 import { SubscriptionReturn, SubscriptionHelper } from '../../util/SubscriptionHelper';
+import { IconNames } from '@blueprintjs/icons';
 
 export interface SubscriptionES1Props {
   paneProps: ContentPaneProps,
@@ -47,6 +48,13 @@ export default function SubscriptionES1(props: SubscriptionES1Props) {
   }
   
   async function createSubscription() {
+    const urlValidationExp:RegExp = /^(http|https):\/\/[^ "]+$/;
+    if (!urlValidationExp.test(endpointUrl)) {
+      props.paneProps.toaster(`Invalid Endpoint URL: ${endpointUrl} - must begin with http:// or https://`, IconNames.ERROR, 2000);
+      props.updateStatus({...props.status, busy: false});
+      return;
+    }
+
     props.updateStatus({...props.status, busy: true});
 
     // flag our parent to clear any old subscriptions
@@ -58,7 +66,7 @@ export default function SubscriptionES1(props: SubscriptionES1Props) {
 		let filter: fhir5.SubscriptionFilterBy = {
 			searchModifier: '=',
 			searchParamName: 'patient',
-			value: `Patient/${props.selectedPatientId}`	    //`Patient/${patientFilter},Patient/K123`
+			value: `Patient/${props.selectedPatientId}`
 		}
 
 		var expirationTime:Date = new Date();
