@@ -18,6 +18,7 @@ import { StorageHelper } from '../util/StorageHelper';
 import PlaygroundPane  from './playground/PlaygroundPane';
 import { CopyHelper } from '../util/CopyHelper';
 import ScenarioPane1 from './scenario1/ScenarioPane1';
+import EndpointScenarioPane1 from './endpointScenario1/EndpointScenarioPane1';
 import ScenarioPane2 from './scenario2/ScenarioPane2';
 import { ApiHelper, ApiResponse } from '../util/ApiHelper';
 import { ClientHostRegistration } from '../models/ClientHostRegistration';
@@ -29,9 +30,10 @@ import DevDaysPane from './devdays/DevDaysPane';
 /** tab configuration - MUST be in 'id' order - first tab is shown at launch */
 let _tabs: UiTabInformation[] = [
   {title: 'Config', tip: 'Configure Settings and Servers', id: '0', panel: React.createFactory(ConfigurationPane)},
-  {title: 'Patient+REST', tip:'Single Patient to REST-Hook', id: '1', panel: React.createFactory(ScenarioPane1)},
-  {title: 'Group+REST', tip:'Patient Group to REST-Hook', id: '2', panel: React.createFactory(ScenarioPane2)},
-  {title: 'Playground', tip:'Playground for testing Subscriptions', id: '3', panel: React.createFactory(PlaygroundPane)},
+  {title: 'Patient+REST Server', tip:'FHIR Server: Single Patient to REST-Hook', id: '1', panel: React.createFactory(ScenarioPane1)},
+  {title: 'Patient+REST Endpoint', tip:'Endpoint: Single Patient to REST-Hook', id: '2', panel: React.createFactory(EndpointScenarioPane1)},
+  {title: 'Group+REST', tip:'Patient Group to REST-Hook', id: '3', panel: React.createFactory(ScenarioPane2)},
+  {title: 'Playground', tip:'Playground for testing Subscriptions', id: '4', panel: React.createFactory(PlaygroundPane)},
   // {title: 'DevDays', tip:'DevDays Amsterdam 2019', id: '4', panel: React.createFactory(DevDaysPane)},
 ]
 

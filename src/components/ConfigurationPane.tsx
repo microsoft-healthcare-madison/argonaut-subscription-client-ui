@@ -54,7 +54,7 @@ export default function ConfigurationPane(props: ContentPaneProps) {
     {
       short: 'build.fhir.org', 
       description: 'Current FHIR R5 Build branch (Subscription, SubscriptionTopic, etc.)', 
-      link:'http://build.fhir.org/branches/subscription-b/'
+      link:'http://build.fhir.org/branches/R4B/'
       // link:'http://build.fhir.org/'
     },
     {
@@ -449,18 +449,6 @@ export default function ConfigurationPane(props: ContentPaneProps) {
           <option>OperationOutcome</option>
         </HTMLSelect>
       </FormGroup>
-      <FormGroup
-        label = {props.clientHostInfo.name + ' URL (only change if you are hosting the Argonaut Subscription Client Host yourself)'}
-        helperText = {props.clientHostInfo.hint}
-        labelFor='fhir-client-url'
-        >
-        <InputGroup 
-          id='fhir-client-url'
-          value={clientHostUrl}
-          onChange={handleClientHostUrlChange}
-          disabled={connected}
-          />
-      </FormGroup>
       <Button
         disabled={busy}
         onClick={() => setRequestConnectionToggle(true)}
@@ -542,6 +530,20 @@ export default function ConfigurationPane(props: ContentPaneProps) {
           </tbody>
         </HTMLTable>
       </Text>
+    </Card>
+    <Card elevation={Elevation.TWO} key='advanced_card'>
+      <FormGroup
+        label = {props.clientHostInfo.name + ' URL (only change if you are hosting the Argonaut Subscription Client Host yourself)'}
+        helperText = {props.clientHostInfo.hint}
+        labelFor='fhir-client-url'
+        >
+        <InputGroup 
+          id='fhir-client-url'
+          value={clientHostUrl}
+          onChange={handleClientHostUrlChange}
+          disabled={connected}
+          />
+      </FormGroup>
     </Card>
   </div>
   );

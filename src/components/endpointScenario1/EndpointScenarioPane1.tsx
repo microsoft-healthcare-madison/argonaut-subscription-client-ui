@@ -9,28 +9,24 @@ import {
 
 import {IconNames} from "@blueprintjs/icons";
 import { ContentPaneProps } from '../../models/ContentPaneProps';
-import { EndpointRegistration } from '../../models/EndpointRegistration';
 import { ApiHelper } from '../../util/ApiHelper';
 import * as fhir4 from '../../local_dts/fhir4';
 import * as fhir5 from '../../local_dts/fhir5';
 import * as fhirCommon from '../../models/fhirCommon';
-import TopicS1 from './TopicS1';
-import PatientS1 from './PatientS1';
+import TopicES1 from './TopicES1';
+import PatientES1 from './PatientES1';
 import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import { DataCardStatus } from '../../models/DataCardStatus';
-import EndpointS1 from './EndpointS1';
-import SubscriptionS1 from './SubscriptionS1';
-import HandshakeS1 from './HandshakeS1';
-import TriggerS1 from './TriggerS1';
-import NotificationS1 from './NotificationS1';
-import CleanUpS1 from './CleanUpS1';
+import SubscriptionES1 from './SubscriptionES1';
+import TriggerES1 from './TriggerES1';
+import CleanUpES1 from './CleanUpES1';
 import { NotificationHelper, NotificationReturn } from '../../util/NotificationHelper';
 import OperationEventsCard from '../common/OperationEventsCard';
 
 /**
  * Walks a user through the steps of Scenario 1
  */
-export default function ScenarioPane1(props: ContentPaneProps) {
+export default function EndpointScenarioPane1(props: ContentPaneProps) {
 
 	const _statusAvailable: DataCardStatus = {available: true, complete: false, busy: false};
 	const _statusNotAvailable: DataCardStatus = {available: false, complete: false, busy: false};
@@ -47,23 +43,13 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 	const [patientStatus, setPatientStatus] = useState<DataCardStatus>(_statusAvailable);
 	const [selectedPatientId, setSelectedPatientId] = useState<string>('');
 	
-	const [endpointData, setEndpointData] = useState<SingleRequestData[]>([]);
-	const [endpointStatus, setEndpointStatus] = useState<DataCardStatus>(_statusNotAvailable);
-	const [endpoint, setEndpoint] = useState<EndpointRegistration | null>(null);
-
 	const [subscriptionData, setSubscriptionData] = useState<SingleRequestData[]>([]);
 	const [subscriptionStatus, setSubscriptionStatus] = useState<DataCardStatus>(_statusNotAvailable);
 	const [subscription, setSubscription] = useState<fhir5.Subscription | null>(null);
 
-	const [handshakeData, setHandshakeData] = useState<SingleRequestData[]>([]);
-	const [handshakeStatus, setHandshakeStatus] = useState<DataCardStatus>(_statusNotAvailable);
-
 	const [triggerData, setTriggerData] = useState<SingleRequestData[]>([]);
 	const [triggerStatus, setTriggerStatus] = useState<DataCardStatus>(_statusNotAvailable);
 	const [triggerCount, setTriggerCount] = useState<number>(0);
-
-	const [notificationData, setNotificationData] = useState<SingleRequestData[]>([]);
-	const [notificationStatus, setNotificationStatus] = useState<DataCardStatus>(_statusNotAvailable);
 
   const [opEventsData, setOpEventsData] = useState<SingleRequestData[]>([]);
   const [opEventsStatus, setOpEventsStatus] = useState<DataCardStatus>(_statusAvailable);
@@ -126,19 +112,6 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 		}
 
 		if (startingAt <= 3) {
-			if (endpoint) {
-				ApiHelper.deleteEndpoint(
-					props.clientHostInfo.registration, 
-					endpoint.uid!,
-					props.clientHostInfo.url
-					);
-			}
-			setEndpoint(null);
-			setEndpointData([]);
-			setEndpointStatus(_statusNotAvailable);
-		}
-
-		if (startingAt <= 4) {
 			if (subscription) {
 				ApiHelper.deleteSubscription(
 					subscription.id!,
@@ -152,23 +125,13 @@ export default function ScenarioPane1(props: ContentPaneProps) {
       setOpEventsData([]);
 		}
 
-		if (startingAt <= 5) {
-			setHandshakeData([]);
-			setHandshakeStatus(_statusNotAvailable);
-		}
-
-		if (startingAt <= 6) {
+		if (startingAt <= 4) {
 			setTriggerCount(0);
 			setTriggerData([]);
 			setTriggerStatus(_statusNotAvailable);
 		}
 
-		if (startingAt <= 7) {
-			setNotificationData([]);
-			setNotificationStatus(_statusNotAvailable);
-		}
-
-		if (startingAt <= 8) {
+		if (startingAt <= 5) {
 			setCleanUpData([]);
 			setCleanUpStatus(_statusAvailable);
 		}
@@ -184,10 +147,6 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 		// build our string
 		if (subscription) {
 			info += `\tRemoved subscription: ${subscription.id!}\n`;
-		}
-
-		if (endpoint) {
-			info += `\tRemoved endpoint: ${endpoint.uid!}\n`;
 		}
 
 		info += '\tCleaned internal steps.\n'
@@ -214,7 +173,6 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 
 		// update status
 		setTriggerStatus(_statusComplete);
-		setNotificationStatus(_statusBusy);
 	}
 
 	/** Register a subscription as active in this scenario */
@@ -235,8 +193,8 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 				setSubscription(null);
 			}
 
-			// flag we are waiting on subscription
-			setHandshakeStatus(_statusBusy);
+			// can trigger now
+			setTriggerStatus(_statusAvailable);
 			return;
 		}
 
@@ -245,28 +203,6 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 
 		// update status
 		setSubscriptionStatus(_statusComplete);
-	}
-
-	/** Register an endpoint as active in this scenario */
-	function registerEndpoint(value: EndpointRegistration) {
-		// disable subsequent steps
-		disableSteps(4);
-
-		// check for an old endpoint
-		if (endpoint) {
-			ApiHelper.deleteEndpoint(
-				props.clientHostInfo.registration,
-				endpoint.uid!,
-				props.clientHostInfo.url
-				);
-		}
-
-		// save endpoint
-		setEndpoint(value);
-
-		// update status
-		setEndpointStatus(_statusComplete);
-		setSubscriptionStatus(_statusAvailable);
 	}
 
 	/** Register a patient id as active in this scenario */
@@ -279,7 +215,7 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 
 		// update status
 		setPatientStatus(_statusComplete);
-		setEndpointStatus(_statusAvailable);
+    setSubscriptionStatus(_statusAvailable);
 
 		// if there was a clean-up performed, reset the data (no longer clean)
 		if ((cleanUpData) && (cleanUpData.length > 0)) {
@@ -299,63 +235,6 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 			// ignore
 			return;
 		}
-
-		// special handling for handshake
-		if (notificationReturn.notificationType === fhirCommon.SubscriptionNotificationTypeCodes.HANDSHAKE) {
-			let data: SingleRequestData = {
-				name: 'Handshake',
-				id: 'handshake',
-				responseData: JSON.stringify(notificationReturn.bundle, null, 2),
-				responseDataType: RenderDataAsTypes.FHIR,
-				info: `Handshake:\n`+
-					`\tSubscriptionTopic: ${notificationReturn.topicUrl}\n` +
-					`\tSubscription:      ${notificationReturn.subscription}\n` +
-					`\tStatus:            ${notificationReturn.status}`,
-			}
-
-			setHandshakeData([data]);
-			setHandshakeStatus(_statusComplete);
-
-			let supported:boolean|undefined = props.useBackportToR4 ? props.fhirServerInfoR4.supportsCreateEncounter : props.fhirServerInfoR5.supportsCreateEncounter;
-
-			// check for NOT being allowed to trigger on this server
-			if (!supported) {
-				setTriggerCount(100000);
-				setNotificationStatus(_statusBusy);
-			}
-			
-			setTriggerStatus(_statusAvailable);
-
-			return;
-		}
-
-		let rec:SingleRequestData = {
-			id:`event_${notificationData.length}`, 
-			name: `Notification #${notificationData.length}`,
-			responseData: JSON.stringify(notificationReturn.bundle, null, 2),
-			responseDataType: RenderDataAsTypes.FHIR,
-			info: `Notification #${notificationData.length}:\n`+
-				`\tSubscription:      ${notificationReturn.subscription}\n` +
-				`\tSubscriptionTopic: ${notificationReturn.topicUrl}\n` +
-				`\tType:              ${notificationReturn.notificationType}\n` +
-				`\tStatus:            ${notificationReturn.status}\n` +
-				`\tBundle Events:     ${notificationReturn.eventsInNotification}\n`+
-				`\tTotal Events:      ${notificationReturn.eventsSinceSubscriptionStart}`,
-		}
-
-		let data: SingleRequestData[] = notificationData.slice();
-		data.push(rec);
-
-		let pendingNotifications = triggerCount - notificationReturn.eventsInNotification;
-
-		setTriggerCount(pendingNotifications);
-		setNotificationData(data);
-
-		if (pendingNotifications > 0) {
-			setNotificationStatus(_statusBusy);
-		} else {
-			setNotificationStatus(_statusComplete);
-		}
 	}
 
 	// if we are connected, render scenario content
@@ -368,12 +247,12 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 					target='_blank'
 					rel="noopener noreferrer"
 					>Docs</a>)</H3>
-				Test a FHIR Server with single-Patient Encounter notifications via REST-Hook (e.g., to a consumer app)
+				Test a REST Endpoint with single-Patient Encounter notifications via REST-Hook (e.g., to a consumer app)
 			</Text>
 		</Card>
 
 		{/* Get Topic list from FHIR Server */}
-		<TopicS1
+		<TopicES1
 			key='s1_topic'
 			paneProps={props}
 			status={topicStatus}
@@ -384,7 +263,7 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 			/>
 
 		{/* Select or Create Patient */}
-		<PatientS1
+		<PatientES1
 			key='s1_patient'
 			paneProps={props}
 			registerSelectedPatientId={registerSelectedPatientId}
@@ -394,19 +273,8 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 			setData={setPatientData}
 			/>
 
-		{/* Ask Client Host to create Endpoint */}
-		<EndpointS1
-			key='s1_endpoint'
-			paneProps={props}
-			registerEndpoint={registerEndpoint}
-			status={endpointStatus}
-			updateStatus={setEndpointStatus}
-			data={endpointData}
-			setData={setEndpointData}
-			/>
-
 		{/* Request Subscription on FHIR Server */}
-		<SubscriptionS1
+		<SubscriptionES1
 			key='s1_subscription'
 			paneProps={props}
 			registerSubscription={registerSubscription}
@@ -417,19 +285,10 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 			selectedPatientId={selectedPatientId!}
 			topic={selectedTopic}
 			subscription={subscription!}
-			endpoint={endpoint!}
 			/>
 		
-		{/* Wait on Endpoint handshake */}
-		<HandshakeS1
-			key='s1_handshake'
-			paneProps={props}
-			status={handshakeStatus}
-			data={handshakeData}
-			/>
-
 		{/* Send an Encounter to trigger an event */}
-		<TriggerS1
+		<TriggerES1
 			key='s1_trigger'
 			paneProps={props}
 			registerEncounterSent={registerEncounterSent}
@@ -438,14 +297,6 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 			data={triggerData}
 			setData={setTriggerData}
 			selectedPatientId={selectedPatientId!}
-			/>
-
-		{/* Wait on Subscription Notification */}
-		<NotificationS1
-			key='s1_notification'
-			paneProps={props}
-			status={notificationStatus}
-			data={notificationData}
 			/>
 
 		{/* Query for events */}
@@ -460,7 +311,7 @@ export default function ScenarioPane1(props: ContentPaneProps) {
 			/>
 
 		{/* Clean up */}
-		<CleanUpS1
+		<CleanUpES1
 			key='s1_cleanup'
 			paneProps={props}
 			cleanUp={cleanUp}
