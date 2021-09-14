@@ -4,11 +4,19 @@ import { ReactNode } from 'react';
 import { CommState, applyByConnected, applyByMissed } from '../../models/CommunicationStatus';
 
 export default function CommStatusDisplay({ commState }: { commState: CommState }) {
-    const { lastReceived, type } = commState;
+    const { lastReceived, type, receivedEvents } = commState;
     return <div>
+        <h3>Events most recently received</h3>
+        <p>
+            {!!receivedEvents
+                ? <pre >{JSON.stringify(commState.receivedEvents, null, 2)}</pre>
+                : <p>Received no events in last event</p>}
+        </p>
+        <h3>Last Received Event ($events counts)</h3>
         <p>
             {`Status ${type}. Last received event ${lastReceived}`}
         </p>
+        <h3>Current connection status</h3>
         <p>
             {applyByConnected(
                 commState,
@@ -16,6 +24,7 @@ export default function CommStatusDisplay({ commState }: { commState: CommState 
                 "Not connected..."
             )}
         </p>
+        <h3>Missing Events (if any)</h3>
         <p>
             {applyByMissed(
                 commState,

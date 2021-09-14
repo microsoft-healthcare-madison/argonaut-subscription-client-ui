@@ -66,12 +66,10 @@ export function reducer(state: CommState, action: CommEvent): CommState {
             return checkLastKnown(missingEvents, state.lastReceived)
         }, () => state.lastReceived);
         const sinceStartToKnown = action.eventsSinceSubscriptionStart - lastKnown;
-        const maybeMissingEvents = checkNewMissed(state.lastReceived,
-            action.eventsSinceSubscriptionStart,
-            applyByMissed(state, missed => missed, () => undefined));
+        const maybePastMissingEvents = applyByMissed(state, missed => missed, () => undefined);
         if (sinceStartToKnown < 0) {
             // Get the new missing (and received) events 
-            const { missingEvents, receivedEvents } = addEventsSimple(action, maybeMissingEvents);
+            const { missingEvents, receivedEvents } = addEventsSimple(action, maybePastMissingEvents);
             return returnState(
                 applyByConnected(state, true, false),
                 getNewLastReceived(action, state),
@@ -80,9 +78,11 @@ export function reducer(state: CommState, action: CommEvent): CommState {
             )
         } else if (sinceStartToKnown === 0) {
             // Get the new missing (and received) events
-            const { missingEvents, receivedEvents } = addEventsSimple(action, maybeMissingEvents);
+            const { missingEvents, receivedEvents } = addEventsSimple(action, maybePastMissingEvents);
             return returnState(
-                action.type !== 'recover',
+                action.type !== 'recover'
+                    ? true
+                    : applyByConnected(state, true, false),
                 getNewLastReceived(action, state),
                 missingEvents,
                 receivedEvents
@@ -90,12 +90,11 @@ export function reducer(state: CommState, action: CommEvent): CommState {
         } else {
             // TODO: What happens if there is a gap in what's returned?
             // Ex: sinceStart is 38, but we're given just 37 in body the below breaks
-            // First: Need to calculate new missing events
-            const maybeNewMissing = checkNewMissed(
-                state.lastReceived, 
+            // First check if there are any newly missed events
+            const maybeNewMissingEvents = checkNewMissed(state.lastReceived,
                 action.eventsSinceSubscriptionStart,
-                maybeMissingEvents);
-            const { missingEvents, receivedEvents } = addEventsSimple(action, maybeNewMissing);
+                maybePastMissingEvents);
+            const { missingEvents, receivedEvents } = addEventsSimple(action, maybeNewMissingEvents);
             return returnState(
                 action.type !== 'recover',
                 getNewLastReceived(action, state),
@@ -109,8 +108,8 @@ export function reducer(state: CommState, action: CommEvent): CommState {
 const getNewLastReceived = (action: HeartBeatEvent | NotifyEvent | RecoverEvent, state: CommState): number => {
     switch (action.type) {
         case 'heartbeat':
-        case 'recover':
             return state.lastReceived;
+        case 'recover':
         case 'notify':
             return Math.max(action.events.endRange, state.lastReceived);
     }

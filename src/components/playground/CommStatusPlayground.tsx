@@ -31,7 +31,6 @@ export default function CommStatusPg(props: CommStatusPgProps) {
   };
 
   const [selectedTabId, setSelectedTabId] = useState<TabTypes>('notification');
-  const [commEvents, setCommEvents] = useState<CommEvent[]>([]);
   const [commState, dispatchCommEvent] = useReducer(reducer, { type: 'connected', lastReceived: 0 });
   const [nextEventsSinceSubscriptionStart, setNextEventsSinceSubscriptionStart] = useState<number>(0);
   const [nextEndRange, setNextEndRange] = useState<number>(0);
