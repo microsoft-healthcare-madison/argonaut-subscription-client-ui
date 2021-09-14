@@ -1,4 +1,4 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 
 import {
   HTMLSelect, Button, FormGroup, InputGroup, Overlay, Classes, Card, ControlGroup,
@@ -44,6 +44,12 @@ export default function EncountersPlayground(props: EncountersPlaygroundProps) {
   const [encounterClass, setPayloadType] = useState<string>('VR');
   const encounterStatus: string = 'in-progress';
   
+  useEffect(() => {
+    if ((selectedPatient === '_manual') && (props.patientIds.length > 0)) {
+      setSelectedPatient('_sequential');
+    }
+  }, [selectedPatient, setSelectedPatient, props.patientIds]);
+
   async function sendEncounter() {
     props.updateStatus({...props.status, busy: true});
 
