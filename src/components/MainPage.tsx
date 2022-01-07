@@ -23,7 +23,7 @@ import ScenarioPane2 from './scenario2/ScenarioPane2';
 import { ApiHelper, ApiResponse } from '../util/ApiHelper';
 import { ClientHostRegistration } from '../models/ClientHostRegistration';
 
-import * as fhir from '../local_dts/fhir4';
+import * as fhir from 'fhir4';
 import * as fhirCommon from '../models/fhirCommon';
 import DevDaysPane from './devdays/DevDaysPane';
 
@@ -301,7 +301,7 @@ export default function MainPage() {
       }
       let found = false;
       resource.interaction!.forEach((interaction: fhir.CapabilityStatementRestResourceInteraction) => {
-        if (interaction.code === fhirCommon.CapabilityStatementRestResourceInteractionCodeCodes.CREATE) {
+        if (interaction.code === fhir.CapabilityStatementRestResourceInteractionCodeCodes.CREATE) {
           found = true;
         }
       });

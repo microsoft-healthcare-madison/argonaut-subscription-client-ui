@@ -9,7 +9,7 @@ import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
-import * as fhir from '../../local_dts/fhir5';
+import * as fhir from 'fhir5';
 import * as fhirCommon from '../../models/fhirCommon';
 
 export interface TriggerS2Props {
@@ -75,7 +75,7 @@ export default function TriggerS2(props: TriggerS2Props) {
 				system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode',
 				code: encounterClass,
 			},
-			status: encounterStatus as fhirCommon.EncounterStatusCodes5,
+			status: encounterStatus as fhir.EncounterStatusCodes,
 			subject: {
 				reference: patientRef,
 			}
@@ -207,7 +207,7 @@ export default function TriggerS2(props: TriggerS2Props) {
           onChange={handleEncounterClassChange}
           value={encounterClass}
           >
-          { Object.values(fhirCommon.v3_ActEncounterCode).map((value) => (
+          { Object.values(fhir.V3ActEncounterCode).map((value) => (
             <option key={value.code} value={value.code}>{value.display}</option>
               ))}
         </HTMLSelect>

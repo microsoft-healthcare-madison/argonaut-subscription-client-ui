@@ -1,0 +1,21 @@
+{
+  "name": "fhir4",
+  "version": "4.3.0-snapshot1",
+  "description": "Basic Module for FHIR 4B Definitions",
+  "author": "MS Healthcare Madison",
+  "contributors": [
+    "Gino Canessa <gino.canessa@microsoft.com>"
+  ],
+  "keywords": [
+    "FHIR"
+  ],
+  "license": "MIT",
+  "main": "fhir4.js",
+  "types": "fhir4.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "typescript": "^4.5.4"
+  }
+}

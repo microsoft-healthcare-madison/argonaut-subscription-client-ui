@@ -9,8 +9,7 @@ import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
-import * as fhir from '../../local_dts/fhir4';
-import * as fhirCommon from '../../models/fhirCommon';
+import * as fhir from 'fhir4';
 import PatientSearchCard from '../common/PatientSearchCard';
 import PatientCreateCard from '../common/PatientCreateCard';
 import { IconNames } from '@blueprintjs/icons';
@@ -98,7 +97,7 @@ export default function EncountersPlayground(props: EncountersPlaygroundProps) {
 				system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode',
 				code: encounterClass,
 			},
-			status: encounterStatus as fhirCommon.EncounterStatusCodes4,
+			status: encounterStatus as fhir.EncounterStatusCodes,
 			subject: {
 				reference: patientRef,
 			}
@@ -275,7 +274,7 @@ export default function EncountersPlayground(props: EncountersPlaygroundProps) {
           onChange={handleEncounterClassChange}
           value={encounterClass}
           >
-          { Object.values(fhirCommon.v3_ActEncounterCode).map((value) => (
+          { Object.values(fhir.V3ActCode).map((value) => (
             <option key={value.code} value={value.code}>{value.display}</option>
               ))}
         </HTMLSelect>

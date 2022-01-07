@@ -1,5 +1,5 @@
-import * as fhir4 from '../local_dts/fhir4';
-import * as fhir5 from '../local_dts/fhir5';
+import * as fhir4 from 'fhir4';
+import * as fhir5 from 'fhir5';
 import * as fhirCommon from '../models/fhirCommon';
 
 export interface NotificationReturn {
@@ -51,7 +51,7 @@ export class NotificationHelper {
     notificationReturn.bundle = bundle;
     notificationReturn.bundleType = bundle.type;
 
-    if (bundle.type !== fhirCommon.BundleTypeCodes4.HISTORY) {
+    if (bundle.type !== fhir4.BundleTypeCodes.HISTORY) {
       console.log(`ParseNotificationR4 failed, expected bundle type 'history', received: ${bundle.type}`)
       return notificationReturn;
     }
@@ -91,10 +91,10 @@ export class NotificationHelper {
     }
 
     notificationReturn.notificationType = subscriptionStatus.type;
-    if (notificationReturn.notificationType === fhirCommon.SubscriptionNotificationTypeCodes.HANDSHAKE) {
+    if (notificationReturn.notificationType === fhir5.SubscriptionNotificationType.Handshake.code) {
       notificationReturn.eventsSinceSubscriptionStart = 0;
       notificationReturn.eventsInNotification = 0;
-    } else if (notificationReturn.notificationType === fhirCommon.SubscriptionNotificationTypeCodes.HEARTBEAT) {
+    } else if (notificationReturn.notificationType === fhir5.SubscriptionNotificationType.Heartbeat.code) {
       notificationReturn.eventsInNotification = 0;
     }
 
@@ -151,7 +151,7 @@ export class NotificationHelper {
     notificationReturn.bundle = bundle;
     notificationReturn.bundleType = bundle.type;
 
-    if (bundle.type !== fhirCommon.BundleTypeCodes5.SUBSCRIPTION_NOTIFICATION) {
+    if (bundle.type !== fhir5.BundleTypeCodes.SUBSCRIPTION_NOTIFICATION) {
       return notificationReturn;
     }
 
@@ -190,10 +190,10 @@ export class NotificationHelper {
     }
 
     notificationReturn.notificationType = subscriptionStatus.type;
-    if (notificationReturn.notificationType === fhirCommon.SubscriptionNotificationTypeCodes.HANDSHAKE) {
+    if (notificationReturn.notificationType === fhir5.SubscriptionNotificationType.Handshake.code) {
       notificationReturn.eventsSinceSubscriptionStart = 0;
       notificationReturn.eventsInNotification = 0;
-    } else if (notificationReturn.notificationType === fhirCommon.SubscriptionNotificationTypeCodes.HEARTBEAT) {
+    } else if (notificationReturn.notificationType === fhir5.SubscriptionNotificationType.Heartbeat.code) {
       notificationReturn.eventsInNotification = 0;
     }
 

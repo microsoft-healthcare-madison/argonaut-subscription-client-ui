@@ -1,4 +1,4 @@
-import { CapabilityStatementRestResource } from "../local_dts/fhir4";
+import { CapabilityStatementRestResource } from "fhir4";
 
 export interface ConnectionInformation {
   name: string;

@@ -5,8 +5,8 @@ import {
   Elevation, NonIdealState, H3, Text,
 } from '@blueprintjs/core';
 
-import * as fhir4 from '../../local_dts/fhir4';
-import * as fhir5 from '../../local_dts/fhir5';
+import * as fhir4 from 'fhir4';
+import * as fhir5 from 'fhir5';
 import {IconNames} from "@blueprintjs/icons";
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import TopicPlayground from './TopicPlayground';

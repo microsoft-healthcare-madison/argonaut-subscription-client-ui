@@ -1,4 +1,4 @@
-import * as fhir5 from '../local_dts/fhir5';
+import * as fhir5 from 'fhir5';
 
 export interface ApiResponse<T> {
   statusCode?: number;

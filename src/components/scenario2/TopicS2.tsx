@@ -5,8 +5,8 @@ import {
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { DataCardInfo } from '../../models/DataCardInfo';
-import * as fhir4 from '../../local_dts/fhir4';
-import * as fhir5 from '../../local_dts/fhir5';
+import * as fhir4 from 'fhir4';
+import * as fhir5 from 'fhir5';
 import { SingleRequestData } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
@@ -49,7 +49,7 @@ export default function TopicS2(props: TopicS2Props) {
         let isEncounterStart:Boolean = (topic.url === 'http://argonautproject.org/encounters-ig/SubscriptionTopic/encounter-start');
 
         if ((!isEncounterStart) && (topic.derivedFrom) && (topic.derivedFrom.length > 0)) {
-          topic.derivedFrom!.forEach((canonical) => {
+          topic.derivedFrom!.forEach((canonical:string) => {
             if (canonical === 'http://argonautproject.org/encounters-ig/SubscriptionTopic/encounter-start') {
               isEncounterStart = true;
             }

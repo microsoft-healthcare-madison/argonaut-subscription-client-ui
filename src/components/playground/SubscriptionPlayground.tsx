@@ -10,8 +10,8 @@ import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import { EndpointRegistration } from '../../models/EndpointRegistration';
 import { ApiHelper } from '../../util/ApiHelper';
-import * as fhir4 from '../../local_dts/fhir4';
-import * as fhir5 from '../../local_dts/fhir5';
+import * as fhir4 from 'fhir4';
+import * as fhir5 from 'fhir5';
 import * as fhirCommon from '../../models/fhirCommon';
 import SubscriptionFilters from './SubscriptionFilters';
 import { IconNames } from '@blueprintjs/icons';
@@ -192,10 +192,10 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
           return;
         } else if (endpointIndex < 0) {
           endpoint = new URL(`Endpoints/${props.endpoints[props.endpoints.length-1].uid}`, props.paneProps.clientHostInfo.url).toString();
-          channelCoding = fhirCommon.SubscriptionChannelType.rest_hook;
+          channelCoding = fhir5.SubscriptionChannelType.RestHook;
         } else {
           endpoint = new URL(`Endpoints/${props.endpoints[endpointIndex].uid}`, props.paneProps.clientHostInfo.url).toString();
-          channelCoding = fhirCommon.SubscriptionChannelType.rest_hook;
+          channelCoding = fhir5.SubscriptionChannelType.RestHook;
         }
         break;
       case 'rest-hook-external':
@@ -209,21 +209,21 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
           return;
         } else {
           endpoint = externalEndpoint
-          channelCoding = fhirCommon.SubscriptionChannelType.rest_hook;
+          channelCoding = fhir5.SubscriptionChannelType.RestHook;
         }
         break;
       case 'websocket':
         endpoint = '';
-        channelCoding = fhirCommon.SubscriptionChannelType.websocket;
+        channelCoding = fhir5.SubscriptionChannelType.Websocket;
         break;
       case 'email':
         endpoint = emailAddress;
         contentType = emailMimeType;
-        channelCoding = fhirCommon.SubscriptionChannelType.email;
+        channelCoding = fhir5.SubscriptionChannelType.Email;
         break;
       case 'zulip':
         endpoint = '';
-        channelCoding = fhirCommon.SubscriptionChannelType.zulip;
+        channelCoding = fhirCommon.SubscriptionChannelTypeZulip;
         break;
       default:
         endpoint = '';
@@ -237,12 +237,12 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       endpoint: endpoint,
       channelType: channelCoding,
       heartbeatPeriod: 60,
-      content: payloadType as fhirCommon.SubscriptionContentCodes,
+      content: payloadType as fhir5.SubscriptionContentCodes,
       contentType: contentType,
 			end: getInstantFromDate(expirationTime),
-			topic: { reference: `${props.topics[topicIndex].url!}` },
+			topic: `${props.topics[topicIndex].url!}`,
 			reason: 'Client Testing',
-			status: 'requested',
+			status: fhir5.SubscriptionStatusCodes.REQUESTED,
     }
 
     // add zulip extensions
@@ -274,14 +274,14 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
         let topic: fhir4.SubscriptionTopic = props.topics[topicIndex]! as fhir4.SubscriptionTopic;
         filter = {
           searchParamName: topic.canFilterBy![filterByIndex].filterParameter!,
-          searchModifier: topic.canFilterBy![filterByIndex].modifier![filterByMatchTypeIndex],
+          searchModifier: topic.canFilterBy![filterByIndex].modifier![filterByMatchTypeIndex] as unknown as fhir5.SubscriptionFilterBySearchModifierCodes,
           value: filterValueActual,
         };
       } else {
         let topic: fhir5.SubscriptionTopic = props.topics[topicIndex]! as fhir5.SubscriptionTopic;
         filter = {
           searchParamName: topic.canFilterBy![filterByIndex].filterParameter!,
-          searchModifier: topic.canFilterBy![filterByIndex].modifier![filterByMatchTypeIndex],
+          searchModifier: topic.canFilterBy![filterByIndex].modifier![filterByMatchTypeIndex] as unknown as fhir5.SubscriptionFilterBySearchModifierCodes,
           value: filterValueActual,
         };
       }
@@ -579,7 +579,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
     
     let rec:fhir5.SubscriptionFilterBy = {
       searchParamName: searchParamName,
-      searchModifier: searchModifier as fhirCommon.SubscriptionFilterByModifierCodes,
+      searchModifier: searchModifier as fhir5.SubscriptionFilterBySearchModifierCodes,
       value: value,
     };
 
@@ -594,7 +594,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 
     if ((rec.searchModifier === 'eq') &&
         ((rec.searchParamName === 'patient') || (rec.searchParamName === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient'))) {
-      rec.searchModifier = '=';
+      rec.searchModifier = fhir5.SubscriptionFilterBySearchModifierCodes.EQUALS;
       props.registerPatientId(rec.value);
     }
 
@@ -626,14 +626,14 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
       let topic: fhir4.SubscriptionTopic = props.topics[topicIndex]! as fhir4.SubscriptionTopic;
       rec = {
         searchParamName: topic.canFilterBy![filterByIndex].filterParameter!,
-        searchModifier: topic.canFilterBy![filterByIndex].modifier![filterByMatchTypeIndex],
+        searchModifier: topic.canFilterBy![filterByIndex].modifier![filterByMatchTypeIndex] as unknown as fhir5.SubscriptionFilterBySearchModifierCodes,
         value: filterValueActual,
       };
     } else {
       let topic: fhir5.SubscriptionTopic = props.topics[topicIndex]! as fhir5.SubscriptionTopic;
       rec = {
         searchParamName: topic.canFilterBy![filterByIndex].filterParameter!,
-        searchModifier: topic.canFilterBy![filterByIndex].modifier![filterByMatchTypeIndex],
+        searchModifier: topic.canFilterBy![filterByIndex].modifier![filterByMatchTypeIndex] as unknown as fhir5.SubscriptionFilterBySearchModifierCodes,
         value: filterValueActual,
       };
     }
@@ -653,7 +653,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
 
     if ((rec.searchModifier === 'eq') &&
         ((rec.searchParamName === 'patient') || (rec.searchParamName === 'http://hl7.org/fhir/build/SearchParameter/Encounter-patient'))) {
-      rec.searchModifier = '=';
+      rec.searchModifier = fhir5.SubscriptionFilterBySearchModifierCodes.EQUALS;
       props.registerPatientId(rec.value);
     }
 
@@ -893,7 +893,7 @@ export default function SubscriptionPlayground(props: SubscriptionPlaygroundProp
           onChange={handlePayloadTypeChange}
           value={payloadType}
           >
-          { Object.values(fhirCommon.SubscriptionContentCodes).map((value) => (
+          { Object.values(fhir5.SubscriptionContentCodes).map((value) => (
             <option key={value}>{value}</option> 
               ))}
         </HTMLSelect>

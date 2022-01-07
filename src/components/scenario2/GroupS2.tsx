@@ -42,7 +42,6 @@ export default function GroupS2(props: GroupS2Props) {
 
   /** Update data to show selected patient and notify parent */
   function handleSelectGroup(groupId: string, patientIds: string[]) {
-
     // add to our data
     if ((props.data) && (props.data.length > 0)) {
       let updated: SingleRequestData = {...props.data[0], info: `Using group id: ${groupId}`};

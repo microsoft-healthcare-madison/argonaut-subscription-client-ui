@@ -9,8 +9,8 @@ import { SingleRequestData } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import { EndpointRegistration } from '../../models/EndpointRegistration';
-import * as fhir4 from '../../local_dts/fhir4';
-import * as fhir5 from '../../local_dts/fhir5';
+import * as fhir4 from 'fhir4';
+import * as fhir5 from 'fhir5';
 import * as fhirCommon from '../../models/fhirCommon';
 import { SubscriptionReturn, SubscriptionHelper } from '../../util/SubscriptionHelper';
 
@@ -56,7 +56,7 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
 
 		// build our filter information
 		let filter: fhir5.SubscriptionFilterBy = {
-			searchModifier: '=',
+			searchModifier: fhir5.SubscriptionFilterBySearchModifierCodes.EQUALS,
 			searchParamName: 'patient',
 			value: `Patient/${props.selectedPatientId}`	    //`Patient/${patientFilter},Patient/K123`
 		}
@@ -75,15 +75,15 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
 		let subscription: fhir5.Subscription = {
       resourceType: 'Subscription',
       endpoint: endpointUrl,
-      channelType: fhirCommon.SubscriptionChannelType.rest_hook,
+      channelType: fhir5.SubscriptionChannelType.RestHook,
       heartbeatPeriod: 60,
-      content: payloadType as fhirCommon.SubscriptionContentCodes,
+      content: payloadType as fhir5.SubscriptionContentCodes,
       contentType: 'application/fhir+json',
 			filterBy: [filter],
 			end: getInstantFromDate(expirationTime),
-			topic: { reference: topicUrl },
+			topic: topicUrl ,
 			reason: 'Client Testing',
-			status: 'requested',
+			status: fhir5.SubscriptionStatusCodes.REQUESTED,
     }
 
     let header: string[] = (headers)
@@ -161,7 +161,7 @@ export default function SubscriptionS1(props: SubscriptionS1Props) {
           onChange={handlePayloadTypeChange}
           value={payloadType}
           >
-          { Object.values(fhirCommon.SubscriptionContentCodes).map((value) => (
+          { Object.values(fhir5.SubscriptionContentCodes).map((value) => (
             <option key={value}>{value}</option> 
               ))}
         </HTMLSelect>

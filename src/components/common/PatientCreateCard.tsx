@@ -5,7 +5,7 @@ import {
 } from '@blueprintjs/core';
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
-import * as fhir from '../../local_dts/fhir4';
+import * as fhir from 'fhir4';
 import * as fhirCommon from '../../models/fhirCommon';
 import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import { DateInput } from '@blueprintjs/datetime';
@@ -51,13 +51,13 @@ export default function PatientCreateCard(props: PatientCreateProps) {
     
 		let msPerYear: number = 365.25 * 24 * 60 * 60 * 1000;
     let birthDate: Date = new Date((new Date()).valueOf() - Math.floor((Math.random() * 110) * msPerYear));
-    let genderIndex: number = Math.floor(Math.random() * Object.values(fhirCommon.PatientGenderCodes).length);
+    let genderIndex: number = Math.floor(Math.random() * Object.values(fhir.PatientGenderCodes).length);
 
 		// generate some info in case a new patient is created
 		setGivenName(`Argonaut-${Math.floor((Math.random() * 10000) + 1)}`);
 		setFamilyName(`Project-${Math.floor((Math.random() * 10000) + 1)}`);
 		setPatientId(`${getRandomChars(3)}${Math.floor((Math.random() * 10000) + 1)}`);
-    setGender(Object.values(fhirCommon.PatientGenderCodes)[genderIndex]);
+    setGender(Object.values(fhir.PatientGenderCodes)[genderIndex]);
 		setBirthDate(birthDate);
   },
   [patientId]
@@ -121,9 +121,9 @@ export default function PatientCreateCard(props: PatientCreateProps) {
 			name: [{
 				family: familyName,
 				given: [givenName],
-				use: 'official'
+				use: fhir.HumanNameUseCodes.OFFICIAL
 			}],
-			gender: gender as fhirCommon.PatientGenderCodes,
+			gender: gender as fhir.PatientGenderCodes,
 			birthDate: getFhirDateFromDate(birthDate),
 		}
 
@@ -209,9 +209,9 @@ export default function PatientCreateCard(props: PatientCreateProps) {
 			name: [{
 				family: familyName,
 				given: [givenName],
-				use: 'official'
+				use: fhir.HumanNameUseCodes.OFFICIAL
 			}],
-			gender: gender as fhirCommon.PatientGenderCodes,
+			gender: gender as fhir.PatientGenderCodes,
 			birthDate: getFhirDateFromDate(birthDate),
 		}
 
@@ -337,7 +337,7 @@ export default function PatientCreateCard(props: PatientCreateProps) {
           value={gender}
           onChange={handleGenderChange}
           >
-          {Object.values(fhirCommon.PatientGenderCodes).map((code, index) => (
+          {Object.values(fhir.PatientGenderCodes).map((code, index) => (
             <option key={`opt_${index}`}>{code}</option>
           ))}
         </HTMLSelect>

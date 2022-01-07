@@ -9,7 +9,7 @@ import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import DataCard from '../basic/DataCard';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import { ApiHelper, ApiResponse } from '../../util/ApiHelper';
-import * as fhir from '../../local_dts/fhir5';
+import * as fhir from 'fhir5';
 import * as fhirCommon from '../../models/fhirCommon';
 import { useEffect } from 'react';
 
@@ -19,8 +19,8 @@ export interface OperationEventsProps {
   updateStatus: ((status: DataCardStatus) => void),
   data: SingleRequestData[],
   setData: ((data: SingleRequestData[]) => void),
-  subscription?: fhir5.Subscription | null,
-  subscriptions?: fhir5.Subscription[] | null,
+  subscription?: fhir.Subscription | null,
+  subscriptions?: fhir.Subscription[] | null,
 }
 
 /** Component representing the Operation Events Card */
@@ -158,7 +158,7 @@ export default function OperationEventsCard(props: OperationEventsProps) {
           onChange={handleContentHintChange}
           value={contentHint}
           >
-          { Object.values(fhirCommon.SubscriptionContentCodes).map((value) => (
+          { Object.values(fhir.SubscriptionContentCodes).map((value) => (
             <option key={value} value={value}>{value}</option>
               ))}
         </HTMLSelect>

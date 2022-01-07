@@ -3,7 +3,7 @@ import React, {useState, useEffect} from 'react';
 import {
  HTMLTable, Button, H6, Intent, Card,
 } from '@blueprintjs/core';
-import * as fhir from '../../local_dts/fhir5';
+import * as fhir from 'fhir5';
 import { IconNames } from '@blueprintjs/icons';
 
 export interface SubscriptionFiltersProps {

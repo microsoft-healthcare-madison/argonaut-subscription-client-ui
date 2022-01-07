@@ -1,5 +1,5 @@
 import { TriggerRequest } from "./TriggerRequest";
-import * as fhir from '../local_dts/fhir4';
+import * as fhir from 'fhir4';
 
 // export enum TriggerStatuses {
 //   Unknown = 0,

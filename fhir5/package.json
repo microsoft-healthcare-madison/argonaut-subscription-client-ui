@@ -1,0 +1,21 @@
+{
+  "name": "fhir5",
+  "version": "5.0.0-snapshot1",
+  "description": "Basic Module for FHIR 5 Definitions",
+  "author": "MS Healthcare Madison",
+  "contributors": [
+    "Gino Canessa <gino.canessa@microsoft.com>"
+  ],
+  "keywords": [
+    "FHIR"
+  ],
+  "license": "MIT",
+  "main": "fhir5.js",
+  "types": "fhir5.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "typescript": "^4.5.4"
+  }
+}

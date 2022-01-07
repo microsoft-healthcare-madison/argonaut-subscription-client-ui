@@ -1,5 +1,5 @@
-import * as fhir4 from '../local_dts/fhir4';
-import * as fhir5 from '../local_dts/fhir5';
+import * as fhir4 from 'fhir4';
+import * as fhir5 from 'fhir5';
 import * as fhirCommon from '../models/fhirCommon';
 import { SingleRequestData, RenderDataAsTypes } from "../models/RequestData";
 import { ConnectionInformation } from "../models/ConnectionInformation";
@@ -344,7 +344,7 @@ export class SubscriptionHelper {
       case 'email':
       case 'message':
         needsChannelTypeExtension = false;
-        channelType = s5.channelType.code! as fhirCommon.SubscriptionChannelTypeCodes;
+        channelType = s5.channelType.code! as fhir4.SubscriptionChannelTypeCodes;
         break;
       default:
         // use rest-hook plus extension
@@ -370,9 +370,9 @@ export class SubscriptionHelper {
             valueCode: s5.content,
           }],
         },
-        type: channelType,
+        type: channelType as fhir4.SubscriptionChannelTypeCodes,
       },
-      status: s5.status as fhirCommon.SubscriptionStatusCodes,
+      status: s5.status as fhir4.SubscriptionStatusCodes,
       criteria: '',
     };
     
@@ -494,23 +494,23 @@ export class SubscriptionHelper {
     }
 
     if ((!filter.searchModifier) ||
-        (filter.searchModifier === fhirCommon.SubscriptionFilterByModifierCodes.EQUALS) ||
-        (filter.searchModifier === fhirCommon.SubscriptionFilterByModifierCodes.EQ)) {
+        (filter.searchModifier === fhir5.SubscriptionFilterBySearchModifierCodes.EQUALS) ||
+        (filter.searchModifier === fhir5.SubscriptionFilterBySearchModifierCodes.EQ)) {
       return `${filter.searchParamName}=${filter.value}`;
     }
 
     let modifier: string = filter.searchModifier.toLowerCase();
 
     switch (filter.searchModifier) {
-      case fhirCommon.SubscriptionFilterByModifierCodes.ABOVE:
-      case fhirCommon.SubscriptionFilterByModifierCodes.BELOW:
-      case fhirCommon.SubscriptionFilterByModifierCodes.IN:
+      case fhir5.SubscriptionFilterBySearchModifierCodes.ABOVE:
+      case fhir5.SubscriptionFilterBySearchModifierCodes.BELOW:
+      case fhir5.SubscriptionFilterBySearchModifierCodes.IN:
         return `${filter.searchParamName}:${modifier}=${filter.value}`;
 
-      case fhirCommon.SubscriptionFilterByModifierCodes.NOT_IN:
+      case fhir5.SubscriptionFilterBySearchModifierCodes.NOT_IN:
         return `${filter.searchParamName}:not-in=${filter.value}`;
 
-      case fhirCommon.SubscriptionFilterByModifierCodes.OF_TYPE:
+      case fhir5.SubscriptionFilterBySearchModifierCodes.OF_TYPE:
         return `${filter.searchParamName}:of-type=${filter.value}`;
 
       default:
@@ -604,7 +604,7 @@ export class SubscriptionHelper {
     if ((s4.channel._payload) && (s4.channel._payload!.extension)) {
       s4.channel._payload.extension.forEach((ext) => {
         if ((ext.url === ExtensionUrlContent) && (ext.valueCode)) {
-          s5.content = ext.valueCode as fhirCommon.SubscriptionContentCodes;
+          s5.content = ext.valueCode as fhir5.SubscriptionContentCodes;
         }
       });
     }
@@ -662,82 +662,82 @@ export class SubscriptionHelper {
 
     switch (modifier) {
       case 'equal':
-        searchModifier = fhirCommon.SubscriptionFilterByModifierCodes.EQUALS;
+        searchModifier = fhir5.SubscriptionFilterBySearchModifierCodes.EQUALS;
         break;
 
       case 'above':
-          searchModifier = fhirCommon.SubscriptionFilterByModifierCodes.ABOVE;
+          searchModifier = fhir5.SubscriptionFilterBySearchModifierCodes.ABOVE;
           break;
 
       case 'below':
-          searchModifier = fhirCommon.SubscriptionFilterByModifierCodes.BELOW;
+          searchModifier = fhir5.SubscriptionFilterBySearchModifierCodes.BELOW;
           break;
 
       case 'in':
-          searchModifier = fhirCommon.SubscriptionFilterByModifierCodes.IN;
+          searchModifier = fhir5.SubscriptionFilterBySearchModifierCodes.IN;
           break;
 
       case 'not-in':
-          searchModifier = fhirCommon.SubscriptionFilterByModifierCodes.NOT_IN;
+          searchModifier = fhir5.SubscriptionFilterBySearchModifierCodes.NOT_IN;
           break;
 
       case 'of-type':
-          searchModifier = fhirCommon.SubscriptionFilterByModifierCodes.OF_TYPE;
+          searchModifier = fhir5.SubscriptionFilterBySearchModifierCodes.OF_TYPE;
           break;
 
       case 'eq':
-          searchModifier = fhirCommon.SubscriptionFilterByModifierCodes.EQ;
+          searchModifier = fhir5.SubscriptionFilterBySearchModifierCodes.EQ;
           searchValue = searchValue.substr(2);
           break;
 
       case 'ne':
-          searchModifier = fhirCommon.SubscriptionFilterByModifierCodes.NE;
+          searchModifier = fhir5.SubscriptionFilterBySearchModifierCodes.NE;
           searchValue = searchValue.substr(2);
           break;
 
       case 'gt':
-          searchModifier = fhirCommon.SubscriptionFilterByModifierCodes.GT;
+          searchModifier = fhir5.SubscriptionFilterBySearchModifierCodes.GT;
           searchValue = searchValue.substr(2);
           break;
 
       case 'lt':
-          searchModifier = fhirCommon.SubscriptionFilterByModifierCodes.LT;
+          searchModifier = fhir5.SubscriptionFilterBySearchModifierCodes.LT;
           searchValue = searchValue.substr(2);
           break;
 
       case 'ge':
-          searchModifier = fhirCommon.SubscriptionFilterByModifierCodes.GE;
+          searchModifier = fhir5.SubscriptionFilterBySearchModifierCodes.GE;
           searchValue = searchValue.substr(2);
           break;
 
       case 'le':
-          searchModifier = fhirCommon.SubscriptionFilterByModifierCodes.LE;
+          searchModifier = fhir5.SubscriptionFilterBySearchModifierCodes.LE;
           searchValue = searchValue.substr(2);
           break;
 
       case 'sa':
-          searchModifier = fhirCommon.SubscriptionFilterByModifierCodes.SA;
+          searchModifier = fhir5.SubscriptionFilterBySearchModifierCodes.SA;
           searchValue = searchValue.substr(2);
           break;
 
       case 'eb':
-          searchModifier = fhirCommon.SubscriptionFilterByModifierCodes.EB;
+          searchModifier = fhir5.SubscriptionFilterBySearchModifierCodes.EB;
           searchValue = searchValue.substr(2);
           break;
 
       case 'ap':
-          searchModifier = fhirCommon.SubscriptionFilterByModifierCodes.AP;
+          searchModifier = fhir5.SubscriptionFilterBySearchModifierCodes.AP;
           searchValue = searchValue.substr(2);
           break;
 
       default:
-          searchModifier = fhirCommon.SubscriptionFilterByModifierCodes.EQUALS;
+          searchModifier = fhir5.SubscriptionFilterBySearchModifierCodes.EQUALS;
           break;
       }
 
       return {
         searchParamName: searchParam,
-        searchModifier: searchModifier as fhirCommon.SubscriptionFilterByModifierCodes,
+        searchModifier: searchModifier as fhir5.SubscriptionFilterBySearchModifierCodes,
         value: searchValue,
       };
   }

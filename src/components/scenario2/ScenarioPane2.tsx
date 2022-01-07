@@ -11,9 +11,8 @@ import {IconNames} from "@blueprintjs/icons";
 import { ContentPaneProps } from '../../models/ContentPaneProps';
 import { EndpointRegistration } from '../../models/EndpointRegistration';
 import { ApiHelper } from '../../util/ApiHelper';
-import * as fhir4 from '../../local_dts/fhir4';
-import * as fhir5 from '../../local_dts/fhir5';
-import * as fhirCommon from '../../models/fhirCommon';
+import * as fhir4 from 'fhir4';
+import * as fhir5 from 'fhir5';
 import { SingleRequestData, RenderDataAsTypes } from '../../models/RequestData';
 import { DataCardStatus } from '../../models/DataCardStatus';
 import TopicS2 from './TopicS2';
@@ -301,7 +300,7 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 		}
 
 		// special handling for handshake
-		if (notificationReturn.notificationType === fhirCommon.SubscriptionNotificationTypeCodes.HANDSHAKE) {
+		if (notificationReturn.notificationType === fhir5.SubscriptionNotificationType.Handshake.code) {
 			let data: SingleRequestData = {
 				name: 'Handshake',
 				id: 'handshake',
@@ -316,7 +315,9 @@ export default function ScenarioPane2(props: ContentPaneProps) {
 			setHandshakeData([data]);
 			setHandshakeStatus(_statusComplete);
 
-			let supported:boolean|undefined = props.useBackportToR4 ? props.fhirServerInfoR4.supportsCreateEncounter : props.fhirServerInfoR5.supportsCreateEncounter;
+			let supported:boolean|undefined = props.useBackportToR4
+        ? props.fhirServerInfoR4.supportsCreateEncounter
+        : props.fhirServerInfoR5.supportsCreateEncounter;
 
 			// check for NOT being allowed to trigger on this server
 			if (!supported) {
