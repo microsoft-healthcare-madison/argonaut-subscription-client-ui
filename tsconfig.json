@@ -22,5 +22,9 @@
   },
   "include": [
     "src"
+  ],
+  "exclude": [
+    "fhir4",
+    "fhir5"
   ]
 }
