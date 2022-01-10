@@ -53,16 +53,18 @@ export default function ConfigurationPane(props: ContentPaneProps) {
     },
     {
       short: 'build.fhir.org', 
-      description: 'Current FHIR R5 Build branch (Subscription, SubscriptionTopic, etc.)', 
+      description: 'Current FHIR R4B Build branch (Subscription, SubscriptionTopic, etc.)', 
       link:'http://build.fhir.org/branches/R4B/'
-      // link:'http://build.fhir.org/'
     },
     {
-      short: 'argonautproject.github.io', 
-      // short: 'build.fhir.org', 
-      description: 'CI Build FHIR-I Subscription Backport (R5 to R4) IG', 
-      link:'https://argonautproject.github.io/subscription-backport-ig/'
-      // link:'http://build.fhir.org/ig/HL7/fhir-subscription-backport-ig/'
+      short: 'build.fhir.org', 
+      description: 'Current FHIR R5 Build branch (Subscription, SubscriptionTopic, etc.)', 
+      link:'http://build.fhir.org/'
+    },
+    {
+      short: 'build.fhir.org', 
+      description: 'CI Build FHIR-I Subscription Backport (R5 to R4B) IG', 
+      link:'http://build.fhir.org/ig/HL7/fhir-subscription-backport-ig/'
     },
     {
       short: 'github.com',
@@ -78,6 +80,11 @@ export default function ConfigurationPane(props: ContentPaneProps) {
       short: 'github.com',
       description: 'Argonaut Subscription Reference Server Proxy (intercept and process Subscription/SubscriptionTopic)',
       link:'https://github.com/microsoft-healthcare-madison/argonaut-subscription-server-proxy'
+    },
+    {
+      short: 'confluence.hl7.org',
+      description: 'September 2021 Connectathon (#29) - Subscriptions',
+      link: 'https://confluence.hl7.org/display/FHIR/2022-01+Subscriptions'
     },
     {
       short: 'confluence.hl7.org',
