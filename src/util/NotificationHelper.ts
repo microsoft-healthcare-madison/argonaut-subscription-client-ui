@@ -74,8 +74,8 @@ export class NotificationHelper {
       notificationReturn.eventsSinceSubscriptionStart = Number(subscriptionStatus.eventsSinceSubscriptionStart!);
     }
 
-    if (subscriptionStatus.eventsInNotification) {
-      notificationReturn.eventsInNotification = Number(subscriptionStatus.eventsInNotification!);
+    if (subscriptionStatus.notificationEvent) {
+      notificationReturn.eventsInNotification = Number(subscriptionStatus.notificationEvent?.length ?? 0);
     }
 
     if (subscriptionStatus.status) {

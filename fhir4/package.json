@@ -1,6 +1,6 @@
 {
   "name": "fhir4",
-  "version": "4.3.0-snapshot1",
+  "version": "4.3.0",
   "description": "Basic Module for FHIR 4B Definitions",
   "author": "MS Healthcare Madison",
   "contributors": [
