@@ -17,6 +17,7 @@ import SubscriptionPlayground from './SubscriptionPlayground';
 import { EndpointRegistration } from '../../models/EndpointRegistration';
 import EndpointPlayground from './EndpointPlayground';
 import WebsocketPlayground from './WebsocketPlayground';
+import CommStatusPlayground from './CommStatusPlayground';
 import { ApiResponse, ApiHelper } from '../../util/ApiHelper';
 // import { KeySelectionInfo } from '../../models/KeySelectionInfo';
 import EncountersPlayground from './EncountersPlayground';
@@ -56,6 +57,8 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 
 	const [websocketData, setWebsocketData] = useState<SingleRequestData[]>([]);
 	const [websocketStatus, setWebsocketStatus] = useState<DataCardStatus>(_statusAvailable);
+
+	const [commStatusStatus, setCommStatusStatus] = useState<DataCardStatus>(_statusAvailable);
 
 	const [pendingMessages, setPendingMessages] = useState<string[]>([]);
 
@@ -116,6 +119,7 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 	}
 
 	/** Callback function to process ClientHost messages */
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	function handleHostMessage(message: string) {
 		// check for an R4-Websocket ping
 		if (message.startsWith('ping')) {
@@ -338,6 +342,13 @@ export default function PlaygroundPane(props: ContentPaneProps) {
 				setData={setWebsocketData}
 				subscriptions={subscriptions}
 				handleHostMessage={queueMessage}
+				/>
+
+			{/* Communication Status Playground Card */}
+			<CommStatusPlayground
+				key='playground_commStatus'
+				paneProps={props}
+				status={commStatusStatus}
 				/>
 
 			<EncountersPlayground
